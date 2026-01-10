@@ -29,8 +29,7 @@ CHART_SCRIPTS = [
     "chart_prequential_f1.py",
     "chart_ablation.py",
     "chart_cd_diagram.py",
-    "chart_detector_selection.py",
-    "chart_error_rate_drift.py",
+    "chart_detector_selection_combined.py",
     "chart_time_memory.py",
 ]
 
