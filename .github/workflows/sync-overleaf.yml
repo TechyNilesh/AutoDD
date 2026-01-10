@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'IJCAI-ECAI-26/**'
+  workflow_dispatch:
 
 jobs:
   sync-to-overleaf:
@@ -21,15 +22,28 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Sync paper folder to paper branch
+      - name: Sync to paper branch and Overleaf
+        env:
+          OVERLEAF_TOKEN: ${{ secrets.OVERLEAF_TOKEN }}
         run: |
-          git subtree split --prefix=IJCAI-ECAI-26 -b paper-temp
-          git push origin paper-temp:paper --force
-          git branch -D paper-temp
-
-      - name: Push to Overleaf
-        run: |
+          # Checkout paper branch
           git checkout paper
           git pull origin paper
-          git remote add overleaf https://git:${{ secrets.OVERLEAF_TOKEN }}@git.overleaf.com/6955b965ea1329764fed32c2
-          git push overleaf paper:master --force
+
+          # Copy files from main's IJCAI-ECAI-26 to paper branch root
+          git checkout main -- IJCAI-ECAI-26/
+          cp -r IJCAI-ECAI-26/* .
+          rm -rf IJCAI-ECAI-26
+
+          # Commit if there are changes
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Sync paper from main branch"
+            git push origin paper
+
+            # Push to Overleaf
+            git remote add overleaf https://git:${OVERLEAF_TOKEN}@git.overleaf.com/6955b965ea1329764fed32c2 || true
+            git push overleaf paper:master
+          fi
