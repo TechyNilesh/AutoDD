@@ -50,6 +50,7 @@ Anonymous
 
 \begin{abstract}
 Concept drift, the change in the distribution of streaming data over time, significantly impacts the performance of machine learning models. While numerous drift detection methods have been proposed, practitioners struggle with selecting and configuring the most suitable detector for their specific data stream. Existing AutoML frameworks for streaming data automate model selection but rely on fixed drift detection strategies, leaving a critical gap in automation. This paper introduces \textbf{AutoDD} (Automated Drift Detector), a pioneering framework that automates the selection and configuration of drift detectors by learning the relationship between stream characteristics and detector performance. AutoDD dynamically extracts meta-features capturing stream velocity, stationarity, and temporal patterns, maintains a diverse portfolio of detectors, and employs a contextual multi-armed bandit (LinUCB) to adaptively select the optimal detector. Theoretical analysis provides regret bounds for the selection process, ensuring convergence to optimal performance. Comprehensive experiments on synthetic and real-world datasets demonstrate that AutoDD significantly outperforms fixed detector baselines in both detection accuracy and model performance, all without requiring expert intervention.
+\end{abstract}
 
 \section{Introduction}
 
@@ -179,23 +180,36 @@ HDDM-W & Error-based & $\lambda$ & [0.01, 0.1] & log & 0.05 \\
 }
 \end{table}
 
-Each detector supports hyperparameter configuration within the specified ranges. AutoDD samples hyperparameters using the appropriate scale: logarithmic for sensitivity parameters spanning orders of magnitude, linear for bounded continuous parameters, and integer for discrete counts.
+AutoDD employs a \textit{cascading (hierarchical) selection} strategy that jointly optimizes both detector choice and hyperparameter configuration online. This two-level approach maintains tractability while enabling fine-grained adaptation.
 
-\subsection{Online Detector Selection via LinUCB}
+\subsection{Cascading Selection Algorithm}
 
-We formulate detector selection as a contextual multi-armed bandit problem. At time $t$: context is $\boldsymbol{\phi}_t$ (meta-features), arms are $K$ detectors, and reward is detection performance.
+\textbf{Level 1: Detector Selection (LinUCB).} We formulate detector selection as a contextual multi-armed bandit problem. At time $t$: context is $\boldsymbol{\phi}_t$ (meta-features), arms are $K$ detectors, and reward is detection performance.
 
-We employ LinUCB \cite{Li2010LinUCB}, which assumes linear reward:
+LinUCB \cite{Li2010LinUCB} assumes linear reward:
 \begin{equation}
 r_{i,t} = \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_i + \epsilon_t
 \end{equation}
-where $\boldsymbol{\theta}_i \in \mathbb{R}^m$ is the parameter vector for detector $i$.
-
-LinUCB selects the detector with highest upper confidence bound:
+where $\boldsymbol{\theta}_i \in \mathbb{R}^m$ is the parameter vector for detector $i$. LinUCB selects the detector with highest upper confidence bound:
 \begin{equation}
 i_t = \arg\max_{i \in [K]} \left( \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_i + \alpha \sqrt{\boldsymbol{\phi}_t^\top \mathbf{A}_i^{-1} \boldsymbol{\phi}_t} \right)
 \end{equation}
-where $\hat{\boldsymbol{\theta}}_i = \mathbf{A}_i^{-1} \mathbf{b}_i$ is the ridge regression estimate, $\mathbf{A}_i = \lambda\mathbf{I} + \sum_{s:i_s=i} \boldsymbol{\phi}_s \boldsymbol{\phi}_s^\top$ is the regularized design matrix with regularization parameter $\lambda > 0$, $\mathbf{b}_i = \sum_{s:i_s=i} r_{s,i} \boldsymbol{\phi}_s$ is the response vector, and $\alpha > 0$ controls exploration.
+where $\hat{\boldsymbol{\theta}}_i = \mathbf{A}_i^{-1} \mathbf{b}_i$ is the ridge regression estimate, $\mathbf{A}_i = \lambda\mathbf{I} + \sum_{s:i_s=i} \boldsymbol{\phi}_s \boldsymbol{\phi}_s^\top$ is the regularized design matrix, and $\alpha > 0$ controls exploration.
+
+\textbf{Level 2: Hyperparameter Selection (Thompson Sampling).} Given the selected detector $D_{i_t}$, we adaptively select hyperparameters using Thompson Sampling. For each detector, we maintain $C$ hyperparameter configurations sampled from the ranges in Table~\ref{tab:portfolio}. The first configuration is always the literature default; the remaining $C-1$ are sampled using the appropriate scale (logarithmic, linear, or integer).
+
+For each configuration $c$ of detector $i$, we maintain Beta distribution parameters $(\alpha_{i,c}, \beta_{i,c})$ initialized to $(1, 1)$. At each window, given the selected detector $i_t$, we sample:
+\begin{equation}
+\theta_{i_t,c} \sim \text{Beta}(\alpha_{i_t,c}, \beta_{i_t,c}) \quad \forall c \in [C]
+\end{equation}
+and select configuration $c_t = \arg\max_c \theta_{i_t,c}$. After observing reward $r_t$, we update:
+\begin{align}
+\alpha_{i_t,c_t} &\gets \alpha_{i_t,c_t} + \tilde{r}_t \\
+\beta_{i_t,c_t} &\gets \beta_{i_t,c_t} + (1 - \tilde{r}_t)
+\end{align}
+where $\tilde{r}_t = (r_t + 1)/2$ normalizes the reward to $[0,1]$.
+
+This cascading approach provides several advantages: (1) \textit{Tractability}---Level 1 has only $K=7$ arms, avoiding the combinatorial explosion of $K \times C$ configurations; (2) \textit{Specialization}---each detector's hyperparameters are tuned independently based on its performance; (3) \textit{Fast adaptation}---Thompson Sampling quickly identifies effective configurations with minimal exploration overhead.
 
 \subsection{Performance Evaluation}
 
@@ -210,33 +224,44 @@ r_t = \begin{cases}
 \end{equation}
 where $d \in \{0,1\}$ indicates drift detection, $\Delta a = acc_{t-w} - acc_t$ is the accuracy drop between windows, and $\tau = 0.05$ is the significance threshold. This reward function captures: true positives ($d=1, \Delta a > \tau$: high reward for detecting real drifts), false positives ($d=1, \Delta a \leq \tau$: penalty for unnecessary resets), false negatives ($d=0, \Delta a > \tau$: penalty for missed drifts), and true negatives ($d=0, \Delta a \leq \tau$: small reward for stable operation).
 
+\textbf{Adaptation Policy.} Upon drift detection, the model undergoes \textit{complete reset}---the classifier is reinitialized from scratch and continues learning from subsequent instances. This reset-based adaptation is used consistently across AutoDD and all baseline detectors to ensure fair comparison. Since the reward signal depends on accuracy change after adaptation, using the same adaptation mechanism controls for potential confounding: any performance differences reflect detector selection quality, not adaptation strategy. Alternative policies (e.g., windowed retraining, partial reset) could be integrated, but we fix the adaptation to isolate the contribution of detector selection.
+
 The pseudocode is provided in Algorithm 1.
 
 \begin{algorithm}[t]
-\caption{AutoDD Framework}
+\caption{AutoDD Framework with Cascading Selection}
 \label{alg:autodd}
-\textbf{Input:} Stream $\mathcal{S}$, Portfolio $\mathcal{D}$, Window size $w$\\
-\textbf{Parameter:} Exploration $\alpha$, Meta-feature dimension $m$\\
+\textbf{Input:} Stream $\mathcal{S}$, Portfolio $\mathcal{D}$, HP configs $\mathcal{C}$, Window $w$\\
+\textbf{Parameter:} Exploration $\alpha$, Configs per detector $C$\\
 \textbf{Output:} Drift signals $\{d_t\}_{t=1}^\infty$
 \begin{algorithmic}[1]
 \STATE Initialize $\mathbf{A}_i \gets \mathbf{I}_m$, $\mathbf{b}_i \gets \mathbf{0}$ for all $i \in [K]$
+\STATE Initialize $\alpha_{i,c} \gets 1$, $\beta_{i,c} \gets 1$ for all $i \in [K], c \in [C]$
 \STATE Initialize sliding window $W \gets \emptyset$
 \FOR{each instance $(\mathbf{x}_t, y_t) \in \mathcal{S}$}
     \STATE $W \gets W \cup \{(\mathbf{x}_t, y_t)\}$
     \IF{$|W| = w$}
         \STATE Extract meta-features $\boldsymbol{\phi}_t \gets \textsc{Extract}(W)$
+        \STATE \textit{// Level 1: Detector Selection (LinUCB)}
         \FOR{$i = 1$ to $K$}
-            \STATE $\hat{\boldsymbol{\theta}}_i \gets \mathbf{A}_i^{-1} \mathbf{b}_i$
-            \STATE $\text{UCB}_i \gets \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_i + \alpha \sqrt{\boldsymbol{\phi}_t^\top \mathbf{A}_i^{-1} \boldsymbol{\phi}_t}$
+            \STATE $\text{UCB}_i \gets \boldsymbol{\phi}_t^\top \mathbf{A}_i^{-1} \mathbf{b}_i + \alpha \sqrt{\boldsymbol{\phi}_t^\top \mathbf{A}_i^{-1} \boldsymbol{\phi}_t}$
         \ENDFOR
         \STATE Select detector $i_t \gets \arg\max_i \text{UCB}_i$
-        \STATE $d_t \gets D_{i_t}.\textsc{Detect}(W)$
+        \STATE \textit{// Level 2: Hyperparameter Selection (Thompson Sampling)}
+        \FOR{$c = 1$ to $C$}
+            \STATE Sample $\theta_c \sim \text{Beta}(\alpha_{i_t,c}, \beta_{i_t,c})$
+        \ENDFOR
+        \STATE Select config $c_t \gets \arg\max_c \theta_c$
+        \STATE $d_t \gets D_{i_t}(\mathcal{C}_{i_t,c_t}).\textsc{Detect}(W)$
         \IF{$d_t = 1$}
             \STATE Trigger model adaptation
         \ENDIF
-        \STATE Compute reward $r_t$ using Eq. (6)
-        \STATE $\mathbf{A}_{i_t} \gets \mathbf{A}_{i_t} + \boldsymbol{\phi}_t \boldsymbol{\phi}_t^\top$
-        \STATE $\mathbf{b}_{i_t} \gets \mathbf{b}_{i_t} + r_t \boldsymbol{\phi}_t$
+        \STATE Compute reward $r_t$ using Eq. (9)
+        \STATE \textit{// Update Level 1 (LinUCB)}
+        \STATE $\mathbf{A}_{i_t} \gets \mathbf{A}_{i_t} + \boldsymbol{\phi}_t \boldsymbol{\phi}_t^\top$; $\mathbf{b}_{i_t} \gets \mathbf{b}_{i_t} + r_t \boldsymbol{\phi}_t$
+        \STATE \textit{// Update Level 2 (Thompson Sampling)}
+        \STATE $\tilde{r}_t \gets (r_t + 1)/2$
+        \STATE $\alpha_{i_t,c_t} \gets \alpha_{i_t,c_t} + \tilde{r}_t$; $\beta_{i_t,c_t} \gets \beta_{i_t,c_t} + (1-\tilde{r}_t)$
         \STATE $W \gets \emptyset$
     \ENDIF
 \ENDFOR
@@ -310,9 +335,6 @@ This guarantees that AutoDD converges to optimal detector selection as more data
 
 \subsection{Experimental Setup}
 
-\footnote{Dataset and code available at: \url{https://anonymous.4open.science/r/AutoDD-BCCF}}
-\end{abstract}
-
 \textbf{Datasets.} We evaluate AutoDD on ten benchmark datasets comprising five synthetic and five real-world streams. Table~\ref{tab:datasets} summarizes their characteristics. Synthetic datasets are generated using River's stream generators with predefined drift points, while real-world datasets are standard benchmarks from the MOA framework \cite{Bifet2010MOA}.
 
 \begin{table}[!ht]
@@ -342,7 +364,7 @@ Poker & Real-world & 829,201 & 10 & Unknown \\
 
 \textbf{Metrics.} We measure: (1) \textit{Prequential accuracy}---percentage of correct predictions using test-then-train evaluation, (2) \textit{F1-score}---harmonic mean of drift detection precision and recall (synthetic only), (3) \textit{Drift count}---number of detected drifts (real-world only), and (4) \textit{Computational cost}---runtime per instance and memory usage.
 
-\textbf{Configuration.} AutoDD uses all 15 meta-features with window size $w=100$ and exploration parameter $\alpha=1.0$. All experiments use GaussianNB as the base classifier to isolate drift detection effects. Results are averaged over 10 runs. Implementation uses Python with River \cite{Montiel2021River} on a MacBook Pro with Apple M2 Pro and 16GB RAM.
+\textbf{Configuration.} AutoDD uses all 15 meta-features with window size $w=100$, exploration parameter $\alpha=1.0$, and $C=5$ hyperparameter configurations per detector (1 default + 4 sampled). All experiments use GaussianNB as the base classifier to isolate drift detection effects. Results are averaged over 10 runs. Implementation uses Python with River \cite{Montiel2021River} on a MacBook Pro with Apple M2 Pro and 16GB RAM.
 
 All experiments are fully reproducible; the implementation and datasets are publicly available.\footnote{Dataset and code available at: \url{https://anonymous.4open.science/r/AutoDD-BCCF}}
 
@@ -434,11 +456,11 @@ Meta-ADD & 85.4 & 22 & 74.8 & 9 & 94.5 & 2 & 63.9 & 143 & 55.4 & 173 & 74.8 & 69
 
 \subsubsection{Ablation Study}
 
-We systematically remove AutoDD components to assess their contributions. Table~\ref{tab:ablation} shows results averaged across all datasets.
+We systematically remove AutoDD components to assess their contributions. Table~\ref{tab:ablation} shows results as weighted mean across all 10 datasets (5 synthetic + 5 real-world).
 
 \begin{table}[!ht]
 \centering
-\caption{Ablation study results}
+\caption{Ablation study results (all 10 datasets)}
 \label{tab:ablation}
 \begin{tabular}{lccc}
 \toprule
@@ -639,7 +661,9 @@ AutoDD (0.47 ms/instance) is 4.3$\times$ faster than Meta-ADD (2.00 ms) while ac
 
 \textbf{Computational Overhead.} AutoDD introduces modest overhead (0.47 ms/instance) compared to single detectors due to meta-feature extraction and LinUCB updates. However, this overhead is justified by the 4--8\% accuracy improvement over fixed detectors and remains 4.3$\times$ faster than Meta-ADD. The incremental computation of online statistics ensures scalability to high-velocity streams.
 
-\textbf{Limitations.} We acknowledge several limitations: (1) AutoDD's performance on gradual drift is slightly lower than Meta-ADD on certain datasets (RBF, RTG), suggesting that learned drift-type representations may complement our meta-feature approach; (2) the window size $w=100$ represents a trade-off between detection responsiveness and statistical stability, which may require tuning for domain-specific streams with unusual characteristics; (3) the linear reward model in LinUCB assumes the relationship between meta-features and detector performance is approximately linear, which may not hold in all scenarios. Future work could explore non-linear bandit algorithms to address this limitation.
+\textbf{Adaptation Policy and Confounding.} A potential confound in detector evaluation is the choice of model adaptation strategy upon drift detection. Since the reward function depends on accuracy change post-adaptation, different adaptation policies could bias detector selection. To control for this, we use \textit{complete model reset} consistently across AutoDD and all baselines: when drift is detected, the classifier is reinitialized and resumes learning from scratch. This ensures that observed performance differences reflect detector selection quality rather than adaptation effects. While alternative strategies (windowed retraining, ensemble updates, gradual adaptation) may be more appropriate for specific applications, we deliberately fix this component to isolate AutoDD's contribution. Future work could extend AutoDD to jointly optimize detector selection and adaptation strategy.
+
+\textbf{Limitations.} We acknowledge several limitations: (1) AutoDD's performance on gradual drift is slightly lower than Meta-ADD on certain datasets (RBF, RTG), suggesting that learned drift-type representations may complement our meta-feature approach; (2) the window size $w=100$ represents a trade-off between detection responsiveness and statistical stability, which may require tuning for domain-specific streams with unusual characteristics; (3) the linear reward model in LinUCB assumes the relationship between meta-features and detector performance is approximately linear, which may not hold in all scenarios; (4) AutoDD currently assumes immediate label availability for reward computation. Under substantial label delays, bandit updates would be delayed, potentially degrading adaptation speed. Future work could address this by using unsupervised proxy rewards, such as prediction entropy, feature distribution divergence (e.g., Maximum Mean Discrepancy), or model disagreement in ensembles, enabling label-efficient operation in delayed-feedback settings.
 
 \section{Conclusion}
 

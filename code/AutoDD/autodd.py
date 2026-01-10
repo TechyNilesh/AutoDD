@@ -19,6 +19,7 @@ from collections import deque
 from .meta_feature_extractor import MetaFeatureExtractor
 from .detector_portfolio import DetectorPortfolio
 from .linucb_agent import LinUCBAgent
+from .hyperparameter_selector import CascadingHyperparameterSelector
 
 
 class AutoDD:
@@ -72,17 +73,33 @@ class AutoDD:
         window_size: int = 100,  # Optimal window size based on experiments
         alpha: float = 1.0,
         lambda_reg: float = 1.0,  # Regularization parameter for LinUCB
-        detectors: Optional[List[str]] = None
+        detectors: Optional[List[str]] = None,
+        cascading_hp: bool = True,  # Enable cascading hyperparameter selection
+        n_hp_configs: int = 5,  # Number of HP configurations per detector
+        seed: Optional[int] = None
     ):
         self.window_size = window_size
         self.alpha = alpha
         self.lambda_reg = lambda_reg
+        self.cascading_hp = cascading_hp
+        self.n_hp_configs = n_hp_configs
 
         # Initialize components
         self.meta_extractor = MetaFeatureExtractor(window_size=window_size)
         self.portfolio = DetectorPortfolio(detectors=detectors)
 
-        # LinUCB agent (K arms, 15 features)
+        # Cascading Hyperparameter Selector (Level 2: Thompson Sampling)
+        if cascading_hp:
+            self.hp_selector = CascadingHyperparameterSelector(
+                portfolio=self.portfolio,
+                n_configs_per_detector=n_hp_configs,
+                include_default=True,
+                seed=seed
+            )
+        else:
+            self.hp_selector = None
+
+        # LinUCB agent (K arms, 15 features) - Level 1: Detector Selection
         self.n_arms = len(self.portfolio)
         self.n_features = 15  # Fixed: 15 meta-features from paper
         self.agent = LinUCBAgent(
@@ -123,6 +140,10 @@ class AutoDD:
         self._active_detector_name: Optional[str] = None
         self._active_detector = None
         self._last_meta_features: Optional[np.ndarray] = None
+        
+        # Cascading HP tracking
+        self._current_hp_config_idx: Optional[int] = None
+        self._current_hp_params: Optional[Dict] = None
 
     def update(self, x: Dict, y_true, y_pred) -> 'AutoDD':
         """
@@ -180,29 +201,52 @@ class AutoDD:
         return self
 
     def _process_window(self):
-        """Process a complete window: select detector for next window."""
+        """
+        Process a complete window: cascading selection of detector and hyperparameters.
+        
+        Level 1 (LinUCB): Select detector based on stream meta-features
+        Level 2 (Thompson Sampling): Select hyperparameters for chosen detector
+        """
         self._window_count += 1
 
         # Get meta-features
         if not self.meta_extractor.is_ready():
-            # Select first detector randomly if no meta-features yet
+            # Select first detector with default config if no meta-features yet
             if self._active_detector is None:
                 first_detector = self.portfolio.detector_names[0]
                 self._active_detector_name = first_detector
-                self._active_detector = self.portfolio.get_detector(first_detector)
+                if self.cascading_hp and self.hp_selector:
+                    # Use Thompson Sampling for initial HP selection
+                    self._current_hp_config_idx, self._current_hp_params = \
+                        self.hp_selector.select_config(first_detector)
+                    self._active_detector = self.hp_selector.create_detector(
+                        first_detector, self._current_hp_params
+                    )
+                else:
+                    self._active_detector = self.portfolio.get_detector(first_detector)
                 self.current_detector = first_detector
                 self.current_arm = 0
             return
 
         meta_features = self.meta_extractor.get_features()
 
-        # If we have a previous detector selection, update LinUCB with reward
+        # If we have a previous selection, update both levels with reward
         if self._last_meta_features is not None and self.current_arm is not None:
             reward = self._compute_reward()
             self.reward_history.append(reward)
+            
+            # Level 1: Update LinUCB (detector selection)
             self.agent.update(self.current_arm, self._last_meta_features, reward)
+            
+            # Level 2: Update Thompson Sampling (hyperparameter selection)
+            if self.cascading_hp and self.hp_selector and self._current_hp_config_idx is not None:
+                self.hp_selector.update(
+                    self._active_detector_name,
+                    self._current_hp_config_idx,
+                    reward
+                )
 
-        # Select detector using LinUCB for the next window
+        # Level 1: Select detector using LinUCB
         selected_arm = self.agent.select_arm(meta_features)
         selected_detector = self.arm_to_detector[selected_arm]
 
@@ -210,10 +254,19 @@ class AutoDD:
         self.current_detector = selected_detector
         self.selection_history.append(selected_detector)
 
-        # Set active detector for continuous updates
+        # Level 2: Select hyperparameters using Thompson Sampling
         self._active_detector_name = selected_detector
-        self.portfolio.reset_detector(selected_detector)  # Fresh start
-        self._active_detector = self.portfolio.get_detector(selected_detector)
+        if self.cascading_hp and self.hp_selector:
+            self._current_hp_config_idx, self._current_hp_params = \
+                self.hp_selector.select_config(selected_detector)
+            self._active_detector = self.hp_selector.create_detector(
+                selected_detector, self._current_hp_params
+            )
+        else:
+            self.portfolio.reset_detector(selected_detector)
+            self._active_detector = self.portfolio.get_detector(selected_detector)
+            self._current_hp_config_idx = None
+            self._current_hp_params = None
 
         # Save meta-features for next reward computation
         self._last_meta_features = meta_features.copy()
