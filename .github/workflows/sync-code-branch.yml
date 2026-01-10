@@ -1,0 +1,28 @@
+name: Sync Code Branch
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'code/**'
+
+jobs:
+  sync-code-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync code folder to code branch
+        run: |
+          git subtree split --prefix=code -b code-temp
+          git push origin code-temp:code --force
+          git branch -D code-temp
