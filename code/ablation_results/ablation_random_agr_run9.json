@@ -1,0 +1,12 @@
+{
+    "dataset": "agr",
+    "config": "random",
+    "config_name": "w/o LinUCB (Random)",
+    "accuracy": 0.599152,
+    "f1": 0.4914,
+    "n_drifts": 20,
+    "total_runtime": 1.54,
+    "total_memory_mb": 5.17,
+    "n_instances": 10000,
+    "run_id": 9
+}

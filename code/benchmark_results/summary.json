@@ -1,0 +1,66 @@
+{
+    "generated_at": "2026-01-10T21:29:38.535657",
+    "n_runs": 10,
+    "synthetic_datasets": [
+        "sea",
+        "hyp",
+        "agr",
+        "rbf",
+        "rtg"
+    ],
+    "realworld_datasets": [
+        "elec",
+        "weather",
+        "spam",
+        "airlines",
+        "poker"
+    ],
+    "detectors": [
+        "gaussiannb",
+        "adwin",
+        "ddm",
+        "eddm",
+        "hddm_a",
+        "hddm_w",
+        "pagehinkley",
+        "kswin",
+        "meta_add",
+        "autodd"
+    ],
+    "mean_accuracy": {
+        "gaussiannb": 0.7087,
+        "adwin": 0.729,
+        "ddm": 0.7383,
+        "eddm": 0.7316,
+        "hddm_a": 0.7372,
+        "hddm_w": 0.7397,
+        "pagehinkley": 0.7281,
+        "kswin": 0.7329,
+        "meta_add": 0.7793,
+        "autodd": 0.8052
+    },
+    "std_accuracy": {
+        "gaussiannb": 0.0082,
+        "adwin": 0.0083,
+        "ddm": 0.0085,
+        "eddm": 0.0077,
+        "hddm_a": 0.0079,
+        "hddm_w": 0.0075,
+        "pagehinkley": 0.0085,
+        "kswin": 0.0084,
+        "meta_add": 0.0068,
+        "autodd": 0.0056
+    },
+    "rankings": [
+        "autodd",
+        "meta_add",
+        "hddm_w",
+        "ddm",
+        "hddm_a",
+        "kswin",
+        "eddm",
+        "adwin",
+        "pagehinkley",
+        "gaussiannb"
+    ]
+}

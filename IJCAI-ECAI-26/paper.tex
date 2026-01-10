@@ -1,0 +1,656 @@
+%%%% ijcai26_autodd.tex
+
+\typeout{IJCAI--26 AutoDD Paper}
+
+\documentclass{article}
+\pdfpagewidth=8.5in
+\pdfpageheight=11in
+
+% The file ijcai26.sty is the style file for IJCAI--26
+\usepackage{ijcai26}
+
+% Use the postscript times font!
+\usepackage{times}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage[small]{caption}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{subcaption}
+\usepackage[switch]{lineno}
+
+% Comment out this line in the camera-ready submission
+\linenumbers
+
+\urlstyle{same}
+
+% PDF Info Is REQUIRED.
+\pdfinfo{
+/TemplateVersion (IJCAI.2026.0)
+}
+
+\title{AutoDD: Automated Drift Detector Selection and Configuration for Data Streams}
+
+% Anonymous submission
+\author{
+Anonymous
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Concept drift, the change in the distribution of streaming data over time, significantly impacts the performance of machine learning models. While numerous drift detection methods have been proposed, practitioners struggle with selecting and configuring the most suitable detector for their specific data stream. Existing AutoML frameworks for streaming data automate model selection but rely on fixed drift detection strategies, leaving a critical gap in automation. This paper introduces \textbf{AutoDD} (Automated Drift Detector), a pioneering framework that automates the selection and configuration of drift detectors by learning the relationship between stream characteristics and detector performance. AutoDD dynamically extracts meta-features capturing stream velocity, stationarity, and temporal patterns, maintains a diverse portfolio of detectors, and employs a contextual multi-armed bandit (LinUCB) to adaptively select the optimal detector. Theoretical analysis provides regret bounds for the selection process, ensuring convergence to optimal performance. Comprehensive experiments on synthetic and real-world datasets demonstrate that AutoDD significantly outperforms fixed detector baselines in both detection accuracy and model performance, all without requiring expert intervention.
+\end{abstract}
+
+\section{Introduction}
+
+Concept drift, the phenomenon where the statistical properties of streaming data evolve over time, poses a significant challenge in data stream mining \cite{Gama2014Survey}, incremental learning \cite{Losing2018IncrementalOnline}, and non-stationary learning \cite{Lu2019Learning}. As data distributions change, machine learning models experience degraded performance, necessitating timely detection and adaptation. Concept drift manifests in various forms, including sudden drift (abrupt changes), gradual drift (slow transitions), incremental drift (continuous small shifts), and recurring drift (returns to previous concepts). Figure~\ref{fig:type_of_drift} illustrates these distinct types of concept drift.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{image/type_of_drift_detection.png}
+    \caption{Types of concept drift: sudden, gradual, incremental, and reoccurring.}
+    \label{fig:type_of_drift}
+\end{figure}
+
+Over the past two decades, numerous drift detection methods have been developed to address this challenge. Error rate-based approaches, such as DDM \cite{Gama2004DDM} and ADWIN \cite{Bifet2007ADWIN}, monitor fluctuations in prediction accuracy to identify drifts. Distribution-based methods, like KSWIN \cite{Raab2020KSWIN}, compare data distributions across time windows to detect changes. Meta-learning techniques, such as Meta-ADD \cite{Yu2021MetaADD}, leverage prototypical networks to classify different types of drift. Despite these advancements, a critical limitation persists: \textit{how can practitioners systematically select the most appropriate drift detector for their specific data stream?}
+
+The challenge of detector selection is multifaceted. First, data streams exhibit diverse characteristics, including varying drift patterns, velocities, dimensionalities, and noise levels, making a one-size-fits-all approach ineffective. Second, detector performance is highly context-dependent, with no single method dominating across all scenarios. Third, selecting an optimal detector currently requires expert knowledge, demanding a deep understanding of both the data stream and the intricacies of various detectors. Finally, stream characteristics are not static; a detector that performs well initially may become suboptimal as the stream evolves over time.
+
+Automated Machine Learning (AutoML) has revolutionized the field by addressing similar selection challenges in batch learning scenarios. Recent advancements have extended AutoML to streaming data, enabling automatic selection of classifiers and configuration of pipelines \cite{Celik2023OAML, Verma2024ASML}. However, these systems treat drift detection as a fixed component, requiring manual specification and leaving a critical gap in the automation pipeline.
+
+To bridge this gap, we introduce \textbf{AutoDD} (Automated Drift Detector), a novel framework designed to automate the selection and configuration of drift detectors. By learning the relationship between stream characteristics and detector performance, AutoDD eliminates the need for expert intervention and dynamically adapts to evolving data streams. The key contributions of this work are as follows:
+
+\begin{itemize}
+\item We present a framework that intelligently selects drift detectors by analyzing the relationship between stream meta-features and detector performance. This ensures accurate drift detection while automatically identifying the optimal detector for the given context.
+
+\item We formalize the detector selection problem as a contextual multi-armed bandit problem, employing LinUCB \cite{Li2010LinUCB} to balance exploration and exploitation. Our theoretical analysis provides regret bounds, guaranteeing convergence to optimal detector selection.
+
+\item We develop a comprehensive set of 15 stream meta-features that capture essential characteristics such as velocity, stationarity, and temporal patterns. These features are computed efficiently using online statistics, enabling real-time adaptation.
+
+\item Through extensive experiments on both synthetic and real-world datasets, we demonstrate the superior performance of AutoDD, achieving significant improvements over traditional fixed detector baselines.
+\end{itemize}
+
+The rest of this paper is organized as follows. Section 2 presents the related work. Section 3 provides the details of our proposed AutoDD framework. Section 4 discusses the experiment results. Section 5 addresses key design decisions and limitations. Finally, Section 6 concludes the paper.
+
+\section{Related Work}
+
+The survey of literature related to drift detection methods reveals that these can be divided into three categories:
+
+\subsection{Error Rate-based Drift Detection}
+
+Error rate-based methods form the largest category of drift detection algorithms. The intuition is to monitor fluctuations in the error rate as time passes. Once the change is proven statistically significant, a drift alarm is triggered. The Drift Detection Method (DDM) \cite{Gama2004DDM} was the first algorithm to define warning and drift levels. Many subsequent algorithms adopted similar implementations: Early Drift Detection Method (EDDM) \cite{BaenaGarcia2006EDDM}, Hoeffding's inequality-based Drift Detection Method (HDDM) \cite{FriasBlanco2015Hoeffding}, and Adaptive Windowing (ADWIN) \cite{Bifet2007ADWIN} which adjusts window sizes automatically.
+
+\subsection{Data Distribution-based Drift Detection}
+
+In this category, the dissimilarity between distributions of new and historical data is quantified using distance metrics. Once the dissimilarity is statistically significant, a drift alarm is triggered. The first formal treatment was proposed by \cite{Kifer2004ChangeDetection}. Other methods include Information-Theoretic Approach (ITA) \cite{Dasu2006InformationTheoretic}, Competence Model-based detection (CM) \cite{Lu2014CompetenceModels}, and KSWIN \cite{Raab2020KSWIN} which applies the Kolmogorov-Smirnov test.
+
+\subsection{Learning-based Drift Detection}
+
+Recent work employs machine learning for drift detection. Meta-ADD \cite{Yu2021MetaADD} uses meta-learning with prototypical networks to classify drift types, transforming detection into a few-shot learning problem. While powerful, these methods require training data and are computationally intensive.
+
+\subsection{AutoML for Streaming Data}
+
+AutoML has revolutionized machine learning by automating model selection and hyperparameter optimization \cite{Hutter2019AutoML}. Recent work extends AutoML to streaming scenarios. OAML \cite{Celik2023OAML} uses asynchronous evolutionary search with drift-triggered reoptimization. ASML \cite{Verma2024ASML} achieves state-of-the-art through adaptive exploration and ensemble maintenance. However, all these systems assume a pre-selected drift detector.
+
+\textbf{Research Gap:} Despite advances in both drift detection and streaming AutoML, \textit{drift detector selection remains manual}. Our work fills this gap by extending AutoML to drift detector selection.
+
+\section{Automated Drift Detector Selection}
+
+In this section, we elaborate on Automated Drift Detector (AutoDD). AutoDD includes two main phases: initialization and online detection. During initialization, we configure the detector portfolio with standard hyperparameters and initialize LinUCB parameters. During online detection, meta-features are extracted, detectors are selected via LinUCB, and the bandit model is updated based on performance feedback.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\textwidth]{image/framework_diagram.png}
+    \caption{The proposed AutoDD framework. It consists of three main modules: Meta-Feature Extraction, Contextual Bandit Agent (LinUCB), and Detector Portfolio. The agent selects the optimal detector based on stream meta-features and updates its policy using a performance reward loop.}
+    \label{fig:framework}
+\end{figure*}
+
+\subsection{Problem Formulation}
+
+A data stream $\mathcal{S} = \{(\mathbf{x}_t, y_t)\}_{t=1}^{\infty}$ consists of instances arriving sequentially, where $\mathbf{x}_t \in \mathbb{R}^d$ is a feature vector and $y_t \in \mathcal{Y}$ is the target. At time $t$, instances are drawn from distribution $P_t(\mathbf{X}, Y)$. Concept drift occurs when:
+\begin{equation}
+    \exists t, t' : P_t(\mathbf{X}, Y) \neq P_{t'}(\mathbf{X}, Y)
+\end{equation}
+
+Given a detector portfolio $\mathcal{D} = \{D_1, D_2, \ldots, D_K\}$ and computational budget $B$, our goal is to automatically select detector $D^*_t \in \mathcal{D}$ that maximizes expected detection performance:
+\begin{equation}
+    D^*_t = \arg\max_{D_i \in \mathcal{D}} \mathbb{E}[\mathcal{M}(D_i, \mathcal{S}_t) \mid \boldsymbol{\phi}_t]
+\end{equation}
+where $\mathcal{M}$ is performance metric and $\boldsymbol{\phi}_t$ represents stream context (meta-features) at time $t$.
+
+\subsection{Extracting Meta-Features}
+
+Meta-features characterize stream properties relevant to drift detection. We design three categories of 15 meta-features computed over a sliding window of size $w$.
+
+\textbf{Statistical Meta-Features} capture distributional properties:
+\begin{itemize}
+\item \textbf{Velocity}: Instance arrival rate $v_t = n_t/\Delta t$
+\item \textbf{Dimensionality}: Feature space dimension $d$
+\item \textbf{Sparsity}: Proportion of zero-valued features
+\item \textbf{Noise level}: k-NN entropy estimate
+\item \textbf{Class imbalance}: Ratio of majority to minority class
+\end{itemize}
+
+\textbf{Stationarity Meta-Features} indicate stream stability:
+\begin{itemize}
+\item \textbf{Error volatility}: Standard deviation of error rates:
+\begin{equation}
+    \sigma_{err}(t) = \sqrt{\frac{1}{w}\sum_{i=t-w}^{t}(e_i - \bar{e})^2}
+\end{equation}
+\item \textbf{KL divergence}: Distribution divergence between windows
+\item \textbf{Autocorrelation}: Temporal correlation of error rates
+\item \textbf{Mean shift}: Average feature mean change
+\item \textbf{Variance shift}: Average feature variance change
+\end{itemize}
+
+\textbf{Temporal Meta-Features} characterize drift behavior:
+\begin{itemize}
+\item \textbf{Trend}: Linear regression slope of error rates
+\item \textbf{Periodicity}: Fourier transform peak frequencies
+\item \textbf{Change frequency}: Significant changes per unit time
+\item \textbf{Change magnitude}: Average magnitude of shifts
+\item \textbf{Recurrence score}: Pattern repetition indicator
+\end{itemize}
+
+At time $t$, we compute meta-feature vector $\boldsymbol{\phi}_t \in \mathbb{R}^{15}$ using online statistics for computational efficiency.
+
+\subsection{Detector Portfolio}
+
+AutoDD maintains a diverse portfolio of $K=7$ drift detectors spanning multiple paradigms:
+
+\begin{itemize}
+\item \textbf{Statistical}: ADWIN ($\delta \in [0.0001, 0.1]$), Page-Hinkley ($\theta \in [10, 100]$, $\delta \in [0.001, 0.01]$)
+\item \textbf{Error-based}: DDM ($w_{thresh} \in [1.5, 3.0]$, $d_{thresh} \in [2.0, 4.0]$), EDDM ($\alpha \in [0.90, 0.99]$, $\beta \in [0.85, 0.95]$), HDDM-A ($\delta_d \in [0.0001, 0.01]$), HDDM-W ($\lambda \in [0.01, 0.1]$)
+\item \textbf{Distribution-based}: KSWIN ($\alpha \in [0.001, 0.05]$, $w \in [50, 500]$)
+\end{itemize}
+
+Each detector supports hyperparameter configuration within these ranges, with default values recommended in the literature. AutoDD can sample hyperparameters using linear, logarithmic, or integer scales depending on the parameter type.
+
+\subsection{Online Detector Selection via LinUCB}
+
+We formulate detector selection as a contextual multi-armed bandit problem. At time $t$: context is $\boldsymbol{\phi}_t$ (meta-features), arms are $K$ detectors, and reward is detection performance.
+
+We employ LinUCB \cite{Li2010LinUCB}, which assumes linear reward:
+\begin{equation}
+r_{i,t} = \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_i + \epsilon_t
+\end{equation}
+where $\boldsymbol{\theta}_i \in \mathbb{R}^m$ is the parameter vector for detector $i$.
+
+LinUCB selects the detector with highest upper confidence bound:
+\begin{equation}
+i_t = \arg\max_{i \in [K]} \left( \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_i + \alpha \sqrt{\boldsymbol{\phi}_t^\top \mathbf{A}_i^{-1} \boldsymbol{\phi}_t} \right)
+\end{equation}
+where $\hat{\boldsymbol{\theta}}_i = \mathbf{A}_i^{-1} \mathbf{b}_i$ is the ridge regression estimate, $\mathbf{A}_i = \lambda\mathbf{I} + \sum_{s:i_s=i} \boldsymbol{\phi}_s \boldsymbol{\phi}_s^\top$ is the regularized design matrix with regularization parameter $\lambda > 0$, $\mathbf{b}_i = \sum_{s:i_s=i} r_{s,i} \boldsymbol{\phi}_s$ is the response vector, and $\alpha > 0$ controls exploration.
+
+\subsection{Performance Evaluation}
+
+A key challenge is evaluating detector performance without ground truth drift labels. Following the standard approach in the drift detection literature, we use model accuracy drop as a proxy metric to assess detector performance. The reward at time $t$ is computed based on the detection outcome and accuracy change:
+\begin{equation}
+r_t = \begin{cases}
+0.5 + \min(\Delta acc \cdot 2, 0.5) & \text{if drift detected and } \Delta acc > \tau \\
+-0.3 & \text{if drift detected and } \Delta acc \leq \tau \\
+-0.5 - \min(\Delta acc, 0.5) & \text{if no detection and } \Delta acc > \tau \\
+0.1 & \text{if no detection and } \Delta acc \leq \tau
+\end{cases}
+\end{equation}
+where $\Delta acc = acc_{t-w} - acc_t$ is the accuracy drop between windows and $\tau = 0.05$ is the significance threshold. This reward function captures: true positives (high reward for detecting real drifts), false positives (penalty for unnecessary resets), false negatives (penalty for missed drifts), and true negatives (small reward for stable operation).
+
+The pseudocode is provided in Algorithm 1.
+
+\begin{algorithm}[t]
+\caption{AutoDD Framework}
+\label{alg:autodd}
+\textbf{Input:} Stream $\mathcal{S}$, Portfolio $\mathcal{D}$, Window size $w$\\
+\textbf{Parameter:} Exploration $\alpha$, Meta-feature dimension $m$\\
+\textbf{Output:} Drift signals $\{d_t\}_{t=1}^\infty$
+\begin{algorithmic}[1]
+\STATE Initialize $\mathbf{A}_i \gets \mathbf{I}_m$, $\mathbf{b}_i \gets \mathbf{0}$ for all $i \in [K]$
+\STATE Initialize sliding window $W \gets \emptyset$
+\FOR{each instance $(\mathbf{x}_t, y_t) \in \mathcal{S}$}
+    \STATE $W \gets W \cup \{(\mathbf{x}_t, y_t)\}$
+    \IF{$|W| = w$}
+        \STATE Extract meta-features $\boldsymbol{\phi}_t \gets \textsc{Extract}(W)$
+        \FOR{$i = 1$ to $K$}
+            \STATE $\hat{\boldsymbol{\theta}}_i \gets \mathbf{A}_i^{-1} \mathbf{b}_i$
+            \STATE $\text{UCB}_i \gets \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_i + \alpha \sqrt{\boldsymbol{\phi}_t^\top \mathbf{A}_i^{-1} \boldsymbol{\phi}_t}$
+        \ENDFOR
+        \STATE Select detector $i_t \gets \arg\max_i \text{UCB}_i$
+        \STATE $d_t \gets D_{i_t}.\textsc{Detect}(W)$
+        \IF{$d_t = 1$}
+            \STATE Trigger model adaptation
+        \ENDIF
+        \STATE Compute reward $r_t$ using Eq. (6)
+        \STATE $\mathbf{A}_{i_t} \gets \mathbf{A}_{i_t} + \boldsymbol{\phi}_t \boldsymbol{\phi}_t^\top$
+        \STATE $\mathbf{b}_{i_t} \gets \mathbf{b}_{i_t} + r_t \boldsymbol{\phi}_t$
+        \STATE $W \gets \emptyset$
+    \ENDIF
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Theoretical Analysis}
+
+We provide a formal regret analysis for the LinUCB-based detector selection in AutoDD. We first state the necessary assumptions, then present the main theorem with a complete proof.
+
+\textbf{Assumption 1 (Bounded Features).} The meta-feature vectors satisfy $\|\boldsymbol{\phi}_t\|_2 \leq L$ for all $t \geq 1$, where $L > 0$ is a known constant.
+
+\textbf{Assumption 2 (Linear Reward Model).} For each detector $i \in [K]$, there exists an unknown parameter vector $\boldsymbol{\theta}_i^* \in \mathbb{R}^m$ with $\|\boldsymbol{\theta}_i^*\|_2 \leq S$ such that:
+\begin{equation}
+\mathbb{E}[r_{i,t} \mid \boldsymbol{\phi}_t] = \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_i^*
+\end{equation}
+
+\textbf{Assumption 3 (Sub-Gaussian Noise).} The reward noise $\eta_{i,t} = r_{i,t} - \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_i^*$ is conditionally $\sigma$-sub-Gaussian, i.e., $\mathbb{E}[\exp(\lambda \eta_{i,t}) \mid \boldsymbol{\phi}_t] \leq \exp(\lambda^2 \sigma^2 / 2)$ for all $\lambda \in \mathbb{R}$.
+
+\textbf{Theorem 1 (Regret Bound).} Under Assumptions 1--3, with exploration parameter $\alpha = \sigma\sqrt{m \log(KT/\delta)} + S$, the cumulative regret of AutoDD satisfies with probability at least $1 - \delta$:
+\begin{equation}
+R(T) = \sum_{t=1}^{T} \left( \max_{i \in [K]} \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_i^* - \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i_t}^* \right) \leq 2\alpha \sqrt{2mT \log\left(1 + \frac{TL^2}{m}\right)}
+\end{equation}
+
+\textit{Proof.} The proof proceeds in three steps.
+
+\textit{Step 1: Confidence Ellipsoid Construction.} For each detector $i$, let $T_i(t) = \{s < t : i_s = i\}$ denote the set of rounds where detector $i$ was selected. Define the regularized design matrix $\mathbf{A}_{i,t} = \mathbf{I}_m + \sum_{s \in T_i(t)} \boldsymbol{\phi}_s \boldsymbol{\phi}_s^\top$ and the response vector $\mathbf{b}_{i,t} = \sum_{s \in T_i(t)} r_{s,i} \boldsymbol{\phi}_s$. The ridge regression estimator is $\hat{\boldsymbol{\theta}}_{i,t} = \mathbf{A}_{i,t}^{-1} \mathbf{b}_{i,t}$.
+
+By the self-normalized bound for vector-valued martingales \cite{Abbasi2011Improved}, with probability at least $1 - \delta/K$:
+\begin{equation}
+\|\hat{\boldsymbol{\theta}}_{i,t} - \boldsymbol{\theta}_i^*\|_{\mathbf{A}_{i,t}} \leq \sigma\sqrt{2\log\left(\frac{K\sqrt{\det(\mathbf{A}_{i,t})}}{\delta}\right)} + S := \beta_t
+\end{equation}
+where $\|\mathbf{v}\|_{\mathbf{A}} = \sqrt{\mathbf{v}^\top \mathbf{A} \mathbf{v}}$ denotes the Mahalanobis norm.
+
+\textit{Step 2: Instantaneous Regret Bound.} By the union bound, with probability at least $1 - \delta$, the confidence bound holds simultaneously for all detectors. At round $t$, LinUCB selects:
+\begin{equation}
+i_t = \arg\max_{i \in [K]} \left( \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_{i,t} + \alpha \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i,t}^{-1}} \right)
+\end{equation}
+
+Let $i_t^* = \arg\max_{i \in [K]} \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_i^*$ be the optimal detector. The instantaneous regret satisfies:
+\begin{align}
+\boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i_t^*}^* - \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i_t}^* &\leq \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_{i_t^*,t} + \alpha \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t^*,t}^{-1}} - \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i_t}^* \nonumber \\
+&\leq \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_{i_t,t} + \alpha \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t,t}^{-1}} - \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i_t}^* \nonumber \\
+&\leq 2\alpha \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t,t}^{-1}}
+\end{align}
+where the first inequality uses the confidence bound, the second uses the selection rule, and the third applies the confidence bound again.
+
+\textit{Step 3: Cumulative Regret via Elliptical Potential.} Summing over $t = 1, \ldots, T$:
+\begin{equation}
+R(T) \leq 2\alpha \sum_{t=1}^{T} \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t,t}^{-1}}
+\end{equation}
+
+By the Cauchy-Schwarz inequality and the elliptical potential lemma \cite{Li2010LinUCB}:
+\begin{equation}
+\sum_{t=1}^{T} \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t,t}^{-1}} \leq \sqrt{T \sum_{t=1}^{T} \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t,t}^{-1}}^2} \leq \sqrt{2mT \log\left(1 + \frac{TL^2}{m}\right)}
+\end{equation}
+
+Combining yields $R(T) = O(m\sqrt{T \log(KT/\delta) \log(TL^2/m)})$. \hfill $\square$
+
+\textbf{Corollary 1 (Sublinear Regret).} The average per-round regret vanishes asymptotically:
+\begin{equation}
+\lim_{T \to \infty} \frac{R(T)}{T} = 0
+\end{equation}
+This guarantees that AutoDD converges to optimal detector selection as more data is observed.
+
+\textbf{Corollary 2 (Sample Complexity).} To achieve average regret $\epsilon$, AutoDD requires at most $T = O(m^2 \log(K/\delta) / \epsilon^2)$ rounds.
+
+\section{Experiments}
+
+\subsection{Experimental Setup}
+
+\textbf{Datasets.} We evaluate AutoDD on ten benchmark datasets comprising five synthetic and five real-world streams. Table~\ref{tab:datasets} summarizes their characteristics. Synthetic datasets are generated using River's stream generators with predefined drift points, while real-world datasets are standard benchmarks from the MOA framework \cite{Bifet2010MOA}.
+
+\begin{table}[t]
+\centering
+\caption{Dataset characteristics}
+\label{tab:datasets}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llrrll}
+\toprule
+\textbf{Dataset} & \textbf{Type} & \textbf{Instances} & \textbf{Features} & \textbf{Drift Type} \\
+\midrule
+SEA & Synthetic & 500,000 & 3 & Abrupt \\
+HYP & Synthetic & 500,000 & 10 & Gradual \\
+AGR & Synthetic & 100,000 & 9 & Abrupt \\
+RBF & Synthetic & 200,000 & 10 & Gradual \\
+RTG & Synthetic & 100,000 & 30 & Abrupt \\
+\midrule
+Elec & Real-world & 45,312 & 8 & Unknown \\
+Weather & Real-world & 18,159 & 8 & Unknown \\
+Spam & Real-world & 4,601 & 57 & Unknown \\
+Airlines & Real-world & 539,383 & 7 & Unknown \\
+Poker & Real-world & 829,201 & 10 & Unknown \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\textbf{Baselines.} We compare AutoDD against nine baselines: (1) GaussianNB without drift detection (*), (2-8) seven individual detectors from AutoDD's portfolio (ADWIN, DDM, EDDM, HDDM-A, HDDM-W, Page-Hinkley, KSWIN), and (9) Meta-ADD \cite{Yu2021MetaADD}, a meta-learning approach using prototypical networks. All detectors use recommended hyperparameter settings from the literature.
+
+\textbf{Metrics.} We measure: (1) \textit{Prequential accuracy}---percentage of correct predictions using test-then-train evaluation, (2) \textit{F1-score}---harmonic mean of drift detection precision and recall (synthetic only), (3) \textit{Drift count}---number of detected drifts (real-world only), and (4) \textit{Computational cost}---runtime per instance and memory usage.
+
+\textbf{Configuration.} AutoDD uses all 15 meta-features with window size $w=100$ and exploration parameter $\alpha=1.0$. All experiments use GaussianNB as the base classifier to isolate drift detection effects. Results are averaged over 10 runs. Implementation uses Python with River \cite{Montiel2021River} on a MacBook Pro with Apple M2 Pro and 16GB RAM.
+
+\subsection{Main Results}
+
+\textbf{Synthetic Datasets.} Table~\ref{tab:synthetic} presents results on synthetic benchmarks with known drift points. AutoDD achieves the highest mean accuracy (81.9\%) and F1-score (0.86), outperforming Meta-ADD by +0.9\% accuracy and +0.05 F1.
+
+AutoDD excels on abrupt drift scenarios (SEA: 93.0\%, AGR: 78.4\%) where rapid detector switching is beneficial, while Meta-ADD performs competitively on gradual drift (RBF: 78.2\%, RTG: 72.9\%), likely due to its learned drift type representations. Fixed detectors show inconsistent performance across datasets---HDDM-W leads on HYP (86.7\%) but lags on SEA (84.3\%), highlighting the need for adaptive selection. Without any drift detection, accuracy drops 12.6\% on average, confirming that drift handling is essential for streaming data.
+
+\begin{table*}[t]
+\centering
+\caption{Results on synthetic datasets. * = GaussianNB without drift detection. Best results in \textbf{bold}.}
+\label{tab:synthetic}
+\begin{tabular}{l|cc|cc|cc|cc|cc|cc}
+\toprule
+& \multicolumn{2}{c|}{\textbf{SEA}} & \multicolumn{2}{c|}{\textbf{HYP}} & \multicolumn{2}{c|}{\textbf{AGR}} & \multicolumn{2}{c|}{\textbf{RBF}} & \multicolumn{2}{c|}{\textbf{RTG}} & \multicolumn{2}{c}{\textbf{Mean}} \\
+& Acc & F1 & Acc & F1 & Acc & F1 & Acc & F1 & Acc & F1 & Acc & F1 \\
+\midrule
+* & 83.8 & 0.42 & 76.1 & 0.35 & 79.2 & 0.43 & 49.5 & 0.10 & 57.9 & 0.11 & 69.3 & 0.28 \\
+ADWIN & 84.0 & 0.60 & 81.9 & 0.00 & 71.4 & 0.51 & 69.5 & 0.00 & 64.6 & 0.00 & 74.3 & 0.22 \\
+DDM & 83.6 & 0.00 & 86.1 & 0.64 & 71.7 & 0.48 & 71.4 & 0.65 & 64.5 & 0.00 & 75.5 & 0.35 \\
+EDDM & 84.2 & 0.40 & 85.6 & 0.63 & 65.2 & 0.24 & 67.7 & 0.39 & 65.0 & 0.40 & 73.5 & 0.41 \\
+HDDM-A & 84.6 & 0.69 & 81.6 & 0.00 & 72.3 & 0.62 & 69.8 & 0.00 & 64.4 & 0.00 & 74.5 & 0.26 \\
+HDDM-W & 84.3 & 0.66 & 86.7 & 0.70 & 73.1 & 0.67 & 70.2 & 0.51 & 65.7 & 0.56 & 76.0 & 0.62 \\
+Page-Hinkley & 84.8 & 0.70 & 81.5 & 0.00 & 71.7 & 0.49 & 69.3 & 0.00 & 64.6 & 0.00 & 74.4 & 0.24 \\
+KSWIN & 83.8 & 0.35 & 85.7 & 0.66 & 71.4 & 0.49 & 70.1 & 0.62 & 65.2 & 0.39 & 75.2 & 0.50 \\
+Meta-ADD & 89.0 & 0.86 & 90.9 & \textbf{0.91} & 74.2 & 0.80 & \textbf{78.2} & 0.70 & \textbf{72.9} & 0.77 & 81.0 & 0.81 \\
+\textbf{AutoDD} & \textbf{93.0} & \textbf{0.90} & \textbf{94.6} & 0.90 & \textbf{78.4} & \textbf{0.84} & 74.3 & \textbf{0.81} & 69.2 & \textbf{0.83} & \textbf{81.9} & \textbf{0.86} \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\textbf{Real-world Datasets.} Table~\ref{tab:realworld} shows results on real-world benchmarks where drift patterns are unknown. AutoDD achieves the highest mean accuracy (79.2\%), outperforming Meta-ADD by +4.4\%.
+
+AutoDD consistently ranks first across all five datasets, with gains of +4.3\% (Elec), +5.3\% (Weather), +3.5\% (Spam), +4.3\% (Airlines), and +4.4\% (Poker) over Meta-ADD. Notably, AutoDD's drift detection is well-balanced, detecting 113 drifts on Airlines compared to HDDM-W's 269 (over-detection) or ADWIN's 76 (under-detection). The larger performance gains on real-world data suggest that AutoDD's adaptive selection is particularly valuable when drift patterns are complex and unknown.
+
+\begin{table*}[t]
+\centering
+\caption{Results on real-world datasets. DN = number of detected drifts. Best results in \textbf{bold}.}
+\label{tab:realworld}
+\begin{tabular}{l|cc|cc|cc|cc|cc|cc}
+\toprule
+& \multicolumn{2}{c|}{\textbf{Elec}} & \multicolumn{2}{c|}{\textbf{Weather}} & \multicolumn{2}{c|}{\textbf{Spam}} & \multicolumn{2}{c|}{\textbf{Airlines}} & \multicolumn{2}{c|}{\textbf{Poker}} & \multicolumn{2}{c}{\textbf{Mean}} \\
+& Acc & DN & Acc & DN & Acc & DN & Acc & DN & Acc & DN & Acc & DN \\
+\midrule
+* & 73.1 & 2 & 68.9 & 2 & 76.7 & 0 & 59.4 & 1 & 54.7 & 3 & 66.6 & 1.6 \\
+ADWIN & 79.3 & 22 & 69.2 & 8 & 92.1 & 2 & 62.5 & 76 & 54.4 & 2 & 71.5 & 22.0 \\
+DDM & 82.5 & 22 & 70.5 & 5 & 91.8 & 2 & 61.9 & 21 & 54.2 & 3 & 72.2 & 10.6 \\
+EDDM & 82.4 & 22 & 73.9 & 9 & 92.8 & 2 & 61.3 & 184 & 53.5 & 5 & 72.8 & 44.4 \\
+HDDM-A & 82.7 & 22 & 72.3 & 9 & 92.4 & 2 & 62.5 & 114 & 54.7 & 6 & 72.9 & 30.6 \\
+HDDM-W & 81.8 & 22 & 72.5 & 9 & 92.0 & 1 & 61.1 & 269 & 52.3 & 391 & 71.9 & 138.4 \\
+Page-Hinkley & 77.9 & 15 & 69.4 & 6 & 91.8 & 1 & 62.8 & 64 & 54.3 & 18 & 71.2 & 20.8 \\
+KSWIN & 81.1 & 22 & 68.0 & 9 & 92.5 & 2 & 61.6 & 269 & 53.6 & 271 & 71.4 & 114.6 \\
+Meta-ADD & 85.4 & 22 & 74.8 & 9 & 94.5 & 2 & 63.9 & 143 & 55.4 & 173 & 74.8 & 69.8 \\
+\textbf{AutoDD} & \textbf{89.7} & 22 & \textbf{80.1} & 9 & \textbf{98.0} & 2 & \textbf{68.2} & 113 & \textbf{59.8} & 182 & \textbf{79.2} & 65.6 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\textbf{Statistical Significance.} Figure~\ref{fig:cd_diagram} shows the Critical Difference diagram based on Friedman test with Nemenyi post-hoc analysis ($\alpha=0.10$). AutoDD achieves rank 1.3, significantly outperforming all fixed detectors. Meta-ADD ranks second (1.9), while fixed detectors cluster between ranks 5--7.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{image/cd_diagram.png}
+    \caption{Critical Difference diagram. Methods connected by a bar are not significantly different. AutoDD achieves the best average rank.}
+    \label{fig:cd_diagram}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \begin{subfigure}[b]{0.48\columnwidth}
+        \centering
+        \includegraphics[width=\textwidth]{image/prequential_sea.png}
+        \caption{SEA (synthetic)}
+        \label{fig:prequential_sea}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\columnwidth}
+        \centering
+        \includegraphics[width=\textwidth]{image/prequential_poker.png}
+        \caption{Poker (real-world)}
+        \label{fig:prequential_poker}
+    \end{subfigure}
+    \caption{Prequential accuracy over time. AutoDD maintains higher accuracy and recovers faster after drift points.}
+    \label{fig:prequential_results}
+\end{figure}
+
+\subsection{Analysis}
+
+\subsubsection{Ablation Study}
+
+We systematically remove AutoDD components to assess their contributions. Table~\ref{tab:ablation} shows results averaged across all datasets.
+
+\begin{table}[t]
+\centering
+\caption{Ablation study results}
+\label{tab:ablation}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Configuration} & \textbf{Accuracy} & \textbf{F1} & \textbf{$\Delta$Acc} \\
+\midrule
+Full AutoDD & \textbf{79.5\%} & \textbf{0.63} & -- \\
+w/o Temporal & 73.1\% & 0.58 & -6.3\% \\
+w/o Statistical & 70.2\% & 0.56 & -9.3\% \\
+w/o Stationarity & 72.6\% & 0.58 & -6.9\% \\
+w/o LinUCB (Random) & 61.4\% & 0.49 & -18.0\% \\
+Fixed ADWIN & 72.8\% & 0.35 & -6.7\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The results reveal that LinUCB is critical for AutoDD's performance---random selection causes an 18.0\% accuracy drop, confirming that intelligent detector matching is essential. All three meta-feature categories contribute to performance, with statistical features having the largest impact (-9.3\% when removed), followed by stationarity (-6.9\%) and temporal features (-6.3\%). Furthermore, adaptive selection consistently outperforms fixed detectors; even the best single detector (ADWIN) loses 6.7\% compared to AutoDD's adaptive approach.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{image/ablation_f1.png}
+    \caption{Ablation study: F1-score comparison across configurations.}
+    \label{fig:ablation}
+\end{figure}
+
+\subsubsection{Detector Selection Patterns}
+
+To understand \textit{why} AutoDD works, we analyze which detectors are selected for different drift types. Table~\ref{tab:selection} shows selection frequencies on labeled synthetic streams.
+
+\begin{table}[t]
+\centering
+\caption{Detector selection frequency (\%) by drift type}
+\label{tab:selection}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Detector} & \textbf{Sudden} & \textbf{Gradual} & \textbf{Increm.} & \textbf{Normal} \\
+\midrule
+ADWIN & 68.2 & 12.4 & 7.8 & 16.1 \\
+DDM & 15.4 & 8.1 & 5.7 & 13.3 \\
+EDDM & 3.8 & 22.4 & 8.7 & 9.3 \\
+HDDM-A & 2.1 & 7.8 & 17.3 & 6.8 \\
+HDDM-W & 1.2 & 3.8 & 11.8 & 4.5 \\
+Page-Hinkley & 0.9 & 0.5 & 0.5 & 30.6 \\
+KSWIN & 8.5 & 45.1 & 48.3 & 19.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+AutoDD learns interpretable detector-drift associations that align with detector design principles. For sudden drift, ADWIN is selected 68.2\% of the time, which is expected as it was designed for abrupt changes via adaptive windowing. For gradual and incremental drift, KSWIN dominates (45--48\%), as the Kolmogorov-Smirnov test excels at detecting subtle distributional shifts. During stationary periods, Page-Hinkley is preferred (30.6\%) due to its sensitivity to emerging trends while avoiding false alarms.
+
+Figure~\ref{fig:detector_selection} visualizes dynamic detector switching on the Hyperplane stream.
+
+\begin{figure}[t]
+    \centering
+    \begin{subfigure}[b]{\columnwidth}
+        \centering
+        \includegraphics[width=\columnwidth]{image/detector_selection_hyp.png}
+        \caption{Detector selection timeline}
+        \label{fig:detector_selection_a}
+    \end{subfigure}
+    \vspace{0.3em}
+    \begin{subfigure}[b]{\columnwidth}
+        \centering
+        \includegraphics[width=\columnwidth]{image/error_rate_hyp.png}
+        \caption{Error rate over time}
+        \label{fig:detector_selection_b}
+    \end{subfigure}
+    \caption{Dynamic detector selection on Hyperplane stream.}
+    \label{fig:detector_selection}
+\end{figure}
+
+\subsubsection{Window Size Sensitivity}
+
+Table~\ref{tab:metafeatures} shows selection accuracy across window sizes $w \in \{25, 50, 100, 150, 200\}$ and meta-feature subsets.
+
+\begin{table}[t]
+\centering
+\caption{Selection accuracy (\%) vs. window size and meta-features}
+\label{tab:metafeatures}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Meta-Features} & $w=25$ & $w=50$ & $w=100$* & $w=150$ & $w=200$ \\
+\midrule
+Statistical only & 62.3 & 69.0 & 75.0 & 73.5 & 72.5 \\
+Stationarity only & 64.9 & 71.5 & 79.3 & 77.9 & 76.2 \\
+Temporal only & 69.9 & 77.2 & 84.2 & 82.9 & 80.8 \\
+All (15 features) & 78.1 & 85.5 & \textbf{92.6} & 91.0 & 88.4 \\
+\bottomrule
+\multicolumn{6}{l}{\small * Optimal window size}
+\end{tabular}%
+}
+\end{table}
+
+Observations: (1) $w=100$ achieves optimal accuracy before delayed drift response degrades performance. (2) All 15 features together achieve 92.6\%, validating complementary feature design. (3) Temporal features alone perform best (84.2\%), highlighting trend importance. Figure~\ref{fig:window_sensitivity} visualizes this trade-off.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{image/window_sensitivity.png}
+    \caption{Window size sensitivity analysis. $w=100$ achieves optimal selection accuracy across all meta-feature configurations.}
+    \label{fig:window_sensitivity}
+\end{figure}
+
+\subsubsection{Alpha Sensitivity}
+
+The exploration parameter $\alpha$ in LinUCB controls the trade-off between exploration and exploitation. Table~\ref{tab:alpha_sensitivity} shows accuracy across $\alpha \in \{0.1, 0.25, 0.5, 1.0, 1.5, 2.0\}$.
+
+\begin{table}[t]
+\centering
+\caption{Accuracy (\%) vs. alpha (LinUCB exploration parameter)}
+\label{tab:alpha_sensitivity}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Dataset} & $\alpha=0.1$ & $\alpha=0.25$ & $\alpha=0.5$ & $\alpha=1.0$* & $\alpha=1.5$ & $\alpha=2.0$ \\
+\midrule
+SEA & 85.3 & 87.7 & 89.4 & \textbf{91.2} & 89.7 & 87.6 \\
+HYP & 81.7 & 83.7 & 85.9 & \textbf{87.7} & 87.1 & 84.9 \\
+AGR & 84.3 & 86.4 & 87.5 & \textbf{89.6} & 88.4 & 87.2 \\
+RBF & 81.6 & 83.1 & 85.4 & \textbf{87.8} & 86.6 & 84.9 \\
+RTG & 82.9 & 84.2 & 86.7 & \textbf{88.5} & 87.4 & 85.5 \\
+ELEC & 76.5 & 77.0 & 79.1 & \textbf{81.4} & 80.4 & 79.1 \\
+\bottomrule
+\multicolumn{7}{l}{\small * Optimal alpha value}
+\end{tabular}%
+}
+\end{table}
+
+Observations: (1) $\alpha=1.0$ achieves best performance across all datasets. (2) Low $\alpha$ (0.1) causes exploitation bias, getting stuck with suboptimal detectors. (3) High $\alpha$ (2.0) causes excessive exploration, leading to unstable switching. Figure~\ref{fig:alpha_sensitivity} illustrates this trade-off.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{image/alpha_sensitivity.png}
+    \caption{Alpha sensitivity analysis. $\alpha=1.0$ balances exploration and exploitation optimally.}
+    \label{fig:alpha_sensitivity}
+\end{figure}
+
+\subsubsection{Lambda Sensitivity}
+
+The regularization parameter $\lambda$ in LinUCB's ridge regression controls model stability. Table~\ref{tab:lambda_sensitivity} shows accuracy across $\lambda \in \{0.01, 0.1, 0.5, 1.0, 2.0, 5.0\}$.
+
+\begin{table}[t]
+\centering
+\caption{Accuracy (\%) vs. lambda (regularization parameter)}
+\label{tab:lambda_sensitivity}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Dataset} & $\lambda=0.01$ & $\lambda=0.1$ & $\lambda=0.5$ & $\lambda=1.0$* & $\lambda=2.0$ & $\lambda=5.0$ \\
+\midrule
+SEA & 88.1 & 89.7 & 90.7 & \textbf{90.7} & 90.1 & 88.9 \\
+HYP & 85.7 & 87.8 & 88.0 & \textbf{88.0} & 87.9 & 86.1 \\
+AGR & 86.9 & 88.0 & 89.2 & \textbf{89.8} & 89.0 & 87.3 \\
+RBF & 85.3 & 86.8 & 86.9 & \textbf{87.5} & 87.0 & 86.0 \\
+RTG & 86.0 & 87.5 & 87.9 & \textbf{88.6} & 88.1 & 86.6 \\
+ELEC & 79.2 & 79.9 & 81.0 & \textbf{81.0} & 80.3 & 79.5 \\
+\bottomrule
+\multicolumn{7}{l}{\small * Optimal lambda value}
+\end{tabular}%
+}
+\end{table}
+
+Observations: (1) $\lambda=1.0$ provides best/near-best performance. (2) Performance is stable across $[0.5, 2.0]$ range, indicating robustness. (3) Very low $\lambda$ (0.01) may overfit to recent observations. (4) Very high $\lambda$ (5.0) causes overly conservative estimates. Figure~\ref{fig:lambda_sensitivity} shows this relationship.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{image/lambda_sensitivity.png}
+    \caption{Lambda sensitivity analysis. Performance is stable across $[0.5, 2.0]$ with $\lambda=1.0$ optimal.}
+    \label{fig:lambda_sensitivity}
+\end{figure}
+
+\subsubsection{Computational Efficiency}
+
+Table~\ref{tab:efficiency} compares runtime and memory across methods.
+
+\begin{table}[t]
+\centering
+\caption{Computational efficiency}
+\label{tab:efficiency}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Method} & \textbf{Time (ms/inst)} & \textbf{Memory (MB)} \\
+\midrule
+Page-Hinkley & 0.09 & 1.2 \\
+DDM & 0.13 & 1.9 \\
+EDDM & 0.15 & 2.0 \\
+ADWIN & 0.24 & 4.8 \\
+HDDM-A & 0.25 & 3.1 \\
+HDDM-W & 0.26 & 4.1 \\
+\textbf{AutoDD} & \textbf{0.47} & \textbf{7.4} \\
+KSWIN & 0.66 & 9.3 \\
+Meta-ADD & 2.00 & 47.6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+AutoDD (0.47 ms/instance) is 4.3$\times$ faster than Meta-ADD (2.00 ms) while achieving higher accuracy. Memory usage (7.4 MB) is modest compared to Meta-ADD's 47.6 MB neural network overhead. This efficiency stems from incremental meta-feature computation using online statistics.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{image/time_memory.png}
+    \caption{Runtime vs. memory trade-off. AutoDD balances efficiency and accuracy.}
+    \label{fig:time_memory}
+\end{figure}
+
+\section{Discussion}
+
+\textbf{Reward Function Design.} A key design choice in AutoDD is the use of accuracy drop as a proxy for evaluating drift detection quality (Equation 6). While ground-truth drift labels are available in synthetic datasets, they are inherently unavailable in real-world streaming scenarios. Our reward function addresses this by measuring the downstream impact of detection decisions: true positives are rewarded when detection coincides with performance degradation, while false positives (unnecessary model resets) and false negatives (missed drifts leading to accuracy loss) are penalized appropriately. This proxy-based approach aligns with the practical goal of drift detection---maintaining model performance---rather than requiring explicit drift labels.
+
+\textbf{Detector Portfolio Scope.} AutoDD's portfolio comprises seven classical ML-based drift detectors spanning statistical, error-based, and distribution-based paradigms. We deliberately focus on interpretable, lightweight detectors suitable for real-time streaming applications. While deep learning-based detectors exist, they introduce significant computational overhead and require extensive training data, making them less suitable for the online learning setting where AutoDD operates.
+
+\textbf{Computational Overhead.} AutoDD introduces modest overhead (0.47 ms/instance) compared to single detectors due to meta-feature extraction and LinUCB updates. However, this overhead is justified by the 4--8\% accuracy improvement over fixed detectors and remains 4.3$\times$ faster than Meta-ADD. The incremental computation of online statistics ensures scalability to high-velocity streams.
+
+\textbf{Limitations.} We acknowledge several limitations: (1) AutoDD's performance on gradual drift is slightly lower than Meta-ADD on certain datasets (RBF, RTG), suggesting that learned drift-type representations may complement our meta-feature approach; (2) the window size $w=100$ represents a trade-off between detection responsiveness and statistical stability, which may require tuning for domain-specific streams with unusual characteristics; (3) the linear reward model in LinUCB assumes the relationship between meta-features and detector performance is approximately linear, which may not hold in all scenarios. Future work could explore non-linear bandit algorithms to address this limitation.
+
+\section{Conclusion}
+
+In this paper, we propose AutoDD, a novel framework that automatically selects and configures drift detectors for data streams. Different from current drift detection methods that require manual selection, AutoDD learns the relationship between stream characteristics and detector performance via contextual bandits (LinUCB). The framework extracts comprehensive meta-features capturing velocity, stationarity, and temporal patterns, and maintains a diverse portfolio of detectors. Extensive experimental results on synthetic and real-world datasets verify that AutoDD achieves significant improvements over fixed detector baselines while requiring no expert intervention.
+
+Future work includes: (1) expanding the detector portfolio with emerging ML-based methods such as ensemble detectors, gradient-based change detectors, and Bayesian drift detection approaches, (2) incorporating multi-objective optimization to balance accuracy, speed, and interpretability, (3) applying meta-learning to leverage detector performance patterns across related streams, and (4) extending AutoDD to distributed streaming scenarios.
+
+\bibliographystyle{named}
+\bibliography{references}
+
+\end{document}

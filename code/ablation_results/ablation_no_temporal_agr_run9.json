@@ -1,0 +1,12 @@
+{
+    "dataset": "agr",
+    "config": "no_temporal",
+    "config_name": "w/o Temporal",
+    "accuracy": 0.716546,
+    "f1": 0.594,
+    "n_drifts": 12,
+    "total_runtime": 2.53,
+    "total_memory_mb": 9.01,
+    "n_instances": 10000,
+    "run_id": 9
+}

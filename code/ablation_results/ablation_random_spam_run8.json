@@ -1,0 +1,12 @@
+{
+    "dataset": "spam",
+    "config": "random",
+    "config_name": "w/o LinUCB (Random)",
+    "accuracy": 0.790986,
+    "f1": 0.6321,
+    "n_drifts": 35,
+    "total_runtime": 1.0,
+    "total_memory_mb": 6.69,
+    "n_instances": 9324,
+    "run_id": 8
+}

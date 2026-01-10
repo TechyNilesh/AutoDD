@@ -1,0 +1,12 @@
+{
+    "dataset": "hyp",
+    "config": "no_statistical",
+    "config_name": "w/o Statistical",
+    "accuracy": 0.849266,
+    "f1": 0.6848,
+    "n_drifts": 13,
+    "total_runtime": 1.56,
+    "total_memory_mb": 5.1,
+    "n_instances": 10000,
+    "run_id": 1
+}

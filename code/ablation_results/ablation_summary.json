@@ -1,0 +1,44 @@
+{
+    "generated_at": "2026-01-10T16:13:54.471598",
+    "n_runs": 10,
+    "datasets": [
+        "sea",
+        "hyp",
+        "agr",
+        "rbf",
+        "rtg",
+        "elec",
+        "weather",
+        "spam",
+        "airlines",
+        "poker"
+    ],
+    "configurations": [
+        "full",
+        "no_temporal",
+        "no_statistical",
+        "no_stationarity",
+        "random"
+    ],
+    "mean_accuracy": {
+        "full": 0.7948,
+        "no_temporal": 0.7313,
+        "no_statistical": 0.7017,
+        "no_stationarity": 0.7262,
+        "random": 0.6144
+    },
+    "std_accuracy": {
+        "full": 0.0082,
+        "no_temporal": 0.0079,
+        "no_statistical": 0.0078,
+        "no_stationarity": 0.008,
+        "random": 0.0075
+    },
+    "mean_f1": {
+        "full": 0.6327,
+        "no_temporal": 0.5848,
+        "no_statistical": 0.5611,
+        "no_stationarity": 0.5808,
+        "random": 0.4914
+    }
+}

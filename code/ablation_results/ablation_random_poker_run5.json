@@ -1,0 +1,12 @@
+{
+    "dataset": "poker",
+    "config": "random",
+    "config_name": "w/o LinUCB (Random)",
+    "accuracy": 0.4,
+    "f1": 0.3153,
+    "n_drifts": 24,
+    "total_runtime": 108.9,
+    "total_memory_mb": 6.57,
+    "n_instances": 829201,
+    "run_id": 5
+}

@@ -1,0 +1,12 @@
+{
+    "dataset": "spam",
+    "config": "full",
+    "config_name": "Full AutoDD",
+    "accuracy": 0.951255,
+    "f1": 0.7233,
+    "n_drifts": 29,
+    "total_runtime": 2.09,
+    "total_memory_mb": 9.12,
+    "n_instances": 9324,
+    "run_id": 7
+}

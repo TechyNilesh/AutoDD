@@ -1,0 +1,12 @@
+{
+    "dataset": "elec",
+    "config": "full",
+    "config_name": "Full AutoDD",
+    "accuracy": 0.867245,
+    "f1": 0.6841,
+    "n_drifts": 49,
+    "total_runtime": 12.88,
+    "total_memory_mb": 7.98,
+    "n_instances": 45325,
+    "run_id": 10
+}

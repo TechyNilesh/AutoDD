@@ -1,0 +1,12 @@
+{
+    "dataset": "spam",
+    "config": "no_temporal",
+    "config_name": "w/o Temporal",
+    "accuracy": 0.914735,
+    "f1": 0.7738,
+    "n_drifts": 43,
+    "total_runtime": 2.63,
+    "total_memory_mb": 5.85,
+    "n_instances": 9324,
+    "run_id": 7
+}

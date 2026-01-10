@@ -1,0 +1,20 @@
+======================================================================
+ABLATION STUDY RESULTS
+======================================================================
+
+Number of runs: 10
+Datasets: sea, hyp, agr, rbf, rtg, elec, weather, spam, airlines, poker
+
+Configuration                         Accuracy         F1      Delta
+----------------------------------------------------------------------
+Full AutoDD                      79.5%±0.8%     0.6327         --
+w/o Temporal Features            73.1%±0.8%     0.5848      -6.3%
+w/o Statistical Features         70.2%±0.8%     0.5611      -9.3%
+w/o Stationarity Features        72.6%±0.8%     0.5808      -6.9%
+w/o LinUCB (Random)              61.4%±0.8%     0.4914     -18.0%
+----------------------------------------------------------------------
+
+Key Findings:
+- Full AutoDD: 79.5%
+- Removing Statistical: -9.3% drop
+- Random selection: -18.0% drop

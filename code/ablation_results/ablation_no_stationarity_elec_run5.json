@@ -1,0 +1,12 @@
+{
+    "dataset": "elec",
+    "config": "no_stationarity",
+    "config_name": "w/o Stationarity",
+    "accuracy": 0.80548,
+    "f1": 0.6447,
+    "n_drifts": 42,
+    "total_runtime": 11.82,
+    "total_memory_mb": 7.12,
+    "n_instances": 45325,
+    "run_id": 5
+}

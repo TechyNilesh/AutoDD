@@ -1,0 +1,12 @@
+{
+    "dataset": "poker",
+    "config": "no_statistical",
+    "config_name": "w/o Statistical",
+    "accuracy": 0.476993,
+    "f1": 0.3798,
+    "n_drifts": 7,
+    "total_runtime": 213.99,
+    "total_memory_mb": 6.14,
+    "n_instances": 829201,
+    "run_id": 6
+}

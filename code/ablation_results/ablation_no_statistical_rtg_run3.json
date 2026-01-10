@@ -1,0 +1,12 @@
+{
+    "dataset": "rtg",
+    "config": "no_statistical",
+    "config_name": "w/o Statistical",
+    "accuracy": 0.619368,
+    "f1": 0.5096,
+    "n_drifts": 30,
+    "total_runtime": 1.83,
+    "total_memory_mb": 7.47,
+    "n_instances": 10000,
+    "run_id": 3
+}

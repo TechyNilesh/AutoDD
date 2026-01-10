@@ -1,0 +1,12 @@
+{
+    "dataset": "elec",
+    "config": "random",
+    "config_name": "w/o LinUCB (Random)",
+    "accuracy": 0.705333,
+    "f1": 0.5579,
+    "n_drifts": 40,
+    "total_runtime": 8.72,
+    "total_memory_mb": 4.19,
+    "n_instances": 45325,
+    "run_id": 3
+}

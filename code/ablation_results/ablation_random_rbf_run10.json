@@ -1,0 +1,12 @@
+{
+    "dataset": "rbf",
+    "config": "random",
+    "config_name": "w/o LinUCB (Random)",
+    "accuracy": 0.569819,
+    "f1": 0.4803,
+    "n_drifts": 17,
+    "total_runtime": 1.12,
+    "total_memory_mb": 6.71,
+    "n_instances": 10000,
+    "run_id": 10
+}

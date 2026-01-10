@@ -1,0 +1,12 @@
+{
+    "dataset": "weather",
+    "config": "no_stationarity",
+    "config_name": "w/o Stationarity",
+    "accuracy": 0.714992,
+    "f1": 0.5464,
+    "n_drifts": 24,
+    "total_runtime": 2.85,
+    "total_memory_mb": 5.1,
+    "n_instances": 18159,
+    "run_id": 3
+}

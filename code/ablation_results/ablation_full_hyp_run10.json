@@ -1,0 +1,12 @@
+{
+    "dataset": "hyp",
+    "config": "full",
+    "config_name": "Full AutoDD",
+    "accuracy": 0.930242,
+    "f1": 0.7179,
+    "n_drifts": 18,
+    "total_runtime": 2.26,
+    "total_memory_mb": 8.06,
+    "n_instances": 10000,
+    "run_id": 10
+}

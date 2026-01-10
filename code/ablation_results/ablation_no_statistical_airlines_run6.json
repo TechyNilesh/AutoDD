@@ -1,0 +1,12 @@
+{
+    "dataset": "airlines",
+    "config": "no_statistical",
+    "config_name": "w/o Statistical",
+    "accuracy": 0.565363,
+    "f1": 0.4556,
+    "n_drifts": 24,
+    "total_runtime": 142.25,
+    "total_memory_mb": 5.73,
+    "n_instances": 539383,
+    "run_id": 6
+}

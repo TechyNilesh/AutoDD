@@ -1,0 +1,12 @@
+{
+    "dataset": "poker",
+    "config": "no_stationarity",
+    "config_name": "w/o Stationarity",
+    "accuracy": 0.518872,
+    "f1": 0.4178,
+    "n_drifts": 5,
+    "total_runtime": 235.32,
+    "total_memory_mb": 7.54,
+    "n_instances": 829201,
+    "run_id": 6
+}

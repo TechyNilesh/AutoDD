@@ -1,0 +1,12 @@
+{
+    "dataset": "rbf",
+    "config": "full",
+    "config_name": "Full AutoDD",
+    "accuracy": 0.755846,
+    "f1": 0.5891,
+    "n_drifts": 14,
+    "total_runtime": 2.29,
+    "total_memory_mb": 8.42,
+    "n_instances": 10000,
+    "run_id": 1
+}

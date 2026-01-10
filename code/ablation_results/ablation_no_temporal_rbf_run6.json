@@ -1,0 +1,12 @@
+{
+    "dataset": "rbf",
+    "config": "no_temporal",
+    "config_name": "w/o Temporal",
+    "accuracy": 0.681465,
+    "f1": 0.5384,
+    "n_drifts": 4,
+    "total_runtime": 1.91,
+    "total_memory_mb": 8.31,
+    "n_instances": 10000,
+    "run_id": 6
+}

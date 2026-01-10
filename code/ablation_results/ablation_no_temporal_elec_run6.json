@@ -1,0 +1,12 @@
+{
+    "dataset": "elec",
+    "config": "no_temporal",
+    "config_name": "w/o Temporal",
+    "accuracy": 0.808625,
+    "f1": 0.6572,
+    "n_drifts": 15,
+    "total_runtime": 7.34,
+    "total_memory_mb": 7.84,
+    "n_instances": 45325,
+    "run_id": 6
+}

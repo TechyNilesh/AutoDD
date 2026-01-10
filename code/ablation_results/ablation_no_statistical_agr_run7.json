@@ -1,0 +1,12 @@
+{
+    "dataset": "agr",
+    "config": "no_statistical",
+    "config_name": "w/o Statistical",
+    "accuracy": 0.660612,
+    "f1": 0.5401,
+    "n_drifts": 31,
+    "total_runtime": 2.86,
+    "total_memory_mb": 6.05,
+    "n_instances": 10000,
+    "run_id": 7
+}

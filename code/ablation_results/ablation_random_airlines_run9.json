@@ -1,0 +1,12 @@
+{
+    "dataset": "airlines",
+    "config": "random",
+    "config_name": "w/o LinUCB (Random)",
+    "accuracy": 0.500484,
+    "f1": 0.3804,
+    "n_drifts": 28,
+    "total_runtime": 85.73,
+    "total_memory_mb": 3.59,
+    "n_instances": 539383,
+    "run_id": 9
+}

@@ -1,0 +1,12 @@
+{
+    "dataset": "sea",
+    "config": "no_statistical",
+    "config_name": "w/o Statistical",
+    "accuracy": 0.83194,
+    "f1": 0.6824,
+    "n_drifts": 35,
+    "total_runtime": 1.93,
+    "total_memory_mb": 7.29,
+    "n_instances": 10000,
+    "run_id": 2
+}

@@ -1,0 +1,12 @@
+{
+    "dataset": "agr",
+    "config": "no_stationarity",
+    "config_name": "w/o Stationarity",
+    "accuracy": 0.690158,
+    "f1": 0.5762,
+    "n_drifts": 24,
+    "total_runtime": 2.66,
+    "total_memory_mb": 7.43,
+    "n_instances": 10000,
+    "run_id": 9
+}

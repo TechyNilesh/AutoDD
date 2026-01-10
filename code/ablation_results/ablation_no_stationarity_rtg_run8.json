@@ -1,0 +1,12 @@
+{
+    "dataset": "rtg",
+    "config": "no_stationarity",
+    "config_name": "w/o Stationarity",
+    "accuracy": 0.636694,
+    "f1": 0.5193,
+    "n_drifts": 9,
+    "total_runtime": 2.31,
+    "total_memory_mb": 8.9,
+    "n_instances": 10000,
+    "run_id": 8
+}
