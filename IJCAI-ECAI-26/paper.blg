@@ -1,0 +1,51 @@
+This is BibTeX, Version 0.99d (TeX Live 2025)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: paper.aux
+White space in argument---line 13 of file paper.aux
+ : \citation{
+ :            Verma2024ASML}
+I'm skipping whatever remains of this command
+The style file: named.bst
+Database file #1: references.bib
+You've used 18 entries,
+            2439 wiz_defined-function locations,
+            682 strings with 8578 characters,
+and the built_in function-call counts, 8850 in all, are:
+= -- 907
+> -- 454
+< -- 8
++ -- 163
+- -- 160
+* -- 744
+:= -- 1411
+add.period$ -- 59
+call.type$ -- 18
+change.case$ -- 151
+chr.to.int$ -- 18
+cite$ -- 18
+duplicate$ -- 327
+empty$ -- 606
+format.name$ -- 179
+if$ -- 1831
+int.to.chr$ -- 1
+int.to.str$ -- 0
+missing$ -- 19
+newline$ -- 93
+num.names$ -- 54
+pop$ -- 137
+preamble$ -- 1
+purify$ -- 170
+quote$ -- 0
+skip$ -- 265
+stack$ -- 0
+substring$ -- 476
+swap$ -- 96
+text.length$ -- 8
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 140
+warning$ -- 0
+while$ -- 72
+width$ -- 23
+write$ -- 241
+(There was 1 error message)

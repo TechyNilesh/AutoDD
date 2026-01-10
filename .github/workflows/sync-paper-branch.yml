@@ -1,0 +1,28 @@
+name: Sync Paper Branch
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'IJCAI-ECAI-26/**'
+
+jobs:
+  sync-paper-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync paper folder to paper branch
+        run: |
+          git subtree split --prefix=IJCAI-ECAI-26 -b paper-temp
+          git push origin paper-temp:paper --force
+          git branch -D paper-temp
