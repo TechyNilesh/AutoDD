@@ -1,0 +1,35 @@
+name: Sync Paper to Overleaf
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'IJCAI-ECAI-26/**'
+
+jobs:
+  sync-to-overleaf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync paper folder to paper branch
+        run: |
+          git subtree split --prefix=IJCAI-ECAI-26 -b paper-temp
+          git push origin paper-temp:paper --force
+          git branch -D paper-temp
+
+      - name: Push to Overleaf
+        run: |
+          git checkout paper
+          git pull origin paper
+          git remote add overleaf https://git:${{ secrets.OVERLEAF_TOKEN }}@git.overleaf.com/6955b965ea1329764fed32c2
+          git push overleaf paper:master --force
