@@ -17,13 +17,15 @@ from .autodd import AutoDD, AutoDDClassifier
 from .meta_feature_extractor import MetaFeatureExtractor
 from .detector_portfolio import DetectorPortfolio
 from .linucb_agent import LinUCBAgent
+from .hyperparameter_selector import CascadingHyperparameterSelector
 
 __all__ = [
     'AutoDD',
     'AutoDDClassifier',
     'MetaFeatureExtractor',
     'DetectorPortfolio',
-    'LinUCBAgent'
+    'LinUCBAgent',
+    'CascadingHyperparameterSelector'
 ]
 
 __version__ = '1.0.0'
