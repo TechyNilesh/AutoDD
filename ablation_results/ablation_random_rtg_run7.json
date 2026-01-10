@@ -1,0 +1,12 @@
+{
+    "dataset": "rtg",
+    "config": "random",
+    "config_name": "w/o LinUCB (Random)",
+    "accuracy": 0.524439,
+    "f1": 0.4423,
+    "n_drifts": 26,
+    "total_runtime": 1.94,
+    "total_memory_mb": 6.67,
+    "n_instances": 10000,
+    "run_id": 7
+}

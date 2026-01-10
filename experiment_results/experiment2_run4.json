@@ -1,0 +1,47 @@
+{
+    "run_id": 4,
+    "results": {
+        "ADWIN": {
+            "sudden": 67.7,
+            "gradual": 11.8,
+            "incremental": 8.0,
+            "normal": 15.7
+        },
+        "DDM": {
+            "sudden": 15.3,
+            "gradual": 7.9,
+            "incremental": 5.7,
+            "normal": 14.1
+        },
+        "EDDM": {
+            "sudden": 3.9,
+            "gradual": 22.1,
+            "incremental": 9.3,
+            "normal": 9.3
+        },
+        "HDDM_A": {
+            "sudden": 2.2,
+            "gradual": 7.6,
+            "incremental": 17.3,
+            "normal": 6.8
+        },
+        "HDDM_W": {
+            "sudden": 1.3,
+            "gradual": 3.9,
+            "incremental": 11.8,
+            "normal": 4.7
+        },
+        "PAGEHINKLEY": {
+            "sudden": 0.9,
+            "gradual": 0.5,
+            "incremental": 0.5,
+            "normal": 30.4
+        },
+        "KSWIN": {
+            "sudden": 8.7,
+            "gradual": 46.2,
+            "incremental": 47.4,
+            "normal": 18.9
+        }
+    }
+}

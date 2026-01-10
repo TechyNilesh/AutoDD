@@ -1,0 +1,12 @@
+{
+    "dataset": "weather",
+    "config": "random",
+    "config_name": "w/o LinUCB (Random)",
+    "accuracy": 0.61024,
+    "f1": 0.4624,
+    "n_drifts": 35,
+    "total_runtime": 2.47,
+    "total_memory_mb": 5.93,
+    "n_instances": 18159,
+    "run_id": 9
+}

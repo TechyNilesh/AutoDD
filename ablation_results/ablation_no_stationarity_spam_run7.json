@@ -1,0 +1,12 @@
+{
+    "dataset": "spam",
+    "config": "no_stationarity",
+    "config_name": "w/o Stationarity",
+    "accuracy": 0.894612,
+    "f1": 0.7551,
+    "n_drifts": 29,
+    "total_runtime": 1.72,
+    "total_memory_mb": 6.92,
+    "n_instances": 9324,
+    "run_id": 7
+}

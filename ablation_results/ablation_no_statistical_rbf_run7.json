@@ -1,0 +1,12 @@
+{
+    "dataset": "rbf",
+    "config": "no_statistical",
+    "config_name": "w/o Statistical",
+    "accuracy": 0.675408,
+    "f1": 0.5667,
+    "n_drifts": 24,
+    "total_runtime": 1.88,
+    "total_memory_mb": 7.88,
+    "n_instances": 10000,
+    "run_id": 7
+}

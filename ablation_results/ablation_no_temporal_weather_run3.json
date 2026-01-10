@@ -1,0 +1,12 @@
+{
+    "dataset": "weather",
+    "config": "no_temporal",
+    "config_name": "w/o Temporal",
+    "accuracy": 0.726066,
+    "f1": 0.5796,
+    "n_drifts": 22,
+    "total_runtime": 3.33,
+    "total_memory_mb": 5.62,
+    "n_instances": 18159,
+    "run_id": 3
+}

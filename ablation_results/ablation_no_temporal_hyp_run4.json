@@ -1,0 +1,12 @@
+{
+    "dataset": "hyp",
+    "config": "no_temporal",
+    "config_name": "w/o Temporal",
+    "accuracy": 0.872269,
+    "f1": 0.7022,
+    "n_drifts": 35,
+    "total_runtime": 2.83,
+    "total_memory_mb": 4.16,
+    "n_instances": 10000,
+    "run_id": 4
+}

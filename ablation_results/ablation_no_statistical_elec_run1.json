@@ -1,0 +1,12 @@
+{
+    "dataset": "elec",
+    "config": "no_statistical",
+    "config_name": "w/o Statistical",
+    "accuracy": 0.783322,
+    "f1": 0.6202,
+    "n_drifts": 40,
+    "total_runtime": 11.12,
+    "total_memory_mb": 5.3,
+    "n_instances": 45325,
+    "run_id": 1
+}

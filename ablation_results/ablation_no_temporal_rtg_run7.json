@@ -1,0 +1,12 @@
+{
+    "dataset": "rtg",
+    "config": "no_temporal",
+    "config_name": "w/o Temporal",
+    "accuracy": 0.653428,
+    "f1": 0.5486,
+    "n_drifts": 4,
+    "total_runtime": 2.66,
+    "total_memory_mb": 4.3,
+    "n_instances": 10000,
+    "run_id": 7
+}

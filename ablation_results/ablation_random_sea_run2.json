@@ -1,0 +1,12 @@
+{
+    "dataset": "sea",
+    "config": "random",
+    "config_name": "w/o LinUCB (Random)",
+    "accuracy": 0.729904,
+    "f1": 0.5836,
+    "n_drifts": 20,
+    "total_runtime": 1.39,
+    "total_memory_mb": 5.76,
+    "n_instances": 10000,
+    "run_id": 2
+}

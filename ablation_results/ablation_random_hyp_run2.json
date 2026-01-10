@@ -1,0 +1,12 @@
+{
+    "dataset": "hyp",
+    "config": "random",
+    "config_name": "w/o LinUCB (Random)",
+    "accuracy": 0.73838,
+    "f1": 0.5626,
+    "n_drifts": 32,
+    "total_runtime": 1.16,
+    "total_memory_mb": 3.49,
+    "n_instances": 10000,
+    "run_id": 2
+}

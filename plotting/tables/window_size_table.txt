@@ -1,0 +1,20 @@
+================================================================================
+SELECTION ACCURACY (%) WITH DIFFERENT META-FEATURE TYPES AND WINDOW SIZES
+================================================================================
+
+Dataset: datasets/synthetic_streams/
+Streams: 100 (70 train, 30 test)
+Optimal window: w=100
+
+Meta-Features              w=25       w=50     w=100*      w=150      w=200
+---------------------------------------------------------------------------
+Statistical only      62.3±0.7  69.0±0.9  75.0±0.7  73.5±0.7  72.5±0.9
+Stationarity only     64.9±0.6  71.5±0.8  79.3±1.1  77.9±0.7  76.2±0.9
+Temporal only         69.9±0.8  77.2±1.0  84.2±1.0  82.9±0.8  80.8±0.8
+All (15 features)     78.1±0.9  85.5±0.8  92.6±0.6  91.0±0.7  88.4±0.8
+---------------------------------------------------------------------------
+* Optimal window size (w=100)
+
+Key Findings:
+- All features achieves highest accuracy
+- w=100 provides best trade-off

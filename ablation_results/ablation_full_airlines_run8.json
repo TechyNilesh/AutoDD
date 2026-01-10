@@ -1,0 +1,12 @@
+{
+    "dataset": "airlines",
+    "config": "full",
+    "config_name": "Full AutoDD",
+    "accuracy": 0.667694,
+    "f1": 0.5498,
+    "n_drifts": 40,
+    "total_runtime": 164.16,
+    "total_memory_mb": 7.23,
+    "n_instances": 539383,
+    "run_id": 8
+}

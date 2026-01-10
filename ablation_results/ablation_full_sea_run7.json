@@ -1,0 +1,12 @@
+{
+    "dataset": "sea",
+    "config": "full",
+    "config_name": "Full AutoDD",
+    "accuracy": 0.920041,
+    "f1": 0.7026,
+    "n_drifts": 25,
+    "total_runtime": 3.39,
+    "total_memory_mb": 5.54,
+    "n_instances": 10000,
+    "run_id": 7
+}

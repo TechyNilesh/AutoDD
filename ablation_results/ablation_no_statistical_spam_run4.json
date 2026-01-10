@@ -1,0 +1,12 @@
+{
+    "dataset": "spam",
+    "config": "no_statistical",
+    "config_name": "w/o Statistical",
+    "accuracy": 0.872906,
+    "f1": 0.6783,
+    "n_drifts": 9,
+    "total_runtime": 2.5,
+    "total_memory_mb": 8.34,
+    "n_instances": 9324,
+    "run_id": 4
+}

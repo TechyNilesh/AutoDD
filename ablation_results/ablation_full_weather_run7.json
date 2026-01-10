@@ -1,0 +1,12 @@
+{
+    "dataset": "weather",
+    "config": "full",
+    "config_name": "Full AutoDD",
+    "accuracy": 0.798179,
+    "f1": 0.606,
+    "n_drifts": 14,
+    "total_runtime": 4.28,
+    "total_memory_mb": 4.49,
+    "n_instances": 18159,
+    "run_id": 7
+}

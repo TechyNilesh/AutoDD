@@ -1,0 +1,12 @@
+{
+    "dataset": "rbf",
+    "config": "no_stationarity",
+    "config_name": "w/o Stationarity",
+    "accuracy": 0.697348,
+    "f1": 0.525,
+    "n_drifts": 33,
+    "total_runtime": 1.65,
+    "total_memory_mb": 8.19,
+    "n_instances": 10000,
+    "run_id": 10
+}

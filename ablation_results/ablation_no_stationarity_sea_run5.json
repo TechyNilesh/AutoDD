@@ -1,0 +1,12 @@
+{
+    "dataset": "sea",
+    "config": "no_stationarity",
+    "config_name": "w/o Stationarity",
+    "accuracy": 0.834711,
+    "f1": 0.6893,
+    "n_drifts": 13,
+    "total_runtime": 2.72,
+    "total_memory_mb": 4.62,
+    "n_instances": 10000,
+    "run_id": 5
+}

@@ -1,0 +1,12 @@
+{
+    "dataset": "weather",
+    "config": "no_statistical",
+    "config_name": "w/o Statistical",
+    "accuracy": 0.678771,
+    "f1": 0.5669,
+    "n_drifts": 27,
+    "total_runtime": 4.41,
+    "total_memory_mb": 5.99,
+    "n_instances": 18159,
+    "run_id": 10
+}

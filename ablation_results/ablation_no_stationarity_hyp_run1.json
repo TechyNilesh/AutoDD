@@ -1,0 +1,12 @@
+{
+    "dataset": "hyp",
+    "config": "no_stationarity",
+    "config_name": "w/o Stationarity",
+    "accuracy": 0.855231,
+    "f1": 0.6999,
+    "n_drifts": 51,
+    "total_runtime": 2.19,
+    "total_memory_mb": 4.08,
+    "n_instances": 10000,
+    "run_id": 1
+}

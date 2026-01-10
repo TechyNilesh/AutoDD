@@ -1,0 +1,12 @@
+{
+    "dataset": "sea",
+    "config": "no_temporal",
+    "config_name": "w/o Temporal",
+    "accuracy": 0.8464,
+    "f1": 0.6358,
+    "n_drifts": 42,
+    "total_runtime": 2.72,
+    "total_memory_mb": 7.58,
+    "n_instances": 10000,
+    "run_id": 6
+}
