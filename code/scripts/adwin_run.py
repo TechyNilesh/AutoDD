@@ -7,23 +7,31 @@ It efficiently keeps a variable-length window and detects changes in data distri
 Usage:
     python scripts/adwin_run.py --dataset elec
     python scripts/adwin_run.py --dataset sea --run_count 1 --seed 42
+    python scripts/adwin_run.py --dataset elec --base_model hat
 """
 
 import time
 import psutil
 import json
 import os
+import sys
 import argparse
 import traceback
 
-from river import drift, naive_bayes, metrics, stream
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from river import drift, metrics, stream
+
+from scripts.utils import get_base_model, get_base_model_display_name
 
 import warnings
 warnings.filterwarnings("ignore")
 
 
 def run_adwin(dataset_name, run_count=None, seed=42, progress_interval=1000,
-              output_dir="benchmark_results", verbose=False, delta=0.002):
+              output_dir="benchmark_results", verbose=False, delta=0.002,
+              base_model='gaussiannb'):
     """
     Run ADWIN drift detector on a dataset with prequential evaluation.
 
@@ -35,16 +43,18 @@ def run_adwin(dataset_name, run_count=None, seed=42, progress_interval=1000,
         output_dir: Directory to save results
         verbose: Enable verbose output
         delta: ADWIN significance value
+        base_model: Base classifier to use ('gaussiannb' or 'hat')
     """
     os.makedirs(output_dir, exist_ok=True)
 
+    base_model_name = get_base_model_display_name(base_model)
     print(f"\n{'='*60}")
-    print(f"Running ADWIN on {dataset_name}")
+    print(f"Running ADWIN on {dataset_name} (Base: {base_model_name})")
     print(f"{'='*60}")
 
     try:
         # Initialize model and drift detector
-        model = naive_bayes.GaussianNB()
+        model = get_base_model(base_model)
         detector = drift.ADWIN(delta=delta)
 
         # Initialize metrics
@@ -87,7 +97,7 @@ def run_adwin(dataset_name, run_count=None, seed=42, progress_interval=1000,
                     if verbose:
                         print(f"  Drift detected at instance {processed_instances}")
                     # Reset model on drift
-                    model = naive_bayes.GaussianNB()
+                    model = get_base_model(base_model)
 
             # Learn from instance
             model.learn_one(x, y)
@@ -121,6 +131,7 @@ def run_adwin(dataset_name, run_count=None, seed=42, progress_interval=1000,
         results = {
             "dataset": dataset_name,
             "model": "ADWIN",
+            "base_model": base_model_name,
             "detector_params": {"delta": delta},
             "accuracy": final_accuracy,
             "f1": final_f1,
@@ -141,9 +152,9 @@ def run_adwin(dataset_name, run_count=None, seed=42, progress_interval=1000,
         if run_count is not None:
             results["run_count"] = run_count
             results["seed"] = seed
-            file_name = f"ADWIN_{dataset_name}_{run_count}.json"
+            file_name = f"ADWIN_{base_model_name}_{dataset_name}_{run_count}.json"
         else:
-            file_name = f"ADWIN_{dataset_name}.json"
+            file_name = f"ADWIN_{base_model_name}_{dataset_name}.json"
 
         # Save results
         output_file = os.path.join(output_dir, file_name)
@@ -183,6 +194,9 @@ if __name__ == "__main__":
     parser.add_argument('--output_dir', type=str, default="benchmark_results", help='Output directory')
     parser.add_argument('--verbose', action='store_true', help='Enable verbose output')
     parser.add_argument('--delta', type=float, default=0.002, help='ADWIN delta parameter')
+    parser.add_argument('--base_model', type=str, default='gaussiannb',
+                        choices=['gaussiannb', 'hat'],
+                        help='Base classifier to use (default: gaussiannb)')
 
     args = parser.parse_args()
 
@@ -193,5 +207,6 @@ if __name__ == "__main__":
         progress_interval=args.progress_interval,
         output_dir=args.output_dir,
         verbose=args.verbose,
-        delta=args.delta
+        delta=args.delta,
+        base_model=args.base_model
     )

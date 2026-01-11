@@ -8,6 +8,9 @@ AutoDD is an adaptive framework for automated drift detector selection in data s
 
 - **Adaptive Detector Selection**: Automatically selects the best drift detector using LinUCB contextual bandits
 - **Meta-Feature Extraction**: Extracts temporal, statistical, and stationarity features from data streams
+- **Multiple Base Classifiers**: Supports different base classifiers:
+  - GaussianNB (Gaussian Naive Bayes) - default
+  - HAT (Hoeffding Adaptive Tree)
 - **Multiple Drift Detectors**: Supports various drift detection algorithms:
   - ADWIN (Adaptive Windowing)
   - DDM (Drift Detection Method)
@@ -16,6 +19,9 @@ AutoDD is an adaptive framework for automated drift detector selection in data s
   - HDDM-W (Hoeffding's bound Drift Detection Method - W-test)
   - Page-Hinkley Test
   - KSWIN (Kolmogorov-Smirnov Windowing)
+  - MDDM (McDiarmid Drift Detection Method)
+  - PUDD (Prediction Uncertainty-based Drift Detector)
+  - ADDM (Autoregressive-Based Drift Detection Method)
 
 - **Comprehensive Evaluation**: Built-in benchmark framework with prequential evaluation
 - **Ablation Studies**: Tools for analyzing component contributions
@@ -93,12 +99,23 @@ The project includes both synthetic and real-world datasets in the `datasets/` d
 
 #### Running AutoDD
 ```bash
+# With GaussianNB (default)
 python scripts/autodd_run.py --dataset elec --seed 42
+
+# With Hoeffding Adaptive Tree (HAT)
+python scripts/autodd_run.py --dataset elec --seed 42 --base_model hat
 ```
 
 #### Running All Experiments
 ```bash
-python run_experiments.py
+# Run with GaussianNB (default)
+python run_experiments.py --mode all
+
+# Run with HAT
+python run_experiments.py --mode all --base_model hat
+
+# Run with both base models
+python run_experiments.py --mode all --base_model all
 ```
 
 ### Individual Model Scripts
@@ -149,12 +166,32 @@ All scripts support the following parameters:
 - `--progress_interval`: Interval for progress updates (default: 1000)
 - `--output_dir`: Directory to save results (default: "benchmark_results")
 - `--verbose`: Enable verbose output
+- `--base_model`: Base classifier to use (default: "gaussiannb")
+  - `gaussiannb`: Gaussian Naive Bayes
+  - `hat`: Hoeffding Adaptive Tree
+
+### Base Model Selection
+
+AutoDD supports two base classifiers that are reset when drift is detected:
+
+| Base Model | Description | Best For |
+|------------|-------------|----------|
+| `gaussiannb` | Gaussian Naive Bayes | Fast, low memory, works well with continuous features |
+| `hat` | Hoeffding Adaptive Tree | Better accuracy on complex patterns, handles concept drift internally |
+
+```bash
+# Run ADWIN with HAT base model
+python scripts/adwin_run.py --dataset elec --base_model hat
+
+# Run all detectors with both base models
+python run_experiments.py --mode all --base_model all
+```
 
 ### Running Multiple Experiments
 
 ```bash
 # Run all models on all datasets with 10 runs each
-python run_experiments.py
+python run_experiments.py --mode all
 
 # Run ablation study
 python run_ablation_study.py
@@ -178,7 +215,8 @@ Each experiment generates a JSON file with the following structure:
 ```json
 {
     "dataset": "elec",
-    "model": "AUTODD",
+    "model": "AutoDD",
+    "base_model": "GaussianNB",
     "accuracy": 0.789,
     "f1": 0.632,
     "n_drifts": 22,
@@ -200,6 +238,8 @@ Each experiment generates a JSON file with the following structure:
     }
 }
 ```
+
+**Output Filename Format**: `{Detector}_{BaseModel}_{Dataset}.json` (e.g., `AutoDD_GaussianNB_elec.json`, `ADWIN_HAT_weather.json`)
 
 ## Ablation Study
 
@@ -262,12 +302,24 @@ AutoDD/
 ├── code/
 │   ├── AutoDD/                    # AutoDD implementation
 │   ├── MetaADD/                   # Meta-ADD implementation
+│   ├── MDDM/                      # MDDM implementation
+│   ├── PUDD/                      # PUDD implementation
+│   ├── ADDM/                      # ADDM implementation
 │   ├── scripts/                   # Individual run scripts
+│   │   ├── utils.py              # Shared utilities (base model helpers)
 │   │   ├── autodd_run.py
 │   │   ├── meta_add_run.py
+│   │   ├── no_detector_run.py    # Baseline without drift detection
 │   │   ├── adwin_run.py
 │   │   ├── ddm_run.py
-│   │   └── ...
+│   │   ├── eddm_run.py
+│   │   ├── hddm_a_run.py
+│   │   ├── hddm_w_run.py
+│   │   ├── pagehinkley_run.py
+│   │   ├── kswin_run.py
+│   │   ├── mddm_run.py
+│   │   ├── pudd_run.py
+│   │   └── addm_run.py
 │   ├── plotting/                  # Visualization scripts
 │   │   ├── charts/               # Generated charts
 │   │   ├── tables/               # Generated tables

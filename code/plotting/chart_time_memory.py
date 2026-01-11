@@ -6,13 +6,17 @@ with Pareto frontier and efficiency annotations.
 
 Creates:
 - charts/time_memory.png - Enhanced time vs memory trade-off plot
+- charts/time_memory_<base_model>.png - Per base model plots
 
 Usage:
     python plotting/chart_time_memory.py
+    python plotting/chart_time_memory.py --base_model hat
+    python plotting/chart_time_memory.py --base_model all
 """
 
 import os
 import json
+import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
@@ -38,6 +42,8 @@ rcParams['ytick.labelsize'] = 12
 rcParams['legend.fontsize'] = 10
 
 DATASETS = ['agr', 'airlines', 'elec', 'hyp', 'poker', 'rbf', 'rtg', 'sea', 'spam', 'weather']
+BASE_MODELS = ['gaussiannb', 'hat']
+BASE_MODEL_NAMES = {'gaussiannb': 'GaussianNB', 'hat': 'HAT'}
 
 # Model colors - emphasize AutoDD
 MODEL_COLORS = {
@@ -47,6 +53,7 @@ MODEL_COLORS = {
     'ADDM': '#4ecdc4',        # Turquoise
     'MDDM': '#95e1d3',        # Mint green
     'GaussianNB': '#7f7f7f',  # Gray
+    'HAT': '#7f7f7f',         # Gray
     'ADWIN': '#2ca02c',       # Green
     'DDM': '#bcbd22',         # Yellow-green
     'EDDM': '#9467bd',        # Purple
@@ -64,6 +71,7 @@ MODEL_NAMES = {
     'ADDM': 'ADDM',
     'MDDM': 'MDDM',
     'GaussianNB': 'No Drift Detector',
+    'HAT': 'No Drift Detector',
     'ADWIN': 'ADWIN',
     'DDM': 'DDM',
     'EDDM': 'EDDM',
@@ -73,29 +81,29 @@ MODEL_NAMES = {
     'KSWIN': 'KSWIN',
 }
 
-# Model markers - different shapes for different method types
+# Model markers
 MODEL_MARKERS = {
-    'AUTODD': '*',        # Star for our method
-    'MetaADD': 'D',       # Diamond for meta-learning
-    'PUDD': 'h',          # Hexagon for new methods
-    'ADDM': 'H',          # Large hexagon
-    'MDDM': 'd',          # Thin diamond
-    'GaussianNB': 'X',    # X for baseline
-    'ADWIN': 'o',         # Circle for detectors
-    'DDM': 's',           # Square
-    'EDDM': '^',          # Triangle up
-    'HDDM_A': 'v',        # Triangle down
-    'HDDM_W': '<',        # Triangle left
-    'PAGEHINKLEY': '>',   # Triangle right
-    'KSWIN': 'p',         # Pentagon
+    'AUTODD': '*',
+    'MetaADD': 'D',
+    'PUDD': 'h',
+    'ADDM': 'H',
+    'MDDM': 'd',
+    'GaussianNB': 'X',
+    'HAT': 'X',
+    'ADWIN': 'o',
+    'DDM': 's',
+    'EDDM': '^',
+    'HDDM_A': 'v',
+    'HDDM_W': '<',
+    'PAGEHINKLEY': '>',
+    'KSWIN': 'p',
 }
 
-# Exclude GaussianNB (No Drift Detector) - it's a baseline without drift detection
 MODEL_ORDER = ['AUTODD', 'MetaADD', 'PUDD', 'ADDM', 'MDDM', 'ADWIN', 'DDM', 'EDDM', 'HDDM_A', 'HDDM_W', 'PAGEHINKLEY', 'KSWIN']
-EXCLUDE_MODELS = ['GaussianNB']
+EXCLUDE_MODELS = ['GaussianNB', 'HAT']
 
 
-def load_results():
+def load_results(base_model=None):
     """Load all benchmark results."""
     records = []
     for filepath in glob(os.path.join(RESULTS_DIR, "*.json")):
@@ -104,6 +112,17 @@ def load_results():
         try:
             with open(filepath, 'r') as f:
                 data = json.load(f)
+
+            record_base_model = data.get('base_model', 'gaussiannb')
+            # Normalize base model name to lowercase
+            if record_base_model == 'GaussianNB':
+                record_base_model = 'gaussiannb'
+            elif record_base_model == 'HAT':
+                record_base_model = 'hat'
+
+            if base_model and record_base_model != base_model:
+                continue
+
             total_runtime = data.get('total_runtime', 0)
             n_instances = data.get('n_instances', 1)
             ms_per_instance = (total_runtime / n_instances) * 1000 if n_instances > 0 else 0
@@ -113,6 +132,7 @@ def load_results():
                 'runtime': ms_per_instance,
                 'memory_mb': data.get('total_memory_mb', 0),
                 'accuracy': data.get('accuracy', 0),
+                'base_model': record_base_model,
             })
         except:
             continue
@@ -127,7 +147,6 @@ def compute_mean_stats(records):
         model = rec['model']
         if not model:
             continue
-        # Skip excluded models (No Drift Detector baseline)
         if model in EXCLUDE_MODELS:
             continue
         if model not in model_stats:
@@ -148,27 +167,11 @@ def compute_mean_stats(records):
     return mean_stats
 
 
-def find_pareto_frontier(points):
-    """Find Pareto-optimal points (minimize both time and memory)."""
-    pareto_points = []
-    for i, (x1, y1, name1) in enumerate(points):
-        dominated = False
-        for j, (x2, y2, name2) in enumerate(points):
-            if i != j and x2 <= x1 and y2 <= y1 and (x2 < x1 or y2 < y1):
-                dominated = True
-                break
-        if not dominated:
-            pareto_points.append((x1, y1, name1))
-    # Sort by x for line drawing
-    pareto_points.sort(key=lambda p: p[0])
-    return pareto_points
-
-
-def generate_time_memory_plot():
+def generate_time_memory_plot(base_model=None):
     """Generate clean time vs memory trade-off plot with quadrant shading."""
-    records = load_results()
+    records = load_results(base_model=base_model)
     if not records:
-        print("No results found!")
+        print(f"No results found for {base_model}!")
         return None
 
     mean_stats = compute_mean_stats(records)
@@ -178,49 +181,39 @@ def generate_time_memory_plot():
 
     print(f"Models found: {list(mean_stats.keys())}")
 
-    # Print stats for debugging
     for model, stats in mean_stats.items():
         print(f"  {model}: {stats['runtime']:.3f} ms, {stats['memory']:.1f} MB")
 
-    # Create figure
     fig, ax = plt.subplots(figsize=(8, 6))
 
-    # Use fixed order
     sorted_models = [m for m in MODEL_ORDER if m in mean_stats]
     for m in mean_stats.keys():
         if m not in sorted_models:
             sorted_models.append(m)
 
-    # Get all values for axis limits
     time_values = [mean_stats[m]['runtime'] for m in sorted_models]
     memory_values = [mean_stats[m]['memory'] for m in sorted_models]
 
-    # Set axis limits with padding
+    # Auto-scale based on data for each base model
     x_max = max(time_values) * 1.15
     y_max = max(memory_values) * 1.1
+
     ax.set_xlim(0, x_max)
     ax.set_ylim(0, y_max)
 
-    # Calculate midpoints for quadrants
     x_mid = x_max / 2
     y_mid = y_max / 2
 
-    # Draw 4 transparent quadrant boxes (zorder=0 to be behind everything)
-    # Bottom-left: Fast + Low Memory (Green - Best)
     ax.fill_between([0, x_mid], [0, 0], [y_mid, y_mid],
                     color='green', alpha=0.12, zorder=0)
-    # Bottom-right: Slow + Low Memory (Yellow)
     ax.fill_between([x_mid, x_max], [0, 0], [y_mid, y_mid],
                     color='orange', alpha=0.12, zorder=0)
-    # Top-left: Fast + High Memory (Yellow)
     ax.fill_between([0, x_mid], [y_mid, y_mid], [y_max, y_max],
                     color='orange', alpha=0.12, zorder=0)
-    # Top-right: Slow + High Memory (Red - Worst)
     ax.fill_between([x_mid, x_max], [y_mid, y_mid], [y_max, y_max],
                     color='red', alpha=0.12, zorder=0)
 
-    # Add quadrant labels (top-left corner of each box)
-    pad = 0.02  # padding from edge
+    pad = 0.02
     ax.text(x_max * pad, y_mid - y_max * pad, 'Fast + Low Memory', ha='left', va='top',
             fontsize=9, color='darkgreen', alpha=0.7, style='italic', zorder=1)
     ax.text(x_mid + x_max * pad, y_mid - y_max * pad, 'Slow + Low Memory', ha='left', va='top',
@@ -230,7 +223,6 @@ def generate_time_memory_plot():
     ax.text(x_mid + x_max * pad, y_max - y_max * pad, 'Slow + High Memory', ha='left', va='top',
             fontsize=9, color='darkred', alpha=0.7, style='italic', zorder=1)
 
-    # Plot each model - NO text labels, just markers
     for model in sorted_models:
         stats = mean_stats[model]
         time_val = stats['runtime']
@@ -240,7 +232,6 @@ def generate_time_memory_plot():
         name = MODEL_NAMES.get(model, model)
         marker = MODEL_MARKERS.get(model, 'o')
 
-        # Larger marker for AutoDD and Meta-ADD
         if model == 'AUTODD':
             size = 400
             edge_width = 2.5
@@ -266,11 +257,9 @@ def generate_time_memory_plot():
             zorder=zorder
         )
 
-    # Labels
     ax.set_xlabel('Runtime (ms/instance)', fontsize=13, fontweight='bold')
     ax.set_ylabel('Memory Usage (MB)', fontsize=13, fontweight='bold')
 
-    # Legend inside the chart (lower right - labels moved to top-left of each box)
     legend = ax.legend(
         loc='lower right',
         framealpha=0.95,
@@ -283,36 +272,52 @@ def generate_time_memory_plot():
     )
     legend.get_frame().set_edgecolor('gray')
 
-    # Bold tick labels
     ax.tick_params(axis='both', which='major', labelsize=11)
     for label in ax.get_xticklabels() + ax.get_yticklabels():
         label.set_fontweight('bold')
 
-    # Light grid
     ax.grid(True, alpha=0.25, linestyle='--', zorder=1)
 
     plt.tight_layout()
 
-    output_path = os.path.join(CHARTS_DIR, "time_memory.png")
+    if base_model:
+        output_path = os.path.join(CHARTS_DIR, f"time_memory_{base_model}.png")
+    else:
+        output_path = os.path.join(CHARTS_DIR, "time_memory.png")
+
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
 
     return output_path
 
 
-def main():
+def main(base_model='all'):
     print("=" * 60)
     print("Generating Time vs Memory Trade-off Plot")
     print("=" * 60)
 
-    path = generate_time_memory_plot()
-    if path:
-        print(f"\nChart saved: {path}")
+    if base_model == 'all':
+        base_models_to_run = BASE_MODELS
     else:
-        print("Failed to generate chart")
+        base_models_to_run = [base_model]
+
+    for bm in base_models_to_run:
+        print(f"\n--- Processing {bm.upper()} ---")
+
+        path = generate_time_memory_plot(base_model=bm)
+        if path:
+            print(f"Chart saved: {path}")
+        else:
+            print(f"Failed to generate chart for {bm}")
 
     print("\nDone!")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Generate Time vs Memory Trade-off Plot')
+    parser.add_argument('--base_model', type=str, default='all',
+                        choices=['gaussiannb', 'hat', 'all'],
+                        help='Base classifier to use (default: all)')
+    args = parser.parse_args()
+
+    main(base_model=args.base_model)

@@ -30,8 +30,10 @@ import sys
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from river import naive_bayes, metrics, stream
+from river import metrics, stream
 from MDDM import MDDM, MDDM_A, MDDM_G, MDDM_E
+
+from scripts.utils import get_base_model, get_base_model_display_name
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -39,7 +41,7 @@ warnings.filterwarnings("ignore")
 
 def run_mddm(dataset_name, run_count=None, seed=42, progress_interval=1000,
              output_dir="benchmark_results", verbose=False,
-             variant='A', n=100, delta=0.000001):
+             variant='A', n=100, delta=0.000001, base_model='gaussiannb'):
     """
     Run MDDM drift detector on a dataset with prequential evaluation.
 
@@ -53,17 +55,19 @@ def run_mddm(dataset_name, run_count=None, seed=42, progress_interval=1000,
         variant: MDDM variant ('A', 'G', or 'E')
         n: Window size
         delta: Confidence parameter for McDiarmid's bound
+        base_model: Base classifier to use ('gaussiannb' or 'hat')
     """
     os.makedirs(output_dir, exist_ok=True)
 
+    base_model_name = get_base_model_display_name(base_model)
     detector_name = f"MDDM_{variant}"
     print(f"\n{'='*60}")
-    print(f"Running {detector_name} on {dataset_name}")
+    print(f"Running {detector_name} on {dataset_name} (Base: {base_model_name})")
     print(f"{'='*60}")
 
     try:
         # Initialize model and drift detector
-        model = naive_bayes.GaussianNB()
+        model = get_base_model(base_model)
 
         if variant == 'A':
             detector = MDDM_A(n=n, delta=delta)
@@ -115,7 +119,7 @@ def run_mddm(dataset_name, run_count=None, seed=42, progress_interval=1000,
                     if verbose:
                         print(f"  Drift detected at instance {processed_instances}")
                     # Reset model on drift
-                    model = naive_bayes.GaussianNB()
+                    model = get_base_model(base_model)
 
             # Learn from instance
             model.learn_one(x, y)
@@ -149,6 +153,7 @@ def run_mddm(dataset_name, run_count=None, seed=42, progress_interval=1000,
         results = {
             "dataset": dataset_name,
             "model": detector_name,
+            "base_model": base_model_name,
             "detector_params": {
                 "variant": variant,
                 "n": n,
@@ -173,9 +178,9 @@ def run_mddm(dataset_name, run_count=None, seed=42, progress_interval=1000,
         if run_count is not None:
             results["run_count"] = run_count
             results["seed"] = seed
-            file_name = f"{detector_name}_{dataset_name}_{run_count}.json"
+            file_name = f"{detector_name}_{base_model_name}_{dataset_name}_{run_count}.json"
         else:
-            file_name = f"{detector_name}_{dataset_name}.json"
+            file_name = f"{detector_name}_{base_model_name}_{dataset_name}.json"
 
         # Save results
         output_file = os.path.join(output_dir, file_name)
@@ -218,6 +223,9 @@ if __name__ == "__main__":
                         help='MDDM variant: A=Arithmetic, G=Geometric, E=Euler')
     parser.add_argument('--n', type=int, default=100, help='Window size')
     parser.add_argument('--delta', type=float, default=0.000001, help='Confidence parameter')
+    parser.add_argument('--base_model', type=str, default='gaussiannb',
+                        choices=['gaussiannb', 'hat'],
+                        help='Base classifier to use (default: gaussiannb)')
 
     args = parser.parse_args()
 
@@ -230,5 +238,6 @@ if __name__ == "__main__":
         verbose=args.verbose,
         variant=args.variant,
         n=args.n,
-        delta=args.delta
+        delta=args.delta,
+        base_model=args.base_model
     )

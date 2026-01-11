@@ -7,16 +7,23 @@ to detect concept drift by comparing distributions in sliding windows.
 Usage:
     python scripts/kswin_run.py --dataset elec
     python scripts/kswin_run.py --dataset sea --run_count 1 --seed 42
+    python scripts/kswin_run.py --dataset elec --base_model hat
 """
 
 import time
 import psutil
 import json
 import os
+import sys
 import argparse
 import traceback
 
-from river import drift, naive_bayes, metrics, stream
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from river import drift, metrics, stream
+
+from scripts.utils import get_base_model, get_base_model_display_name
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -24,7 +31,7 @@ warnings.filterwarnings("ignore")
 
 def run_kswin(dataset_name, run_count=None, seed=42, progress_interval=1000,
               output_dir="benchmark_results", verbose=False,
-              alpha=0.005, window_size=100, stat_size=30):
+              alpha=0.005, window_size=100, stat_size=30, base_model='gaussiannb'):
     """
     Run KSWIN drift detector on a dataset with prequential evaluation.
 
@@ -38,16 +45,18 @@ def run_kswin(dataset_name, run_count=None, seed=42, progress_interval=1000,
         alpha: Probability for the KS test
         window_size: Size of the sliding window
         stat_size: Size of the statistic window
+        base_model: Base classifier to use ('gaussiannb' or 'hat')
     """
     os.makedirs(output_dir, exist_ok=True)
 
+    base_model_name = get_base_model_display_name(base_model)
     print(f"\n{'='*60}")
-    print(f"Running KSWIN on {dataset_name}")
+    print(f"Running KSWIN on {dataset_name} (Base: {base_model_name})")
     print(f"{'='*60}")
 
     try:
         # Initialize model and drift detector
-        model = naive_bayes.GaussianNB()
+        model = get_base_model(base_model)
         detector = drift.KSWIN(
             alpha=alpha,
             window_size=window_size,
@@ -95,7 +104,7 @@ def run_kswin(dataset_name, run_count=None, seed=42, progress_interval=1000,
                     if verbose:
                         print(f"  Drift detected at instance {processed_instances}")
                     # Reset model on drift
-                    model = naive_bayes.GaussianNB()
+                    model = get_base_model(base_model)
 
             # Learn from instance
             model.learn_one(x, y)
@@ -129,6 +138,7 @@ def run_kswin(dataset_name, run_count=None, seed=42, progress_interval=1000,
         results = {
             "dataset": dataset_name,
             "model": "KSWIN",
+            "base_model": base_model_name,
             "detector_params": {
                 "alpha": alpha,
                 "window_size": window_size,
@@ -153,9 +163,9 @@ def run_kswin(dataset_name, run_count=None, seed=42, progress_interval=1000,
         if run_count is not None:
             results["run_count"] = run_count
             results["seed"] = seed
-            file_name = f"KSWIN_{dataset_name}_{run_count}.json"
+            file_name = f"KSWIN_{base_model_name}_{dataset_name}_{run_count}.json"
         else:
-            file_name = f"KSWIN_{dataset_name}.json"
+            file_name = f"KSWIN_{base_model_name}_{dataset_name}.json"
 
         # Save results
         output_file = os.path.join(output_dir, file_name)
@@ -197,6 +207,9 @@ if __name__ == "__main__":
     parser.add_argument('--alpha', type=float, default=0.005, help='KS test alpha')
     parser.add_argument('--window_size', type=int, default=100, help='Window size')
     parser.add_argument('--stat_size', type=int, default=30, help='Statistic window size')
+    parser.add_argument('--base_model', type=str, default='gaussiannb',
+                        choices=['gaussiannb', 'hat'],
+                        help='Base classifier to use (default: gaussiannb)')
 
     args = parser.parse_args()
 
@@ -209,5 +222,6 @@ if __name__ == "__main__":
         verbose=args.verbose,
         alpha=args.alpha,
         window_size=args.window_size,
-        stat_size=args.stat_size
+        stat_size=args.stat_size,
+        base_model=args.base_model
     )

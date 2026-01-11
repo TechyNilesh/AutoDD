@@ -7,17 +7,24 @@ inequality to detect concept drift based on error rate changes.
 Usage:
     python scripts/hddm_a_run.py --dataset elec
     python scripts/hddm_a_run.py --dataset sea --run_count 1 --seed 42
+    python scripts/hddm_a_run.py --dataset elec --base_model hat
 """
 
 import time
 import psutil
 import json
 import os
+import sys
 import argparse
 import traceback
 
-from river import drift, naive_bayes, metrics, stream
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from river import drift, metrics, stream
 from river.drift import binary as binary_drift
+
+from scripts.utils import get_base_model, get_base_model_display_name
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -25,7 +32,7 @@ warnings.filterwarnings("ignore")
 
 def run_hddm_a(dataset_name, run_count=None, seed=42, progress_interval=1000,
                output_dir="benchmark_results", verbose=False,
-               drift_confidence=0.001, warning_confidence=0.005):
+               drift_confidence=0.001, warning_confidence=0.005, base_model='gaussiannb'):
     """
     Run HDDM-A drift detector on a dataset with prequential evaluation.
 
@@ -38,16 +45,18 @@ def run_hddm_a(dataset_name, run_count=None, seed=42, progress_interval=1000,
         verbose: Enable verbose output
         drift_confidence: Confidence level for drift detection
         warning_confidence: Confidence level for warning zone
+        base_model: Base classifier to use ('gaussiannb' or 'hat')
     """
     os.makedirs(output_dir, exist_ok=True)
 
+    base_model_name = get_base_model_display_name(base_model)
     print(f"\n{'='*60}")
-    print(f"Running HDDM-A on {dataset_name}")
+    print(f"Running HDDM-A on {dataset_name} (Base: {base_model_name})")
     print(f"{'='*60}")
 
     try:
         # Initialize model and drift detector
-        model = naive_bayes.GaussianNB()
+        model = get_base_model(base_model)
         detector = binary_drift.HDDM_A(
             drift_confidence=drift_confidence,
             warning_confidence=warning_confidence
@@ -93,7 +102,7 @@ def run_hddm_a(dataset_name, run_count=None, seed=42, progress_interval=1000,
                     if verbose:
                         print(f"  Drift detected at instance {processed_instances}")
                     # Reset model on drift
-                    model = naive_bayes.GaussianNB()
+                    model = get_base_model(base_model)
 
             # Learn from instance
             model.learn_one(x, y)
@@ -127,6 +136,7 @@ def run_hddm_a(dataset_name, run_count=None, seed=42, progress_interval=1000,
         results = {
             "dataset": dataset_name,
             "model": "HDDM_A",
+            "base_model": base_model_name,
             "detector_params": {
                 "drift_confidence": drift_confidence,
                 "warning_confidence": warning_confidence
@@ -150,9 +160,9 @@ def run_hddm_a(dataset_name, run_count=None, seed=42, progress_interval=1000,
         if run_count is not None:
             results["run_count"] = run_count
             results["seed"] = seed
-            file_name = f"HDDM_A_{dataset_name}_{run_count}.json"
+            file_name = f"HDDM_A_{base_model_name}_{dataset_name}_{run_count}.json"
         else:
-            file_name = f"HDDM_A_{dataset_name}.json"
+            file_name = f"HDDM_A_{base_model_name}_{dataset_name}.json"
 
         # Save results
         output_file = os.path.join(output_dir, file_name)
@@ -193,6 +203,9 @@ if __name__ == "__main__":
     parser.add_argument('--verbose', action='store_true', help='Enable verbose output')
     parser.add_argument('--drift_confidence', type=float, default=0.001, help='Drift confidence')
     parser.add_argument('--warning_confidence', type=float, default=0.005, help='Warning confidence')
+    parser.add_argument('--base_model', type=str, default='gaussiannb',
+                        choices=['gaussiannb', 'hat'],
+                        help='Base classifier to use (default: gaussiannb)')
 
     args = parser.parse_args()
 
@@ -204,5 +217,6 @@ if __name__ == "__main__":
         output_dir=args.output_dir,
         verbose=args.verbose,
         drift_confidence=args.drift_confidence,
-        warning_confidence=args.warning_confidence
+        warning_confidence=args.warning_confidence,
+        base_model=args.base_model
     )

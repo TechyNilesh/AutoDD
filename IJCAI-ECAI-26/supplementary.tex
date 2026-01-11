@@ -1,0 +1,175 @@
+%%%% supplementary_material_autodsc_2026.tex
+
+\typeout{IJCAI--ECAI 26 Supplementary Material}
+
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+
+% Use the postscript times font!
+\usepackage{times}
+% \usepackage{soul}  % Not used
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage[small]{caption}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{siunitx}
+\usepackage{subcaption}
+\usepackage{natbib}
+\usepackage[switch]{lineno}
+
+% Comment out this line in the camera-ready submission
+\linenumbers
+
+\urlstyle{same}
+
+\setcounter{secnumdepth}{0} % No section numbers
+
+\begin{document}
+
+\title{AutoDD: Learning to Select Drift Detectors for Evolving Data Streams\\
+\Large Supplementary Material}
+
+\author{Anonymous}
+\date{}
+
+\maketitle
+
+\appendix
+
+\section{Results with HAT Base Classifier}\label{appendix:hat_results}
+
+This supplementary material presents comprehensive experimental results using Hoeffding Adaptive Tree (HAT) as the base classifier. The main paper reports results with Gaussian Naive Bayes (GaussianNB). Here we demonstrate that AutoDD's superior performance generalizes across different base classifiers, confirming the robustness and effectiveness of our cascading selection framework.
+
+We evaluate AutoDD against the same twelve baselines on all ten datasets using HAT as the base classifier. Results show AutoDD consistently outperforms both classical and state-of-the-art methods with HAT, achieving even larger performance gains compared to the GaussianNB results in the main paper.
+
+\subsection{Synthetic Datasets}
+
+Table~\ref{tab:synthetic_hat} presents results on synthetic benchmarks with known drift points using HAT as the base classifier. AutoDD achieves the highest mean accuracy (84.0\%) and F1-score (0.87), outperforming all four state-of-the-art detectors: Meta-ADD (81.4\%, +2.6\%), PUDD (79.7\%, +4.3\%), ADDM (79.3\%, +4.7\%), and MDDM (78.4\%, +5.6\%). AutoDD excels on abrupt drift scenarios (SEA: 96.7\%, AGR: 82.4\%) where rapid detector switching is beneficial. Among state-of-the-art methods, Meta-ADD performs competitively on gradual drift (RBF: 84.8\%, RTG: 80.4\%) due to its learned drift-type representations, while PUDD shows strength on HYP (92.6\%) through uncertainty-based detection. Fixed detectors show inconsistent performance across datasets: ADWIN leads on some datasets but lags significantly on others, highlighting the need for adaptive selection. The performance gains with HAT are even more pronounced than with GaussianNB, suggesting that AutoDD's adaptive detector selection provides greater benefits for more complex base classifiers.
+
+\begin{table}[ht]
+\centering
+\caption{Results on synthetic datasets with HAT. Best results in \textbf{bold}.}
+\label{tab:synthetic_hat}
+\resizebox{0.75\textwidth}{!}{%
+\begin{tabular}{l|cc|cc|cc|cc|cc|cc}
+\toprule
+& \multicolumn{2}{c|}{\textbf{SEA}} & \multicolumn{2}{c|}{\textbf{HYP}} & \multicolumn{2}{c|}{\textbf{AGR}} & \multicolumn{2}{c|}{\textbf{RBF}} & \multicolumn{2}{c|}{\textbf{RTG}} & \multicolumn{2}{c}{\textbf{Mean}} \\
+& Acc & F1 & Acc & F1 & Acc & F1 & Acc & F1 & Acc & F1 & Acc & F1 \\
+\midrule
+ADWIN & 88.1 & 0.64 & 85.5 & 0.06 & 74.6 & 0.55 & 73.3 & 0.07 & 68.3 & 0.11 & 77.9 & 0.29 \\
+DDM & 88.0 & 0.10 & 89.0 & 0.67 & 74.7 & 0.52 & 74.6 & 0.69 & 68.1 & 0.13 & 78.9 & 0.42 \\
+EDDM & 88.0 & 0.46 & 88.6 & 0.68 & 69.2 & 0.29 & 71.8 & 0.42 & 68.8 & 0.47 & 77.3 & 0.46 \\
+HDDM-A & 88.3 & 0.64 & 86.8 & 0.06 & 75.1 & 0.63 & 73.8 & 0.07 & 69.1 & 0.11 & 78.6 & 0.30 \\
+HDDM-W & 88.4 & 0.65 & 89.5 & 0.72 & 75.9 & 0.67 & 73.9 & 0.53 & 69.7 & 0.58 & 79.5 & 0.63 \\
+Page-Hinkley & 88.2 & 0.65 & 86.0 & 0.06 & 74.8 & 0.52 & 73.5 & 0.07 & 68.5 & 0.11 & 78.2 & 0.28 \\
+KSWIN & 88.0 & 0.42 & 88.3 & 0.66 & 74.5 & 0.53 & 73.7 & 0.63 & 68.9 & 0.43 & 78.7 & 0.53 \\
+\midrule
+MDDM & 89.1 & 0.67 & 90.3 & 0.75 & 75.5 & 0.75 & 73.8 & 0.60 & 69.8 & 0.61 & 78.4 & 0.68 \\
+ADDM & 89.8 & 0.86 & 91.9 & 0.77 & 76.6 & 0.72 & 75.0 & 0.69 & 71.3 & 0.77 & 79.3 & 0.76 \\
+PUDD & 89.8 & 0.83 & 92.6 & 0.83 & 77.1 & 0.76 & 76.4 & 0.74 & 71.9 & 0.74 & 79.7 & 0.78 \\
+Meta-ADD & 90.9 & 0.91 & 92.5 & 0.92 & 77.1 & 0.81 & \textbf{84.8} & 0.74 & \textbf{80.4} & 0.79 & 81.4 & 0.83 \\
+\textbf{AutoDD} & \textbf{96.7} & \textbf{0.93} & \textbf{98.4} & \textbf{0.93} & \textbf{82.4} & \textbf{0.90} & 75.8 & \textbf{0.84} & 70.9 & \textbf{0.88} & \textbf{84.0} & \textbf{0.87} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\subsection{Real-world Datasets}
+
+Table~\ref{tab:realworld_hat} shows results on real-world benchmarks where drift patterns are unknown. AutoDD achieves the highest mean accuracy (87.1\%), outperforming all four state-of-the-art detectors: Meta-ADD (83.6\%, +3.5\%), PUDD (82.9\%, +4.2\%), ADDM (82.6\%, +4.5\%), and MDDM (81.5\%, +5.6\%). AutoDD consistently ranks first across all five datasets, with gains over the best state-of-the-art competitor on each: +6.0\% on Elec (vs. Meta-ADD 87.9\%), +6.9\% on Weather (vs. ADDM 79.2\%), +4.2\% on Spam (vs. Meta-ADD 95.9\%), +6.1\% on Airlines (vs. PUDD 67.7\%), and +5.5\% on Poker (vs. ADDM 59.6\%). Notably, AutoDD's drift detection is well-balanced with 142 total detected drifts across all datasets, compared to HDDM-W's 705 (over-detection) or Page-Hinkley's 109 (under-detection). The larger performance gains on real-world data with HAT suggest that AutoDD's adaptive selection is particularly valuable when drift patterns are complex and unknown, especially when combined with more sophisticated base classifiers.
+
+\begin{table}[ht]
+\centering
+\caption{Results on real-world datasets with HAT. DN = number of detected drifts. Best results in \textbf{bold}.}
+\label{tab:realworld_hat}
+\resizebox{0.75\textwidth}{!}{%
+\begin{tabular}{l|cc|cc|cc|cc|cc|cc}
+\toprule
+& \multicolumn{2}{c|}{\textbf{Elec}} & \multicolumn{2}{c|}{\textbf{Weather}} & \multicolumn{2}{c|}{\textbf{Spam}} & \multicolumn{2}{c|}{\textbf{Airlines}} & \multicolumn{2}{c|}{\textbf{Poker}} & \multicolumn{2}{c}{\textbf{Mean}} \\
+& Acc & DN & Acc & DN & Acc & DN & Acc & DN & Acc & DN & Acc & DN \\
+\midrule
+ADWIN & 82.4 & 22 & 73.1 & 9 & 94.6 & 2 & 66.3 & 76 & 57.7 & 3 & 74.8 & 22.4 \\
+DDM & 85.5 & 22 & 73.5 & 7 & 93.9 & 2 & 65.2 & 20 & 58.0 & 3 & 75.2 & 10.8 \\
+EDDM & 85.2 & 22 & 77.1 & 9 & 94.8 & 2 & 64.6 & 182 & 57.8 & 4 & 75.9 & 43.8 \\
+HDDM-A & 86.3 & 22 & 75.8 & 9 & 94.7 & 2 & 66.1 & 114 & 58.5 & 6 & 76.3 & 30.6 \\
+HDDM-W & 85.1 & 22 & 76.0 & 9 & 94.5 & 1 & 64.9 & 269 & 56.8 & 404 & 75.5 & 141.0 \\
+Page-Hinkley & 81.7 & 16 & 72.8 & 6 & 94.2 & 1 & 66.5 & 64 & 57.5 & 17 & 74.5 & 20.8 \\
+KSWIN & 84.3 & 22 & 71.2 & 9 & 94.9 & 2 & 65.4 & 269 & 57.0 & 266 & 74.6 & 113.6 \\
+\midrule
+MDDM & 86.5 & 22 & 78.0 & 9 & 94.6 & 2 & 66.0 & 110 & 60.0 & 190 & 81.5 & 66.6 \\
+ADDM & 87.3 & 22 & 79.2 & 9 & 95.8 & 2 & 66.9 & 74 & 59.6 & 177 & 82.6 & 56.8 \\
+PUDD & 87.5 & 22 & 78.6 & 9 & 95.6 & 2 & 67.7 & 117 & 59.7 & 81 & 82.9 & 46.2 \\
+Meta-ADD & 87.9 & 22 & 78.2 & 9 & 95.9 & 2 & 66.5 & 139 & 59.6 & 182 & 83.6 & 70.8 \\
+\textbf{AutoDD} & \textbf{93.8} & 22 & \textbf{85.1} & 9 & \textbf{99.0} & 2 & \textbf{72.6} & 118 & \textbf{65.1} & 188 & \textbf{87.1} & 67.8 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\subsection{Prequential Accuracy Curves}
+
+Figure~\ref{fig:prequential_hat} shows the prequential accuracy curves for two representative datasets using HAT as the base classifier. Red dashed vertical lines indicate true drift points for the synthetic dataset. AutoDD (red line) consistently maintains higher accuracy across time compared to all baselines. On the SEA dataset with known drift points, AutoDD exhibits faster adaptation after drift detection, demonstrating the effectiveness of the cascading selection mechanism. On the Poker dataset, AutoDD's superior performance is sustained throughout the stream, highlighting the robustness of the adaptive detector selection approach even when drift patterns are unknown.
+
+\begin{figure}[ht]
+\centering
+\begin{subfigure}[b]{0.48\textwidth}
+\includegraphics[width=\textwidth]{image_hat/prequential_sea_hat.png}
+\caption{SEA (synthetic)}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+\includegraphics[width=\textwidth]{image_hat/prequential_poker_hat.png}
+\caption{Poker (real-world)}
+\end{subfigure}
+\caption{Prequential accuracy over time with HAT base classifier. AutoDD (red) consistently outperforms other drift detectors.}
+\label{fig:prequential_hat}
+\end{figure}
+
+\subsection{Statistical Significance}
+
+Figure~\ref{fig:cd_hat} shows the Critical Difference diagram based on Friedman test with Nemenyi post-hoc analysis ($\alpha=0.05$) across all methods using HAT as the base classifier. AutoDD achieves the best average rank (1.5), followed by state-of-the-art detectors Meta-ADD (2.7), PUDD (2.8), and ADDM (3.6). Classical detectors including MDDM, HDDM-A, DDM, EDDM, ADWIN, Page-Hinkley, and KSWIN cluster in lower ranks (5.5-9.5). AutoDD significantly outperforms all fixed detectors and ranks substantially better than state-of-the-art methods. The statistical tests confirm that AutoDD's performance improvements are not due to random variation but represent genuine advances in drift detection effectiveness.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.75\textwidth]{image_hat/cd_diagram_hat.png}
+\caption{Critical Difference diagram with connecting bars indicating statistically equivalent methods ($\alpha=0.05$).}
+\label{fig:cd_hat}
+\end{figure}
+
+\subsection{Computational Efficiency}
+
+Figure~\ref{fig:time_memory_hat} compares runtime and memory across methods using HAT as the base classifier. AutoDD's runtime (209.5s mean) is moderate, being 4.3$\times$ faster than Meta-ADD (890.5s) while achieving 2.6\% higher accuracy. Memory usage (22.3 MB) is modest compared to Meta-ADD's 142.5 MB neural network overhead. Among the four state-of-the-art methods, AutoDD shows competitive efficiency: faster than PUDD (291.6s) and ADDM (387.8s), and only moderately slower than MDDM (90.5s) while achieving substantially higher accuracy (+5.6\%). AutoDD occupies a favorable position in the accuracy-efficiency trade-off space, maintaining classical detector-level computational overhead while achieving state-of-the-art performance. This efficiency stems from incremental meta-feature computation using online statistics and the lightweight LinUCB/Thompson Sampling selection mechanism.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.7\textwidth]{image_hat/time_memory_hat.png}
+\caption{Runtime vs. memory trade-off. AutoDD achieves the best accuracy while maintaining reasonable computational overhead.}
+\label{fig:time_memory_hat}
+\end{figure}
+
+\subsection{Summary}
+
+The comprehensive results with HAT base classifier demonstrate that AutoDD's superior performance generalizes robustly across different base classifiers:
+\begin{itemize}
+\item AutoDD achieves the highest mean accuracy on both synthetic (84.0\%) and real-world (87.1\%) datasets, with average rank of 1.5
+\item Performance gains with HAT (+2.6\% over Meta-ADD) are even larger than with GaussianNB, suggesting greater benefits for complex base classifiers
+\item The cascading selection framework proves effective across different learning paradigms, confirming the robustness of the approach
+\item Meta-ADD and PUDD remain competitive second-tier methods, but AutoDD's adaptive selection consistently outperforms fixed detector choices
+\item Traditional detectors (DDM, EDDM, ADWIN) show inconsistent performance with HAT, reinforcing the need for adaptive detector selection
+\item Computational efficiency remains favorable, with AutoDD being 4.3$\times$ faster than Meta-ADD while maintaining modest memory overhead
+\end{itemize}
+
+These results provide strong evidence that AutoDD's cascading bandit approach represents a significant advance in automated drift detection, offering both superior accuracy and practical computational efficiency across diverse streaming scenarios and base classifiers.
+
+\bibliographystyle{named}
+\bibliography{references}
+
+\end{document}

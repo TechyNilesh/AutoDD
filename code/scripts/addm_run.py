@@ -25,8 +25,10 @@ import sys
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from river import naive_bayes, metrics, stream
+from river import metrics, stream
 from ADDM import ADDM
+
+from scripts.utils import get_base_model, get_base_model_display_name
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -34,7 +36,7 @@ warnings.filterwarnings("ignore")
 
 def run_addm(dataset_name, run_count=None, seed=42, progress_interval=1000,
              output_dir="benchmark_results", verbose=False,
-             window_size=100, lag=5, threshold=2.0):
+             window_size=100, lag=5, threshold=2.0, base_model='gaussiannb'):
     """
     Run ADDM drift detector on a dataset with prequential evaluation.
 
@@ -48,16 +50,18 @@ def run_addm(dataset_name, run_count=None, seed=42, progress_interval=1000,
         window_size: Size of the sliding window
         lag: Autoregressive lag order
         threshold: Number of standard deviations for drift detection
+        base_model: Base classifier to use ('gaussiannb' or 'hat')
     """
     os.makedirs(output_dir, exist_ok=True)
 
+    base_model_name = get_base_model_display_name(base_model)
     print(f"\n{'='*60}")
-    print(f"Running ADDM on {dataset_name}")
+    print(f"Running ADDM on {dataset_name} (Base: {base_model_name})")
     print(f"{'='*60}")
 
     try:
         # Initialize model and drift detector
-        model = naive_bayes.GaussianNB()
+        model = get_base_model(base_model)
         detector = ADDM(window_size=window_size, lag=lag, threshold=threshold)
 
         # Initialize metrics
@@ -106,7 +110,7 @@ def run_addm(dataset_name, run_count=None, seed=42, progress_interval=1000,
                         print(f"  Drift detected at instance {processed_instances}"
                               f" (severity: {severity:.3f})" if severity else "")
                     # Reset model on drift
-                    model = naive_bayes.GaussianNB()
+                    model = get_base_model(base_model)
 
             # Learn from instance
             model.learn_one(x, y)
@@ -140,6 +144,7 @@ def run_addm(dataset_name, run_count=None, seed=42, progress_interval=1000,
         results = {
             "dataset": dataset_name,
             "model": "ADDM",
+            "base_model": base_model_name,
             "detector_params": {
                 "window_size": window_size,
                 "lag": lag,
@@ -165,9 +170,9 @@ def run_addm(dataset_name, run_count=None, seed=42, progress_interval=1000,
         if run_count is not None:
             results["run_count"] = run_count
             results["seed"] = seed
-            file_name = f"ADDM_{dataset_name}_{run_count}.json"
+            file_name = f"ADDM_{base_model_name}_{dataset_name}_{run_count}.json"
         else:
-            file_name = f"ADDM_{dataset_name}.json"
+            file_name = f"ADDM_{base_model_name}_{dataset_name}.json"
 
         # Save results
         output_file = os.path.join(output_dir, file_name)
@@ -211,6 +216,9 @@ if __name__ == "__main__":
     parser.add_argument('--window_size', type=int, default=100, help='Window size')
     parser.add_argument('--lag', type=int, default=5, help='Autoregressive lag order')
     parser.add_argument('--threshold', type=float, default=2.0, help='Drift detection threshold')
+    parser.add_argument('--base_model', type=str, default='gaussiannb',
+                        choices=['gaussiannb', 'hat'],
+                        help='Base classifier to use (default: gaussiannb)')
 
     args = parser.parse_args()
 
@@ -223,5 +231,6 @@ if __name__ == "__main__":
         verbose=args.verbose,
         window_size=args.window_size,
         lag=args.lag,
-        threshold=args.threshold
+        threshold=args.threshold,
+        base_model=args.base_model
     )
