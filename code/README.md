@@ -361,7 +361,3 @@ If you use AutoDD in your research, please cite:
   note={Under review}
 }
 ```
-
-## License
-
-MIT License
