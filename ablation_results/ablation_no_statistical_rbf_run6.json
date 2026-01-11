@@ -2,11 +2,11 @@
     "dataset": "rbf",
     "config": "no_statistical",
     "config_name": "w/o Statistical",
-    "accuracy": 0.655484,
-    "f1": 0.5401,
-    "n_drifts": 4,
-    "total_runtime": 2.61,
-    "total_memory_mb": 7.56,
+    "accuracy": 0.658785,
+    "f1": 0.4946,
+    "n_drifts": 6,
+    "total_runtime": 1.89,
+    "total_memory_mb": 4.26,
     "n_instances": 10000,
     "run_id": 6
 }

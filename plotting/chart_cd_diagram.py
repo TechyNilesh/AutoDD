@@ -112,7 +112,7 @@ def generate_cd_diagram():
     # Run autorank analysis
     res = autorank(
         data_df,
-        alpha=0.11,
+        alpha=0.05,
         order='descending',
         verbose=True,
         effect_size="cohen_d",

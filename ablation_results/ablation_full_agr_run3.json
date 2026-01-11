@@ -2,11 +2,11 @@
     "dataset": "agr",
     "config": "full",
     "config_name": "Full AutoDD",
-    "accuracy": 0.769226,
-    "f1": 0.5834,
-    "n_drifts": 32,
-    "total_runtime": 3.07,
-    "total_memory_mb": 5.89,
+    "accuracy": 0.781405,
+    "f1": 0.6123,
+    "n_drifts": 23,
+    "total_runtime": 2.22,
+    "total_memory_mb": 7.79,
     "n_instances": 10000,
     "run_id": 3
 }

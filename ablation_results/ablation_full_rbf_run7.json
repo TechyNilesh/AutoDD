@@ -2,11 +2,11 @@
     "dataset": "rbf",
     "config": "full",
     "config_name": "Full AutoDD",
-    "accuracy": 0.749878,
-    "f1": 0.5712,
-    "n_drifts": 17,
-    "total_runtime": 3.06,
-    "total_memory_mb": 7.37,
+    "accuracy": 0.741018,
+    "f1": 0.6114,
+    "n_drifts": 14,
+    "total_runtime": 2.57,
+    "total_memory_mb": 8.64,
     "n_instances": 10000,
     "run_id": 7
 }

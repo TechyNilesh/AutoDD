@@ -1,0 +1,12 @@
+{
+    "dataset": "rtg",
+    "config": "no_thompson",
+    "config_name": "w/o Thompson (Level 2)",
+    "accuracy": 0.647874,
+    "f1": 0.4898,
+    "n_drifts": 28,
+    "total_runtime": 2.76,
+    "total_memory_mb": 4.9,
+    "n_instances": 10000,
+    "run_id": 5
+}

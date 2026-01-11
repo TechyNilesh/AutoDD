@@ -7,14 +7,16 @@ Datasets: sea, hyp, agr, rbf, rtg, elec, weather, spam, airlines, poker
 
 Configuration                         Accuracy         F1      Delta
 ----------------------------------------------------------------------
-Full AutoDD                      79.5%±0.8%     0.6327         --
-w/o Temporal Features            73.1%±0.8%     0.5848      -6.3%
-w/o Statistical Features         70.2%±0.8%     0.5611      -9.3%
-w/o Stationarity Features        72.6%±0.8%     0.5808      -6.9%
-w/o LinUCB (Random)              61.4%±0.8%     0.4914     -18.0%
+Full AutoDD                      80.6%±0.8%     0.6439         --
+w/o Temporal Features            74.2%±0.8%     0.5928      -6.4%
+w/o Statistical Features         71.2%±0.8%     0.5662      -9.4%
+w/o Stationarity Features        73.5%±0.9%     0.5856      -7.1%
+w/o LinUCB (Level 1)             62.5%±0.7%     0.5015     -18.0%
+w/o Thompson (Level 2)           75.3%±0.8%     0.6040      -5.2%
 ----------------------------------------------------------------------
 
 Key Findings:
-- Full AutoDD: 79.5%
-- Removing Statistical: -9.3% drop
-- Random selection: -18.0% drop
+- Full AutoDD: 80.6%
+- Removing LinUCB (Level 1): -18.0% drop
+- Removing Thompson (Level 2): -5.2% drop
+- Removing Statistical: -9.4% drop

@@ -1,0 +1,12 @@
+{
+    "dataset": "sea",
+    "config": "no_linucb",
+    "config_name": "w/o LinUCB (Level 1)",
+    "accuracy": 0.748958,
+    "f1": 0.5835,
+    "n_drifts": 43,
+    "total_runtime": 1.09,
+    "total_memory_mb": 7.58,
+    "n_instances": 10000,
+    "run_id": 1
+}

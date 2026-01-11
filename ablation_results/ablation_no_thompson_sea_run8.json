@@ -1,0 +1,12 @@
+{
+    "dataset": "sea",
+    "config": "no_thompson",
+    "config_name": "w/o Thompson (Level 2)",
+    "accuracy": 0.887202,
+    "f1": 0.7305,
+    "n_drifts": 27,
+    "total_runtime": 2.06,
+    "total_memory_mb": 5.23,
+    "n_instances": 10000,
+    "run_id": 8
+}

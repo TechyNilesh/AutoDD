@@ -1,0 +1,12 @@
+{
+    "dataset": "weather",
+    "config": "no_thompson",
+    "config_name": "w/o Thompson (Level 2)",
+    "accuracy": 0.738818,
+    "f1": 0.6113,
+    "n_drifts": 23,
+    "total_runtime": 5.63,
+    "total_memory_mb": 5.45,
+    "n_instances": 18159,
+    "run_id": 4
+}

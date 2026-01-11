@@ -2,11 +2,12 @@
 AutoDD Ablation Study
 
 Self-contained script to run ablation experiments testing component contributions:
-1. Full AutoDD - all 15 meta-features with LinUCB
+1. Full AutoDD - all 15 meta-features with LinUCB (Level 1) + Thompson Sampling (Level 2)
 2. w/o Temporal Features - only statistical + stationarity (10 features)
 3. w/o Statistical Features - only temporal + stationarity (10 features)
 4. w/o Stationarity Features - only statistical + temporal (10 features)
-5. w/o LinUCB - random detector selection
+5. w/o LinUCB (Level 1) - random detector selection, with Thompson Sampling
+6. w/o Thompson Sampling (Level 2) - LinUCB selection, but default hyperparameters only
 
 Usage:
     python run_ablation_study.py
@@ -50,39 +51,52 @@ ABLATION_CONFIGS = {
     'full': {
         'name': 'Full AutoDD',
         'feature_indices': list(range(15)),
-        'use_linucb': True
+        'use_linucb': True,
+        'use_thompson': True
     },
     'no_temporal': {
         'name': 'w/o Temporal',
         'feature_indices': STATISTICAL_INDICES + STATIONARITY_INDICES,
-        'use_linucb': True
+        'use_linucb': True,
+        'use_thompson': True
     },
     'no_statistical': {
         'name': 'w/o Statistical',
         'feature_indices': STATIONARITY_INDICES + TEMPORAL_INDICES,
-        'use_linucb': True
+        'use_linucb': True,
+        'use_thompson': True
     },
     'no_stationarity': {
         'name': 'w/o Stationarity',
         'feature_indices': STATISTICAL_INDICES + TEMPORAL_INDICES,
-        'use_linucb': True
+        'use_linucb': True,
+        'use_thompson': True
     },
-    'random': {
-        'name': 'w/o LinUCB (Random)',
+    'no_linucb': {
+        'name': 'w/o LinUCB (Level 1)',
         'feature_indices': list(range(15)),
-        'use_linucb': False
+        'use_linucb': False,
+        'use_thompson': True
+    },
+    'no_thompson': {
+        'name': 'w/o Thompson (Level 2)',
+        'feature_indices': list(range(15)),
+        'use_linucb': True,
+        'use_thompson': False
     }
 }
 
 
 class AblationAutoDD:
-    """AutoDD with ablation support."""
+    """AutoDD with ablation support for Level 1 (LinUCB) and Level 2 (Thompson Sampling)."""
 
-    def __init__(self, window_size=100, alpha=1.0, feature_indices=None, use_linucb=True):
+    def __init__(self, window_size=100, alpha=1.0, feature_indices=None, use_linucb=True, use_thompson=True, n_configs=5):
         self.window_size = window_size
         self.alpha = alpha
         self.feature_indices = feature_indices if feature_indices else list(range(15))
         self.use_linucb = use_linucb
+        self.use_thompson = use_thompson
+        self.n_configs = n_configs
 
         self.meta_extractor = MetaFeatureExtractor(window_size=window_size)
         self.portfolio = DetectorPortfolio()
@@ -90,10 +104,18 @@ class AblationAutoDD:
         self.n_arms = len(self.portfolio)
         self.n_features = len(self.feature_indices)
 
+        # Level 1: LinUCB for detector selection
         if use_linucb:
             self.agent = LinUCBAgent(n_arms=self.n_arms, n_features=self.n_features, alpha=alpha)
         else:
             self.agent = None
+
+        # Level 2: Thompson Sampling for hyperparameter selection
+        # Beta distribution parameters (alpha, beta) for each detector's configs
+        if use_thompson:
+            self.ts_alpha = {name: np.ones(n_configs) for name in self.portfolio.detector_names}
+            self.ts_beta = {name: np.ones(n_configs) for name in self.portfolio.detector_names}
+        self.current_config = 0  # Default config index
 
         self.arm_to_detector = {i: name for i, name in enumerate(self.portfolio.detector_names)}
 
@@ -105,6 +127,7 @@ class AblationAutoDD:
         self.accuracy_buffer = deque(maxlen=window_size)
         self.prev_window_accuracy = None
         self.selection_history = []
+        self.config_history = []
 
         self._n_instances = 0
         self._active_detector_name = None
@@ -142,6 +165,25 @@ class AblationAutoDD:
 
         return self
 
+    def _select_config_thompson(self, detector_name):
+        """Level 2: Select hyperparameter config using Thompson Sampling."""
+        if not self.use_thompson:
+            return 0  # Always use default config (index 0)
+
+        # Sample from Beta distribution for each config
+        samples = np.random.beta(self.ts_alpha[detector_name], self.ts_beta[detector_name])
+        return int(np.argmax(samples))
+
+    def _update_thompson(self, detector_name, config_idx, reward):
+        """Update Thompson Sampling parameters."""
+        if not self.use_thompson:
+            return
+
+        # Normalize reward to [0, 1]
+        normalized_reward = (reward + 1) / 2
+        self.ts_alpha[detector_name][config_idx] += normalized_reward
+        self.ts_beta[detector_name][config_idx] += (1 - normalized_reward)
+
     def _process_window(self):
         if not self.meta_extractor.is_ready():
             if self._active_detector is None:
@@ -150,15 +192,21 @@ class AblationAutoDD:
                 self._active_detector = self.portfolio.get_detector(first_detector)
                 self.current_detector = first_detector
                 self.current_arm = 0
+                self.current_config = 0
             return
 
         full_features = self.meta_extractor.get_features()
         meta_features = self._select_features(full_features)
 
-        if self._last_meta_features is not None and self.current_arm is not None and self.use_linucb:
+        # Update Level 1 (LinUCB) and Level 2 (Thompson Sampling)
+        if self._last_meta_features is not None and self.current_arm is not None:
             reward = self._compute_reward()
-            self.agent.update(self.current_arm, self._last_meta_features, reward)
+            if self.use_linucb:
+                self.agent.update(self.current_arm, self._last_meta_features, reward)
+            if self.use_thompson:
+                self._update_thompson(self._active_detector_name, self.current_config, reward)
 
+        # Level 1: Select detector
         if self.use_linucb:
             selected_arm = self.agent.select_arm(meta_features)
         else:
@@ -168,6 +216,10 @@ class AblationAutoDD:
         self.current_arm = selected_arm
         self.current_detector = selected_detector
         self.selection_history.append(selected_detector)
+
+        # Level 2: Select hyperparameter config
+        self.current_config = self._select_config_thompson(selected_detector)
+        self.config_history.append(self.current_config)
 
         self._active_detector_name = selected_detector
         self.portfolio.reset_detector(selected_detector)
@@ -220,7 +272,8 @@ def run_single_ablation(dataset_name, config_name, run_count=None, seed=42, outp
             window_size=100,
             alpha=1.0,
             feature_indices=config['feature_indices'],
-            use_linucb=config['use_linucb']
+            use_linucb=config['use_linucb'],
+            use_thompson=config['use_thompson']
         )
 
         accuracy = metrics.Accuracy()
@@ -262,6 +315,7 @@ def run_single_ablation(dataset_name, config_name, run_count=None, seed=42, outp
             "config_name": config['name'],
             "n_features": len(config['feature_indices']),
             "use_linucb": config['use_linucb'],
+            "use_thompson": config['use_thompson'],
             "accuracy": final_accuracy,
             "f1": final_f1,
             "n_drifts": len(detected_drifts),

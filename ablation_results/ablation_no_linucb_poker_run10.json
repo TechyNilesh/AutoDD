@@ -1,0 +1,12 @@
+{
+    "dataset": "poker",
+    "config": "no_linucb",
+    "config_name": "w/o LinUCB (Level 1)",
+    "accuracy": 0.416575,
+    "f1": 0.3233,
+    "n_drifts": 22,
+    "total_runtime": 156.62,
+    "total_memory_mb": 6.48,
+    "n_instances": 829201,
+    "run_id": 10
+}

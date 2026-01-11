@@ -2,11 +2,11 @@
     "dataset": "rtg",
     "config": "no_statistical",
     "config_name": "w/o Statistical",
-    "accuracy": 0.626999,
-    "f1": 0.5047,
-    "n_drifts": 10,
-    "total_runtime": 2.62,
-    "total_memory_mb": 8.43,
+    "accuracy": 0.593625,
+    "f1": 0.4824,
+    "n_drifts": 11,
+    "total_runtime": 1.62,
+    "total_memory_mb": 7.84,
     "n_instances": 10000,
     "run_id": 6
 }

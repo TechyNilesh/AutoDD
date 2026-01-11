@@ -2,11 +2,11 @@
     "dataset": "hyp",
     "config": "no_stationarity",
     "config_name": "w/o Stationarity",
-    "accuracy": 0.859356,
-    "f1": 0.647,
-    "n_drifts": 6,
-    "total_runtime": 1.61,
-    "total_memory_mb": 8.17,
+    "accuracy": 0.87064,
+    "f1": 0.715,
+    "n_drifts": 25,
+    "total_runtime": 1.67,
+    "total_memory_mb": 5.82,
     "n_instances": 10000,
     "run_id": 5
 }

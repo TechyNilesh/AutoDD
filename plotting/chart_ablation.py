@@ -36,17 +36,18 @@ rcParams['ytick.labelsize'] = 14
 rcParams['legend.fontsize'] = 14
 
 # Configuration order and display names
-CONFIGS = ['full', 'no_temporal', 'no_statistical', 'no_stationarity', 'random']
+CONFIGS = ['full', 'no_temporal', 'no_statistical', 'no_stationarity', 'no_linucb', 'no_thompson']
 DISPLAY_NAMES = {
     'full': 'Full AutoDD',
     'no_temporal': 'w/o Temporal',
     'no_statistical': 'w/o Statistical',
     'no_stationarity': 'w/o Stationarity',
-    'random': 'Random',
+    'no_linucb': 'w/o LinUCB\n(Level 1)',
+    'no_thompson': 'w/o Thompson\n(Level 2)',
 }
 
 # Box colors
-BOX_COLORS = ['#2ca02c', '#1f77b4', '#ff7f0e', '#9467bd', '#d62728']
+BOX_COLORS = ['#2ca02c', '#1f77b4', '#ff7f0e', '#9467bd', '#d62728', '#8c564b']
 
 
 def load_all_results():

@@ -1,0 +1,12 @@
+{
+    "dataset": "elec",
+    "config": "no_thompson",
+    "config_name": "w/o Thompson (Level 2)",
+    "accuracy": 0.839748,
+    "f1": 0.6737,
+    "n_drifts": 23,
+    "total_runtime": 9.53,
+    "total_memory_mb": 5.88,
+    "n_instances": 45325,
+    "run_id": 9
+}

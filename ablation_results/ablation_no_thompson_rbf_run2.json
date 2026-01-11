@@ -1,0 +1,12 @@
+{
+    "dataset": "rbf",
+    "config": "no_thompson",
+    "config_name": "w/o Thompson (Level 2)",
+    "accuracy": 0.690279,
+    "f1": 0.5201,
+    "n_drifts": 38,
+    "total_runtime": 2.7,
+    "total_memory_mb": 5.5,
+    "n_instances": 10000,
+    "run_id": 2
+}

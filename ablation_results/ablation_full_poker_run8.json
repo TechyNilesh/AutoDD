@@ -2,11 +2,11 @@
     "dataset": "poker",
     "config": "full",
     "config_name": "Full AutoDD",
-    "accuracy": 0.579229,
-    "f1": 0.4717,
-    "n_drifts": 13,
-    "total_runtime": 274.17,
-    "total_memory_mb": 5.36,
+    "accuracy": 0.590237,
+    "f1": 0.4593,
+    "n_drifts": 16,
+    "total_runtime": 254.41,
+    "total_memory_mb": 9.06,
     "n_instances": 829201,
     "run_id": 8
 }

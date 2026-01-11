@@ -1,0 +1,12 @@
+{
+    "dataset": "spam",
+    "config": "no_thompson",
+    "config_name": "w/o Thompson (Level 2)",
+    "accuracy": 0.916993,
+    "f1": 0.7301,
+    "n_drifts": 13,
+    "total_runtime": 2.73,
+    "total_memory_mb": 6.43,
+    "n_instances": 9324,
+    "run_id": 6
+}

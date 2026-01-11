@@ -2,11 +2,11 @@
     "dataset": "spam",
     "config": "no_temporal",
     "config_name": "w/o Temporal",
-    "accuracy": 0.9146,
-    "f1": 0.7217,
-    "n_drifts": 44,
-    "total_runtime": 2.26,
-    "total_memory_mb": 5.09,
+    "accuracy": 0.919855,
+    "f1": 0.7608,
+    "n_drifts": 14,
+    "total_runtime": 2.57,
+    "total_memory_mb": 7.99,
     "n_instances": 9324,
     "run_id": 9
 }

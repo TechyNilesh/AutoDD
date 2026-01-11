@@ -1,0 +1,12 @@
+{
+    "dataset": "airlines",
+    "config": "no_linucb",
+    "config_name": "w/o LinUCB (Level 1)",
+    "accuracy": 0.513964,
+    "f1": 0.4272,
+    "n_drifts": 5,
+    "total_runtime": 82.28,
+    "total_memory_mb": 7.14,
+    "n_instances": 539383,
+    "run_id": 10
+}
