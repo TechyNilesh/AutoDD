@@ -2,11 +2,11 @@
     "dataset": "poker",
     "config": "no_statistical",
     "config_name": "w/o Statistical",
-    "accuracy": 0.489661,
-    "f1": 0.4151,
-    "n_drifts": 11,
-    "total_runtime": 132.19,
-    "total_memory_mb": 7.95,
+    "accuracy": 0.498515,
+    "f1": 0.3819,
+    "n_drifts": 18,
+    "total_runtime": 200.31,
+    "total_memory_mb": 8.13,
     "n_instances": 829201,
     "run_id": 2
 }

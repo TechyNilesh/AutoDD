@@ -2,11 +2,11 @@
     "dataset": "agr",
     "config": "no_stationarity",
     "config_name": "w/o Stationarity",
-    "accuracy": 0.696696,
-    "f1": 0.528,
-    "n_drifts": 24,
-    "total_runtime": 1.59,
-    "total_memory_mb": 7.13,
+    "accuracy": 0.707472,
+    "f1": 0.5531,
+    "n_drifts": 41,
+    "total_runtime": 2.43,
+    "total_memory_mb": 4.56,
     "n_instances": 10000,
     "run_id": 3
 }

@@ -1,0 +1,12 @@
+{
+    "dataset": "rbf",
+    "config": "no_linucb",
+    "config_name": "w/o LinUCB (Level 1)",
+    "accuracy": 0.573999,
+    "f1": 0.462,
+    "n_drifts": 10,
+    "total_runtime": 1.78,
+    "total_memory_mb": 7.13,
+    "n_instances": 10000,
+    "run_id": 6
+}

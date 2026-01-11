@@ -1,0 +1,12 @@
+{
+    "dataset": "rtg",
+    "config": "no_linucb",
+    "config_name": "w/o LinUCB (Level 1)",
+    "accuracy": 0.507438,
+    "f1": 0.4147,
+    "n_drifts": 17,
+    "total_runtime": 1.17,
+    "total_memory_mb": 5.86,
+    "n_instances": 10000,
+    "run_id": 4
+}

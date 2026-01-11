@@ -2,11 +2,11 @@
     "dataset": "weather",
     "config": "full",
     "config_name": "Full AutoDD",
-    "accuracy": 0.773354,
-    "f1": 0.6365,
-    "n_drifts": 10,
-    "total_runtime": 3.86,
-    "total_memory_mb": 7.34,
+    "accuracy": 0.80001,
+    "f1": 0.6318,
+    "n_drifts": 49,
+    "total_runtime": 5.18,
+    "total_memory_mb": 6.66,
     "n_instances": 18159,
     "run_id": 8
 }

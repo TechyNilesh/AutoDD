@@ -2,11 +2,11 @@
     "dataset": "rtg",
     "config": "full",
     "config_name": "Full AutoDD",
-    "accuracy": 0.703897,
-    "f1": 0.5639,
-    "n_drifts": 7,
-    "total_runtime": 2.62,
-    "total_memory_mb": 8.43,
+    "accuracy": 0.692424,
+    "f1": 0.5522,
+    "n_drifts": 17,
+    "total_runtime": 2.95,
+    "total_memory_mb": 5.34,
     "n_instances": 10000,
     "run_id": 3
 }

@@ -1,0 +1,12 @@
+{
+    "dataset": "weather",
+    "config": "no_linucb",
+    "config_name": "w/o LinUCB (Level 1)",
+    "accuracy": 0.619694,
+    "f1": 0.5103,
+    "n_drifts": 37,
+    "total_runtime": 2.96,
+    "total_memory_mb": 5.52,
+    "n_instances": 18159,
+    "run_id": 8
+}

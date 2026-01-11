@@ -1,0 +1,12 @@
+{
+    "dataset": "poker",
+    "config": "no_thompson",
+    "config_name": "w/o Thompson (Level 2)",
+    "accuracy": 0.5567,
+    "f1": 0.4363,
+    "n_drifts": 22,
+    "total_runtime": 217.11,
+    "total_memory_mb": 6.47,
+    "n_instances": 829201,
+    "run_id": 1
+}

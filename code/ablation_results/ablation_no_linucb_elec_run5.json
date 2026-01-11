@@ -1,0 +1,12 @@
+{
+    "dataset": "elec",
+    "config": "no_linucb",
+    "config_name": "w/o LinUCB (Level 1)",
+    "accuracy": 0.709871,
+    "f1": 0.5746,
+    "n_drifts": 42,
+    "total_runtime": 5.26,
+    "total_memory_mb": 4.6,
+    "n_instances": 45325,
+    "run_id": 5
+}

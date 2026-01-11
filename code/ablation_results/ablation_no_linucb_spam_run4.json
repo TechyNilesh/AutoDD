@@ -1,0 +1,12 @@
+{
+    "dataset": "spam",
+    "config": "no_linucb",
+    "config_name": "w/o LinUCB (Level 1)",
+    "accuracy": 0.808806,
+    "f1": 0.6422,
+    "n_drifts": 17,
+    "total_runtime": 1.0,
+    "total_memory_mb": 4.45,
+    "n_instances": 9324,
+    "run_id": 4
+}

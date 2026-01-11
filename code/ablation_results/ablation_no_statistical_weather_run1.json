@@ -2,11 +2,11 @@
     "dataset": "weather",
     "config": "no_statistical",
     "config_name": "w/o Statistical",
-    "accuracy": 0.677347,
-    "f1": 0.5412,
-    "n_drifts": 30,
-    "total_runtime": 4.12,
-    "total_memory_mb": 6.98,
+    "accuracy": 0.696126,
+    "f1": 0.5458,
+    "n_drifts": 25,
+    "total_runtime": 3.3,
+    "total_memory_mb": 6.72,
     "n_instances": 18159,
     "run_id": 1
 }

@@ -1,0 +1,12 @@
+{
+    "dataset": "hyp",
+    "config": "no_thompson",
+    "config_name": "w/o Thompson (Level 2)",
+    "accuracy": 0.887646,
+    "f1": 0.6865,
+    "n_drifts": 47,
+    "total_runtime": 2.63,
+    "total_memory_mb": 5.83,
+    "n_instances": 10000,
+    "run_id": 8
+}

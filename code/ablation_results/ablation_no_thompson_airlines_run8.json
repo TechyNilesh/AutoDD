@@ -1,0 +1,12 @@
+{
+    "dataset": "airlines",
+    "config": "no_thompson",
+    "config_name": "w/o Thompson (Level 2)",
+    "accuracy": 0.622312,
+    "f1": 0.5056,
+    "n_drifts": 36,
+    "total_runtime": 105.96,
+    "total_memory_mb": 4.27,
+    "n_instances": 539383,
+    "run_id": 8
+}

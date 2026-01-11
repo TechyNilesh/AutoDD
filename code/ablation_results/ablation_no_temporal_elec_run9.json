@@ -2,11 +2,11 @@
     "dataset": "elec",
     "config": "no_temporal",
     "config_name": "w/o Temporal",
-    "accuracy": 0.823037,
-    "f1": 0.6828,
-    "n_drifts": 49,
-    "total_runtime": 7.61,
-    "total_memory_mb": 8.99,
+    "accuracy": 0.827569,
+    "f1": 0.6768,
+    "n_drifts": 36,
+    "total_runtime": 7.93,
+    "total_memory_mb": 6.42,
     "n_instances": 45325,
     "run_id": 9
 }

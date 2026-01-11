@@ -1,0 +1,12 @@
+{
+    "dataset": "agr",
+    "config": "no_thompson",
+    "config_name": "w/o Thompson (Level 2)",
+    "accuracy": 0.73902,
+    "f1": 0.628,
+    "n_drifts": 25,
+    "total_runtime": 3.12,
+    "total_memory_mb": 9.45,
+    "n_instances": 10000,
+    "run_id": 3
+}

@@ -1,0 +1,12 @@
+{
+    "dataset": "hyp",
+    "config": "no_linucb",
+    "config_name": "w/o LinUCB (Level 1)",
+    "accuracy": 0.761589,
+    "f1": 0.6125,
+    "n_drifts": 15,
+    "total_runtime": 1.65,
+    "total_memory_mb": 6.68,
+    "n_instances": 10000,
+    "run_id": 8
+}

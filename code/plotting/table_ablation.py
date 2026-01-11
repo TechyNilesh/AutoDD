@@ -36,7 +36,8 @@ def generate_table(data):
         'no_temporal': 'w/o Temporal Features',
         'no_statistical': 'w/o Statistical Features',
         'no_stationarity': 'w/o Stationarity Features',
-        'random': 'w/o LinUCB (Random)',
+        'no_linucb': 'w/o LinUCB (Level 1)',
+        'no_thompson': 'w/o Thompson (Level 2)',
     }
 
     lines = []
@@ -73,8 +74,9 @@ def generate_table(data):
     lines.append("")
     lines.append("Key Findings:")
     lines.append(f"- Full AutoDD: {full_acc*100:.1f}%")
+    lines.append(f"- Removing LinUCB (Level 1): {(mean_acc.get('no_linucb', 0) - full_acc)*100:.1f}% drop")
+    lines.append(f"- Removing Thompson (Level 2): {(mean_acc.get('no_thompson', 0) - full_acc)*100:.1f}% drop")
     lines.append(f"- Removing Statistical: {(mean_acc.get('no_statistical', 0) - full_acc)*100:.1f}% drop")
-    lines.append(f"- Random selection: {(mean_acc.get('random', 0) - full_acc)*100:.1f}% drop")
 
     return "\n".join(lines)
 

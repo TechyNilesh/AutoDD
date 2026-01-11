@@ -2,11 +2,11 @@
     "dataset": "airlines",
     "config": "no_statistical",
     "config_name": "w/o Statistical",
-    "accuracy": 0.574183,
-    "f1": 0.4346,
-    "n_drifts": 11,
-    "total_runtime": 84.88,
-    "total_memory_mb": 3.91,
+    "accuracy": 0.588269,
+    "f1": 0.4779,
+    "n_drifts": 16,
+    "total_runtime": 122.89,
+    "total_memory_mb": 8.03,
     "n_instances": 539383,
     "run_id": 7
 }

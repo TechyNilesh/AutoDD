@@ -2,11 +2,11 @@
     "dataset": "agr",
     "config": "no_temporal",
     "config_name": "w/o Temporal",
-    "accuracy": 0.70294,
-    "f1": 0.5493,
-    "n_drifts": 37,
-    "total_runtime": 2.04,
-    "total_memory_mb": 5.06,
+    "accuracy": 0.70837,
+    "f1": 0.5629,
+    "n_drifts": 33,
+    "total_runtime": 2.39,
+    "total_memory_mb": 3.93,
     "n_instances": 10000,
     "run_id": 7
 }
