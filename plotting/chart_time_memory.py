@@ -43,6 +43,9 @@ DATASETS = ['agr', 'airlines', 'elec', 'hyp', 'poker', 'rbf', 'rtg', 'sea', 'spa
 MODEL_COLORS = {
     'AUTODD': '#d62728',      # Red (highlighted)
     'MetaADD': '#1f77b4',     # Blue
+    'PUDD': '#ff6b6b',        # Coral red
+    'ADDM': '#4ecdc4',        # Turquoise
+    'MDDM': '#95e1d3',        # Mint green
     'GaussianNB': '#7f7f7f',  # Gray
     'ADWIN': '#2ca02c',       # Green
     'DDM': '#bcbd22',         # Yellow-green
@@ -57,7 +60,10 @@ MODEL_COLORS = {
 MODEL_NAMES = {
     'AUTODD': 'AutoDD',
     'MetaADD': 'Meta-ADD',
-    'GaussianNB': 'No Detector (*)',
+    'PUDD': 'PUDD',
+    'ADDM': 'ADDM',
+    'MDDM': 'MDDM',
+    'GaussianNB': 'No Drift Detector',
     'ADWIN': 'ADWIN',
     'DDM': 'DDM',
     'EDDM': 'EDDM',
@@ -71,6 +77,9 @@ MODEL_NAMES = {
 MODEL_MARKERS = {
     'AUTODD': '*',        # Star for our method
     'MetaADD': 'D',       # Diamond for meta-learning
+    'PUDD': 'h',          # Hexagon for new methods
+    'ADDM': 'H',          # Large hexagon
+    'MDDM': 'd',          # Thin diamond
     'GaussianNB': 'X',    # X for baseline
     'ADWIN': 'o',         # Circle for detectors
     'DDM': 's',           # Square
@@ -81,7 +90,9 @@ MODEL_MARKERS = {
     'KSWIN': 'p',         # Pentagon
 }
 
-MODEL_ORDER = ['AUTODD', 'MetaADD', 'GaussianNB', 'ADWIN', 'DDM', 'EDDM', 'HDDM_A', 'HDDM_W', 'PAGEHINKLEY', 'KSWIN']
+# Exclude GaussianNB (No Drift Detector) - it's a baseline without drift detection
+MODEL_ORDER = ['AUTODD', 'MetaADD', 'PUDD', 'ADDM', 'MDDM', 'ADWIN', 'DDM', 'EDDM', 'HDDM_A', 'HDDM_W', 'PAGEHINKLEY', 'KSWIN']
+EXCLUDE_MODELS = ['GaussianNB']
 
 
 def load_results():
@@ -115,6 +126,9 @@ def compute_mean_stats(records):
     for rec in records:
         model = rec['model']
         if not model:
+            continue
+        # Skip excluded models (No Drift Detector baseline)
+        if model in EXCLUDE_MODELS:
             continue
         if model not in model_stats:
             model_stats[model] = {'runtime': [], 'memory': [], 'accuracy': []}

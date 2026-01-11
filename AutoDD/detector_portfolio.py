@@ -1,10 +1,17 @@
 """
 Detector Portfolio for AutoDD
 
-Manages a diverse portfolio of K=7 drift detectors spanning multiple paradigms:
+AutoDD is a framework - any River-compatible drift detector can be plugged in.
+
+Default portfolio includes K=7 diverse detectors spanning multiple paradigms:
 - Statistical: ADWIN, Page-Hinkley
 - Error-based: DDM, EDDM, HDDM-A, HDDM-W
 - Distribution-based: KSWIN
+
+Users can:
+1. Use default detectors with default/custom hyperparameters
+2. Plug in any River-compatible drift detector
+3. Create custom portfolios for experimentation
 
 Supports hyperparameter configuration ranges for adaptive selection.
 """
@@ -59,13 +66,17 @@ class DetectorPortfolio:
     """
     Manages a portfolio of drift detectors.
 
-    The portfolio contains K=7 diverse detectors from different paradigms,
-    each with standard hyperparameter configurations recommended in the literature.
+    AutoDD is a framework that works with any River-compatible drift detector.
+    The default portfolio contains K=7 diverse detectors from different paradigms,
+    but users can plug in custom detectors.
 
     Parameters
     ----------
     detectors : list of str, optional
         List of detector names to include. If None, uses all 7 default detectors.
+    custom_detectors : dict, optional
+        Dictionary mapping names to custom detector configs:
+        {'MyDetector': {'class': MyClass, 'params': {...}, 'paradigm': 'custom'}}
 
     Attributes
     ----------
@@ -78,10 +89,18 @@ class DetectorPortfolio:
 
     Examples
     --------
+    >>> # Use default portfolio
     >>> portfolio = DetectorPortfolio()
     >>> print(portfolio.detector_names)
     ['ADWIN', 'DDM', 'EDDM', 'HDDM_A', 'HDDM_W', 'PageHinkley', 'KSWIN']
-    >>> detector = portfolio.get_detector('ADWIN')
+
+    >>> # Use only specific detectors
+    >>> portfolio = DetectorPortfolio(detectors=['ADWIN', 'DDM'])
+
+    >>> # Add custom River detector
+    >>> from river.drift import DummyDriftDetector  # example
+    >>> custom = {'Custom': {'class': DummyDriftDetector, 'params': {}, 'paradigm': 'custom'}}
+    >>> portfolio = DetectorPortfolio(custom_detectors=custom)
     """
 
     # Default detector configurations from the paper
@@ -148,17 +167,69 @@ class DetectorPortfolio:
         }
     }
 
-    def __init__(self, detectors: Optional[List[str]] = None):
+    def __init__(
+        self,
+        detectors: Optional[List[str]] = None,
+        custom_detectors: Optional[Dict[str, Dict]] = None,
+        param_ranges: Optional[Dict[str, Dict[str, Tuple]]] = None
+    ):
         """
         Initialize the detector portfolio.
 
         Parameters
         ----------
         detectors : list of str, optional
-            Detector names to include. If None, uses all 7 detectors.
+            Detector names to include. If None, uses all 7 default detectors.
+        custom_detectors : dict, optional
+            Custom detector configurations to add:
+            {'MyDetector': {'class': MyClass, 'params': {...}, 'paradigm': 'custom'}}
+        param_ranges : dict, optional
+            Custom hyperparameter search ranges. Overrides defaults.
+            Format: {detector_name: {param_name: (min, max, default, scale)}}
+            Scale can be: 'linear', 'log', or 'int'
+
+            Example:
+            {
+                'ADWIN': {'delta': (0.0001, 0.5, 0.002, 'log')},
+                'DDM': {'drift_threshold': (2.0, 5.0, 3.0, 'linear')}
+            }
+
+        Examples
+        --------
+        >>> # Use default HP ranges
+        >>> portfolio = DetectorPortfolio()
+
+        >>> # Custom HP ranges for specific detectors
+        >>> custom_ranges = {
+        ...     'ADWIN': {'delta': (0.001, 0.1, 0.01, 'log')},
+        ...     'DDM': {'drift_threshold': (2.5, 4.0, 3.0, 'linear')}
+        ... }
+        >>> portfolio = DetectorPortfolio(param_ranges=custom_ranges)
         """
+        # Merge default and custom configs
+        self.all_configs = self.DEFAULT_CONFIGS.copy()
+        if custom_detectors:
+            for name, config in custom_detectors.items():
+                if 'class' not in config:
+                    raise ValueError(f"Custom detector '{name}' must have 'class' key")
+                # Ensure required keys exist
+                if 'params' not in config:
+                    config['params'] = {}
+                if 'paradigm' not in config:
+                    config['paradigm'] = 'custom'
+                self.all_configs[name] = config
+
+        # Merge default and custom param ranges
+        self._param_ranges = DETECTOR_PARAM_RANGES.copy()
+        if param_ranges:
+            for detector_name, ranges in param_ranges.items():
+                if detector_name not in self._param_ranges:
+                    self._param_ranges[detector_name] = {}
+                self._param_ranges[detector_name].update(ranges)
+
+        # Select which detectors to include
         if detectors is None:
-            detectors = list(self.DEFAULT_CONFIGS.keys())
+            detectors = list(self.DEFAULT_CONFIGS.keys())  # Only default detectors by default
 
         self.detector_names = detectors
         self.n_detectors = len(detectors)
@@ -168,18 +239,20 @@ class DetectorPortfolio:
         self.configs: Dict[str, Dict] = {}
 
         for name in detectors:
-            if name not in self.DEFAULT_CONFIGS:
+            if name not in self.all_configs:
                 raise ValueError(f"Unknown detector: {name}. "
-                                f"Available: {list(self.DEFAULT_CONFIGS.keys())}")
+                                f"Available: {list(self.all_configs.keys())}")
 
-            config = self.DEFAULT_CONFIGS[name]
+            config = self.all_configs[name]
             self.configs[name] = config
             self.detectors[name] = self._create_detector(name)
 
-    def _create_detector(self, name: str) -> Any:
+    def _create_detector(self, name: str, params: Optional[Dict] = None) -> Any:
         """Create a new detector instance."""
-        config = self.DEFAULT_CONFIGS[name]
-        return config['class'](**config['params'])
+        config = self.all_configs[name]
+        if params is None:
+            params = config['params']
+        return config['class'](**params)
 
     def get_detector(self, name: str) -> Any:
         """
@@ -314,8 +387,7 @@ class DetectorPortfolio:
 
     # ==================== Hyperparameter Selection Methods ====================
 
-    @staticmethod
-    def get_param_ranges(detector_name: str) -> Dict[str, Tuple]:
+    def get_param_ranges(self, detector_name: str) -> Dict[str, Tuple]:
         """
         Get hyperparameter ranges for a detector.
 
@@ -329,9 +401,25 @@ class DetectorPortfolio:
         ranges : dict
             Dictionary mapping param names to (min, max, default, scale) tuples.
         """
-        if detector_name not in DETECTOR_PARAM_RANGES:
-            raise ValueError(f"Unknown detector: {detector_name}")
-        return DETECTOR_PARAM_RANGES[detector_name]
+        if detector_name not in self._param_ranges:
+            return {}  # Custom detectors may not have ranges defined
+        return self._param_ranges[detector_name]
+
+    def set_param_ranges(self, detector_name: str, ranges: Dict[str, Tuple]):
+        """
+        Set custom hyperparameter ranges for a detector.
+
+        Parameters
+        ----------
+        detector_name : str
+            Name of the detector.
+        ranges : dict
+            Dictionary mapping param names to (min, max, default, scale) tuples.
+            Example: {'delta': (0.001, 0.1, 0.01, 'log')}
+        """
+        if detector_name not in self._param_ranges:
+            self._param_ranges[detector_name] = {}
+        self._param_ranges[detector_name].update(ranges)
 
     @staticmethod
     def sample_param(param_range: Tuple, rng: Optional[np.random.Generator] = None) -> Union[int, float]:
@@ -408,10 +496,10 @@ class DetectorPortfolio:
         detector : drift detector
             New detector instance with specified parameters.
         """
-        if detector_name not in self.DEFAULT_CONFIGS:
+        if detector_name not in self.all_configs:
             raise ValueError(f"Unknown detector: {detector_name}")
 
-        config = self.DEFAULT_CONFIGS[detector_name]
+        config = self.all_configs[detector_name]
 
         if params is None:
             params = config['params']
@@ -486,8 +574,7 @@ class DetectorPortfolio:
 
         return augmented
 
-    @staticmethod
-    def get_all_param_ranges() -> Dict[str, Dict[str, Tuple]]:
+    def get_all_param_ranges(self) -> Dict[str, Dict[str, Tuple]]:
         """
         Get all hyperparameter ranges for all detectors.
 
@@ -496,7 +583,59 @@ class DetectorPortfolio:
         all_ranges : dict
             Dictionary mapping detector names to their parameter ranges.
         """
+        return self._param_ranges.copy()
+
+    @staticmethod
+    def get_default_param_ranges() -> Dict[str, Dict[str, Tuple]]:
+        """
+        Get default hyperparameter ranges (class-level defaults).
+
+        Returns
+        -------
+        default_ranges : dict
+            Dictionary mapping detector names to their default parameter ranges.
+        """
         return DETECTOR_PARAM_RANGES.copy()
+
+    # ==================== Convenience Methods ====================
+
+    @classmethod
+    def from_river_detector(cls, detector: Any, name: Optional[str] = None) -> 'DetectorPortfolio':
+        """
+        Create a portfolio from a single River detector.
+
+        This is the simplest way to use AutoDD with a custom detector.
+
+        Parameters
+        ----------
+        detector : river drift detector
+            Any River-compatible drift detector instance.
+        name : str, optional
+            Name for the detector. Defaults to class name.
+
+        Returns
+        -------
+        portfolio : DetectorPortfolio
+            Portfolio containing just this detector.
+
+        Examples
+        --------
+        >>> from river.drift import ADWIN
+        >>> detector = ADWIN(delta=0.001)
+        >>> portfolio = DetectorPortfolio.from_river_detector(detector, 'ADWIN_sensitive')
+        """
+        if name is None:
+            name = type(detector).__name__
+
+        custom = {
+            name: {
+                'class': type(detector),
+                'params': {},  # User's detector is already configured
+                'paradigm': 'custom'
+            }
+        }
+
+        return cls(detectors=[name], custom_detectors=custom)
 
 
 class DetectorWrapper:

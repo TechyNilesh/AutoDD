@@ -102,6 +102,10 @@ def generate_cd_diagram():
     # Remove Mean row for autorank (it needs only data rows)
     data_df = temp_df.iloc[:-1]
 
+    # Rename GaussianNB to "No Drift Detector" for consistent naming
+    if 'GaussianNB' in data_df.columns:
+        data_df = data_df.rename(columns={'GaussianNB': 'No Drift Detector'})
+
     print(f"Data shape: {data_df.shape}")
     print(f"Models: {list(data_df.columns)}")
 
