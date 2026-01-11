@@ -20,10 +20,12 @@ import traceback
 # Add parent directory to path for MetaADD import
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from river import naive_bayes, metrics, stream
+from river import metrics, stream
 
 from MetaADD import MetaADD, train_meta_detector, load_pretrained_model, quick_pretrain
 from MetaADD.trainer import generate_synthetic_training_data
+
+from scripts.utils import get_base_model, get_base_model_display_name
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -64,7 +66,8 @@ def get_pretrained_model(seed=42, use_cached=True):
 
 def run_meta_add(dataset_name, run_count=None, seed=42, progress_interval=1000,
                  output_dir="benchmark_results", verbose=False,
-                 window_size=50, n_meta_features=100, pretrain=True):  # Match pretraining: n=50, l=100
+                 window_size=50, n_meta_features=100, pretrain=True,
+                 base_model='gaussiannb'):  # Match pretraining: n=50, l=100
     """
     Run Meta-ADD drift detector on a dataset with prequential evaluation.
 
@@ -78,11 +81,13 @@ def run_meta_add(dataset_name, run_count=None, seed=42, progress_interval=1000,
         window_size: Window size for meta-feature extraction
         n_meta_features: Number of meta-features
         pretrain: Whether to use pre-trained model
+        base_model: Base classifier to use ('gaussiannb' or 'hat')
     """
     os.makedirs(output_dir, exist_ok=True)
 
+    base_model_name = get_base_model_display_name(base_model)
     print(f"\n{'='*60}")
-    print(f"Running Meta-ADD on {dataset_name}")
+    print(f"Running Meta-ADD on {dataset_name} (Base: {base_model_name})")
     print(f"{'='*60}")
 
     try:
@@ -92,7 +97,7 @@ def run_meta_add(dataset_name, run_count=None, seed=42, progress_interval=1000,
             pretrained_model = get_pretrained_model(seed)
 
         # Initialize model and drift detector
-        model = naive_bayes.GaussianNB()
+        model = get_base_model(base_model)
         detector = MetaADD(
             window_size=window_size,
             n_meta_features=n_meta_features,
@@ -148,7 +153,7 @@ def run_meta_add(dataset_name, run_count=None, seed=42, progress_interval=1000,
                               f"{drift_info['drift_type']} (conf: {drift_info['confidence']:.3f})")
 
                     # Reset model on drift
-                    model = naive_bayes.GaussianNB()
+                    model = get_base_model(base_model)
 
             # Learn from instance
             model.learn_one(x, y)
@@ -187,6 +192,7 @@ def run_meta_add(dataset_name, run_count=None, seed=42, progress_interval=1000,
         results = {
             "dataset": dataset_name,
             "model": "MetaADD",
+            "base_model": base_model_name,
             "detector_params": {
                 "window_size": window_size,
                 "n_meta_features": n_meta_features,
@@ -213,9 +219,9 @@ def run_meta_add(dataset_name, run_count=None, seed=42, progress_interval=1000,
         if run_count is not None:
             results["run_count"] = run_count
             results["seed"] = seed
-            file_name = f"MetaADD_{dataset_name}_{run_count}.json"
+            file_name = f"MetaADD_{base_model_name}_{dataset_name}_{run_count}.json"
         else:
-            file_name = f"MetaADD_{dataset_name}.json"
+            file_name = f"MetaADD_{base_model_name}_{dataset_name}.json"
 
         # Save results
         output_file = os.path.join(output_dir, file_name)
@@ -258,6 +264,9 @@ if __name__ == "__main__":
     parser.add_argument('--window_size', type=int, default=50, help='Window size (match pretraining: n=50)')
     parser.add_argument('--n_meta_features', type=int, default=100, help='Number of meta-features (paper: l=100)')
     parser.add_argument('--no_pretrain', action='store_true', help='Disable pre-training')
+    parser.add_argument('--base_model', type=str, default='gaussiannb',
+                        choices=['gaussiannb', 'hat'],
+                        help='Base classifier to use (default: gaussiannb)')
 
     args = parser.parse_args()
 
@@ -270,5 +279,6 @@ if __name__ == "__main__":
         verbose=args.verbose,
         window_size=args.window_size,
         n_meta_features=args.n_meta_features,
-        pretrain=not args.no_pretrain
+        pretrain=not args.no_pretrain,
+        base_model=args.base_model
     )

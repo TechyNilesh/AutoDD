@@ -1,0 +1,21 @@
+=======================================================
+Table: Computational Efficiency - GAUSSIANNB
+=======================================================
+
+Method                Time (ms/inst)     Memory (MB)
+-------------------------------------------------------
+Page-Hinkley                    0.06             1.3
+DDM                             0.09             1.9
+EDDM                            0.10             2.2
+MDDM                            0.13             4.8
+ADWIN                           0.15             4.5
+HDDM-A                          0.16             3.3
+HDDM-W                          0.19             4.2
+AutoDD                          0.30             7.4
+PUDD                            0.42             6.3
+KSWIN                           0.45             9.0
+ADDM                            0.58             5.3
+Meta-ADD                        1.32            47.4
+-------------------------------------------------------
+
+* Results combined across 100 measurements per method

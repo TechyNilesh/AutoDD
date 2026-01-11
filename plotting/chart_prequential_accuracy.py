@@ -5,13 +5,17 @@ Creates accuracy over time charts with drift points marked.
 
 Creates:
 - charts/prequential_<dataset>.png - Per-dataset accuracy curves
+- charts/prequential_<dataset>_<base_model>.png - Per base model charts
 
 Usage:
     python plotting/chart_prequential_accuracy.py
+    python plotting/chart_prequential_accuracy.py --base_model hat
+    python plotting/chart_prequential_accuracy.py --base_model all
 """
 
 import os
 import json
+import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
@@ -37,9 +41,10 @@ rcParams['legend.fontsize'] = 18
 
 DATASETS = ['sea', 'hyp', 'agr', 'rbf', 'rtg', 'elec', 'weather', 'spam', 'airlines', 'poker']
 SYNTHETIC = ['sea', 'hyp', 'agr', 'rbf', 'rtg']
+BASE_MODELS = ['gaussiannb', 'hat']
+BASE_MODEL_NAMES = {'gaussiannb': 'GaussianNB', 'hat': 'HAT'}
 
 # True drift points for synthetic datasets (scaled to actual dataset sizes)
-# sea: 500k instances, hyp: 500k, agr: 100k, rbf: 200k, rtg: 100k
 TRUE_DRIFT_POINTS = {
     'sea': [125000, 250000, 375000],
     'hyp': [150000, 300000],
@@ -56,6 +61,7 @@ MODEL_CONFIG = {
     'ADDM': {'color': '#4ecdc4', 'linestyle': '-', 'linewidth': 2.0, 'label': 'ADDM'},
     'MDDM': {'color': '#95e1d3', 'linestyle': '-', 'linewidth': 2.0, 'label': 'MDDM'},
     'GaussianNB': {'color': '#7f7f7f', 'linestyle': ':', 'linewidth': 2.0, 'label': 'No Drift Detector'},
+    'HAT': {'color': '#7f7f7f', 'linestyle': ':', 'linewidth': 2.0, 'label': 'No Drift Detector'},
     'ADWIN': {'color': '#2ca02c', 'linestyle': '-', 'linewidth': 1.5, 'label': 'ADWIN'},
     'DDM': {'color': '#bcbd22', 'linestyle': '-', 'linewidth': 1.5, 'label': 'DDM'},
     'EDDM': {'color': '#9467bd', 'linestyle': '-', 'linewidth': 1.5, 'label': 'EDDM'},
@@ -66,10 +72,10 @@ MODEL_CONFIG = {
 }
 
 # Fixed order: AutoDD first, Meta-ADD second, new detectors, then others
-MODEL_ORDER = ['AUTODD', 'MetaADD', 'PUDD', 'ADDM', 'MDDM', 'GaussianNB', 'ADWIN', 'DDM', 'EDDM', 'HDDM_A', 'HDDM_W', 'PAGEHINKLEY', 'KSWIN']
+MODEL_ORDER = ['AUTODD', 'MetaADD', 'PUDD', 'ADDM', 'MDDM', 'GaussianNB', 'HAT', 'ADWIN', 'DDM', 'EDDM', 'HDDM_A', 'HDDM_W', 'PAGEHINKLEY', 'KSWIN']
 
 
-def load_results():
+def load_results(base_model=None):
     """Load all benchmark results."""
     results = {}
     for filepath in glob(os.path.join(RESULTS_DIR, "*.json")):
@@ -78,6 +84,12 @@ def load_results():
         try:
             with open(filepath, 'r') as f:
                 data = json.load(f)
+
+            record_base_model = data.get('base_model', 'gaussiannb')
+
+            if base_model and record_base_model != base_model:
+                continue
+
             model = data.get('model', '')
             dataset = data.get('dataset', '')
             if not model or not dataset:
@@ -119,7 +131,7 @@ def get_mean_accuracy_curve(runs):
     return instances[:min_len], mean_scores
 
 
-def plot_scores(dataset, results):
+def plot_scores(dataset, results, base_model=None, actual_base_model=None):
     """Plot prequential accuracy scores for a dataset."""
 
     # Collect data for all models
@@ -184,8 +196,13 @@ def plot_scores(dataset, results):
         padding = (y_max - y_min) * 0.05
         ax.set_ylim(max(0, y_min - padding - 2), min(100, y_max + padding + 2))
 
-    # Legend - upper left to avoid hiding data
-    ax.legend(fontsize=10, loc='upper left', framealpha=0.9)
+    # Legend - position depends on dataset and base model
+    # For poker with GaussianNB, use upper left; for all others, use lower right
+    if dataset == 'poker' and actual_base_model == 'gaussiannb':
+        legend_loc = 'upper left'
+    else:
+        legend_loc = 'lower right'
+    ax.legend(fontsize=10, loc=legend_loc, ncol=2, framealpha=0.9)
 
     # Grid for readability
     ax.grid(True, alpha=0.3, linestyle='--')
@@ -197,30 +214,50 @@ def plot_scores(dataset, results):
 
     plt.tight_layout()
 
-    output_path = os.path.join(CHARTS_DIR, f"prequential_{dataset}.png")
+    if base_model:
+        output_path = os.path.join(CHARTS_DIR, f"prequential_{dataset}_{base_model}.png")
+    else:
+        output_path = os.path.join(CHARTS_DIR, f"prequential_{dataset}.png")
+
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     plt.close()
 
     return output_path
 
 
-def main():
+def main(base_model='all'):
     print("=" * 60)
     print("Generating Prequential Accuracy Charts")
     print("=" * 60)
 
-    results = load_results()
-    print(f"Loaded results for {len(results)} model-dataset combinations")
+    if base_model == 'all':
+        base_models_to_run = BASE_MODELS
+    else:
+        base_models_to_run = [base_model]
 
-    for dataset in tqdm.tqdm(DATASETS, desc="Generating charts"):
-        path = plot_scores(dataset, results)
-        if path:
-            print(f"Chart saved: {path}")
-        else:
-            print(f"Skipped: {dataset} (no data)")
+    for bm in base_models_to_run:
+        print(f"\n--- Processing {bm.upper()} ---")
+
+        results = load_results(base_model=bm)
+        print(f"Loaded results for {len(results)} model-dataset combinations")
+
+        for dataset in tqdm.tqdm(DATASETS, desc="Generating charts"):
+            path = plot_scores(dataset, results,
+                             base_model=bm if len(base_models_to_run) > 1 else None,
+                             actual_base_model=bm)
+            if path:
+                print(f"Chart saved: {path}")
+            else:
+                print(f"Skipped: {dataset} (no data)")
 
     print("\nDone!")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Generate Prequential Accuracy Charts')
+    parser.add_argument('--base_model', type=str, default='all',
+                        choices=['gaussiannb', 'hat', 'all'],
+                        help='Base classifier to use (default: all)')
+    args = parser.parse_args()
+
+    main(base_model=args.base_model)

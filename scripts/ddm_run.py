@@ -7,17 +7,24 @@ when significant increases are detected using statistical bounds.
 Usage:
     python scripts/ddm_run.py --dataset elec
     python scripts/ddm_run.py --dataset sea --run_count 1 --seed 42
+    python scripts/ddm_run.py --dataset elec --base_model hat
 """
 
 import time
 import psutil
 import json
 import os
+import sys
 import argparse
 import traceback
 
-from river import drift, naive_bayes, metrics, stream
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from river import drift, metrics, stream
 from river.drift import binary as binary_drift
+
+from scripts.utils import get_base_model, get_base_model_display_name
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -25,7 +32,8 @@ warnings.filterwarnings("ignore")
 
 def run_ddm(dataset_name, run_count=None, seed=42, progress_interval=1000,
             output_dir="benchmark_results", verbose=False,
-            warm_start=30, warning_threshold=2.0, drift_threshold=3.0):
+            warm_start=30, warning_threshold=2.0, drift_threshold=3.0,
+            base_model='gaussiannb'):
     """
     Run DDM drift detector on a dataset with prequential evaluation.
 
@@ -39,16 +47,18 @@ def run_ddm(dataset_name, run_count=None, seed=42, progress_interval=1000,
         warm_start: Minimum instances before drift detection
         warning_threshold: Warning level threshold
         drift_threshold: Drift level threshold
+        base_model: Base classifier to use ('gaussiannb' or 'hat')
     """
     os.makedirs(output_dir, exist_ok=True)
 
+    base_model_name = get_base_model_display_name(base_model)
     print(f"\n{'='*60}")
-    print(f"Running DDM on {dataset_name}")
+    print(f"Running DDM on {dataset_name} (Base: {base_model_name})")
     print(f"{'='*60}")
 
     try:
         # Initialize model and drift detector
-        model = naive_bayes.GaussianNB()
+        model = get_base_model(base_model)
         detector = binary_drift.DDM(
             warm_start=warm_start,
             warning_threshold=warning_threshold,
@@ -95,7 +105,7 @@ def run_ddm(dataset_name, run_count=None, seed=42, progress_interval=1000,
                     if verbose:
                         print(f"  Drift detected at instance {processed_instances}")
                     # Reset model on drift
-                    model = naive_bayes.GaussianNB()
+                    model = get_base_model(base_model)
 
             # Learn from instance
             model.learn_one(x, y)
@@ -129,6 +139,7 @@ def run_ddm(dataset_name, run_count=None, seed=42, progress_interval=1000,
         results = {
             "dataset": dataset_name,
             "model": "DDM",
+            "base_model": base_model_name,
             "detector_params": {
                 "warm_start": warm_start,
                 "warning_threshold": warning_threshold,
@@ -153,9 +164,9 @@ def run_ddm(dataset_name, run_count=None, seed=42, progress_interval=1000,
         if run_count is not None:
             results["run_count"] = run_count
             results["seed"] = seed
-            file_name = f"DDM_{dataset_name}_{run_count}.json"
+            file_name = f"DDM_{base_model_name}_{dataset_name}_{run_count}.json"
         else:
-            file_name = f"DDM_{dataset_name}.json"
+            file_name = f"DDM_{base_model_name}_{dataset_name}.json"
 
         # Save results
         output_file = os.path.join(output_dir, file_name)
@@ -197,6 +208,9 @@ if __name__ == "__main__":
     parser.add_argument('--warm_start', type=int, default=30, help='DDM warm start')
     parser.add_argument('--warning_threshold', type=float, default=2.0, help='DDM warning threshold')
     parser.add_argument('--drift_threshold', type=float, default=3.0, help='DDM drift threshold')
+    parser.add_argument('--base_model', type=str, default='gaussiannb',
+                        choices=['gaussiannb', 'hat'],
+                        help='Base classifier to use (default: gaussiannb)')
 
     args = parser.parse_args()
 
@@ -209,5 +223,6 @@ if __name__ == "__main__":
         verbose=args.verbose,
         warm_start=args.warm_start,
         warning_threshold=args.warning_threshold,
-        drift_threshold=args.drift_threshold
+        drift_threshold=args.drift_threshold,
+        base_model=args.base_model
     )

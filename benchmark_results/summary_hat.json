@@ -1,0 +1,80 @@
+{
+    "generated_at": "2026-01-11T19:02:49.538248",
+    "n_runs": 10,
+    "base_model": "hat",
+    "base_model_name": "HAT",
+    "synthetic_datasets": [
+        "sea",
+        "hyp",
+        "agr",
+        "rbf",
+        "rtg"
+    ],
+    "realworld_datasets": [
+        "elec",
+        "weather",
+        "spam",
+        "airlines",
+        "poker"
+    ],
+    "detectors": [
+        "no_detector",
+        "adwin",
+        "ddm",
+        "eddm",
+        "hddm_a",
+        "hddm_w",
+        "pagehinkley",
+        "kswin",
+        "mddm",
+        "addm",
+        "pudd",
+        "meta_add",
+        "autodd"
+    ],
+    "mean_accuracy": {
+        "no_detector": 0.7169,
+        "adwin": 0.762,
+        "ddm": 0.7715,
+        "eddm": 0.7657,
+        "hddm_a": 0.7709,
+        "hddm_w": 0.7736,
+        "pagehinkley": 0.7611,
+        "kswin": 0.7676,
+        "mddm": 0.7838,
+        "addm": 0.7943,
+        "pudd": 0.7955,
+        "meta_add": 0.8158,
+        "autodd": 0.8404
+    },
+    "std_accuracy": {
+        "no_detector": 0.008,
+        "adwin": 0.0085,
+        "ddm": 0.0085,
+        "eddm": 0.0076,
+        "hddm_a": 0.0086,
+        "hddm_w": 0.0084,
+        "pagehinkley": 0.0078,
+        "kswin": 0.0079,
+        "mddm": 0.008,
+        "addm": 0.0081,
+        "pudd": 0.0083,
+        "meta_add": 0.0079,
+        "autodd": 0.0049
+    },
+    "rankings": [
+        "autodd",
+        "meta_add",
+        "pudd",
+        "addm",
+        "mddm",
+        "hddm_w",
+        "ddm",
+        "hddm_a",
+        "kswin",
+        "eddm",
+        "adwin",
+        "pagehinkley",
+        "no_detector"
+    ]
+}

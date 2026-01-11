@@ -7,16 +7,23 @@ change detection in the average of a Gaussian signal.
 Usage:
     python scripts/pagehinkley_run.py --dataset elec
     python scripts/pagehinkley_run.py --dataset sea --run_count 1 --seed 42
+    python scripts/pagehinkley_run.py --dataset elec --base_model hat
 """
 
 import time
 import psutil
 import json
 import os
+import sys
 import argparse
 import traceback
 
-from river import drift, naive_bayes, metrics, stream
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from river import drift, metrics, stream
+
+from scripts.utils import get_base_model, get_base_model_display_name
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -24,7 +31,8 @@ warnings.filterwarnings("ignore")
 
 def run_pagehinkley(dataset_name, run_count=None, seed=42, progress_interval=1000,
                     output_dir="benchmark_results", verbose=False,
-                    min_instances=30, delta=0.005, threshold=50, alpha=0.9999):
+                    min_instances=30, delta=0.005, threshold=50, alpha=0.9999,
+                    base_model='gaussiannb'):
     """
     Run Page-Hinkley drift detector on a dataset with prequential evaluation.
 
@@ -39,16 +47,18 @@ def run_pagehinkley(dataset_name, run_count=None, seed=42, progress_interval=100
         delta: Magnitude threshold
         threshold: Detection threshold
         alpha: Forgetting factor
+        base_model: Base classifier to use ('gaussiannb' or 'hat')
     """
     os.makedirs(output_dir, exist_ok=True)
 
+    base_model_name = get_base_model_display_name(base_model)
     print(f"\n{'='*60}")
-    print(f"Running Page-Hinkley on {dataset_name}")
+    print(f"Running Page-Hinkley on {dataset_name} (Base: {base_model_name})")
     print(f"{'='*60}")
 
     try:
         # Initialize model and drift detector
-        model = naive_bayes.GaussianNB()
+        model = get_base_model(base_model)
         detector = drift.PageHinkley(
             min_instances=min_instances,
             delta=delta,
@@ -96,7 +106,7 @@ def run_pagehinkley(dataset_name, run_count=None, seed=42, progress_interval=100
                     if verbose:
                         print(f"  Drift detected at instance {processed_instances}")
                     # Reset model on drift
-                    model = naive_bayes.GaussianNB()
+                    model = get_base_model(base_model)
 
             # Learn from instance
             model.learn_one(x, y)
@@ -130,6 +140,7 @@ def run_pagehinkley(dataset_name, run_count=None, seed=42, progress_interval=100
         results = {
             "dataset": dataset_name,
             "model": "PageHinkley",
+            "base_model": base_model_name,
             "detector_params": {
                 "min_instances": min_instances,
                 "delta": delta,
@@ -155,9 +166,9 @@ def run_pagehinkley(dataset_name, run_count=None, seed=42, progress_interval=100
         if run_count is not None:
             results["run_count"] = run_count
             results["seed"] = seed
-            file_name = f"PageHinkley_{dataset_name}_{run_count}.json"
+            file_name = f"PageHinkley_{base_model_name}_{dataset_name}_{run_count}.json"
         else:
-            file_name = f"PageHinkley_{dataset_name}.json"
+            file_name = f"PageHinkley_{base_model_name}_{dataset_name}.json"
 
         # Save results
         output_file = os.path.join(output_dir, file_name)
@@ -200,6 +211,9 @@ if __name__ == "__main__":
     parser.add_argument('--delta', type=float, default=0.005, help='Delta parameter')
     parser.add_argument('--threshold', type=float, default=50, help='Threshold parameter')
     parser.add_argument('--alpha', type=float, default=0.9999, help='Alpha parameter')
+    parser.add_argument('--base_model', type=str, default='gaussiannb',
+                        choices=['gaussiannb', 'hat'],
+                        help='Base classifier to use (default: gaussiannb)')
 
     args = parser.parse_args()
 
@@ -213,5 +227,6 @@ if __name__ == "__main__":
         min_instances=args.min_instances,
         delta=args.delta,
         threshold=args.threshold,
-        alpha=args.alpha
+        alpha=args.alpha,
+        base_model=args.base_model
     )

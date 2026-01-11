@@ -3,14 +3,17 @@ Generate Benchmark F1 Score Tables
 
 Creates:
 - tables/f1_table.txt - Main F1 comparison with mean and rank
-- tables/f1_<dataset>.txt - Per-dataset F1 tables
+- tables/f1_table_<base_model>.txt - Per base model F1 tables
 
 Usage:
     python plotting/table_benchmark_f1.py
+    python plotting/table_benchmark_f1.py --base_model hat
+    python plotting/table_benchmark_f1.py --base_model all
 """
 
 import os
 import json
+import argparse
 import pandas as pd
 import numpy as np
 from glob import glob
@@ -23,9 +26,10 @@ TABLES_DIR = os.path.join(SCRIPT_DIR, "tables")
 os.makedirs(TABLES_DIR, exist_ok=True)
 
 DATASETS = ['sea', 'hyp', 'agr', 'rbf', 'rtg', 'elec', 'weather', 'spam', 'airlines', 'poker']
+BASE_MODELS = ['gaussiannb', 'hat']
 
 
-def load_results():
+def load_results(base_model=None):
     """Load all benchmark results into a DataFrame."""
     records = []
     for filepath in glob(os.path.join(RESULTS_DIR, "*.json")):
@@ -34,10 +38,18 @@ def load_results():
         try:
             with open(filepath, 'r') as f:
                 data = json.load(f)
+
+            record_base_model = data.get('base_model', 'gaussiannb')
+
+            if base_model and record_base_model != base_model:
+                continue
+
             records.append({
                 'model': data.get('model', ''),
+                'detector': data.get('detector', ''),
                 'dataset': data.get('dataset', ''),
                 'f1': data.get('f1', 0),
+                'base_model': record_base_model,
                 'run_count': data.get('run_count', 1)
             })
         except Exception as e:
@@ -83,9 +95,10 @@ def add_rank_row(df):
     return pd.concat([df, rank_row])
 
 
-def generate_main_table(df_raw):
+def generate_main_table(df_raw, base_model_name=None):
     """Generate main F1 table in pivot format."""
     agg_df = df_raw.groupby(['model', 'dataset'])['f1'].agg(['mean', 'std']).reset_index()
+    agg_df['std'] = agg_df['std'].fillna(0)
     agg_df['score'] = [f"{mean:.3f}±{std:.3f}" for mean, std in zip(agg_df['mean'], agg_df['std'])]
 
     pivot_df = agg_df.pivot_table(index='dataset', columns='model', values='score', aggfunc='first')
@@ -99,7 +112,10 @@ def generate_main_table(df_raw):
 
     lines = []
     lines.append("=" * 140)
-    lines.append("F1 SCORE COMPARISON TABLE")
+    title = "F1 SCORE COMPARISON TABLE"
+    if base_model_name:
+        title += f" - {base_model_name.upper()}"
+    lines.append(title)
     lines.append("=" * 140)
     lines.append("")
 
@@ -125,27 +141,47 @@ def generate_main_table(df_raw):
     return "\n".join(lines)
 
 
-def main():
+def main(base_model='all'):
     print("=" * 60)
     print("Generating Benchmark F1 Score Tables")
     print("=" * 60)
 
-    df_raw = load_results()
-    if df_raw.empty:
-        print("No results found!")
-        return
+    if base_model == 'all':
+        base_models_to_run = BASE_MODELS
+    else:
+        base_models_to_run = [base_model]
 
-    print(f"Loaded {len(df_raw)} records")
+    for bm in base_models_to_run:
+        print(f"\n--- Processing {bm.upper()} ---")
 
-    table = generate_main_table(df_raw)
-    path = os.path.join(TABLES_DIR, "f1_table.txt")
-    with open(path, 'w') as f:
-        f.write(table)
-    print(f"\nMain table: {path}")
-    print(table)
+        df_raw = load_results(base_model=bm)
+        if df_raw.empty:
+            print(f"No results found for {bm}!")
+            continue
+
+        print(f"Loaded {len(df_raw)} records")
+
+        table = generate_main_table(df_raw, base_model_name=bm)
+
+        if len(base_models_to_run) > 1:
+            filename = f"f1_table_{bm}.txt"
+        else:
+            filename = "f1_table.txt"
+
+        path = os.path.join(TABLES_DIR, filename)
+        with open(path, 'w') as f:
+            f.write(table)
+        print(f"Table saved: {path}")
+        print(table)
 
     print("\nDone!")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Generate Benchmark F1 Score Tables')
+    parser.add_argument('--base_model', type=str, default='all',
+                        choices=['gaussiannb', 'hat', 'all'],
+                        help='Base classifier to use (default: all)')
+    args = parser.parse_args()
+
+    main(base_model=args.base_model)

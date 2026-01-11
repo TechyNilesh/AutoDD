@@ -34,9 +34,13 @@ SYNTHETIC_DATASETS = ['sea', 'hyp', 'agr', 'rbf', 'rtg']
 REALWORLD_DATASETS = ['elec', 'weather', 'spam', 'airlines', 'poker']
 ALL_DATASETS = SYNTHETIC_DATASETS + REALWORLD_DATASETS
 
+# Base model options
+BASE_MODELS = ['gaussiannb', 'hat']
+
 # Detector list (from paper's portfolio + baselines + AutoDD)
+# Note: 'no_detector' runs the base model without drift detection
 DETECTORS = [
-    'gaussiannb',  # Baseline: No drift detection (*)
+    'no_detector',  # Baseline: No drift detection (uses base_model directly)
     'adwin',
     'ddm',
     'eddm',
@@ -53,7 +57,7 @@ DETECTORS = [
 
 # Detector script mapping
 DETECTOR_SCRIPTS = {
-    'gaussiannb': 'scripts/gaussiannb_run.py',
+    'no_detector': 'scripts/no_detector_run.py',  # Renamed from gaussiannb_run.py
     'adwin': 'scripts/adwin_run.py',
     'meta_add': 'scripts/meta_add_run.py',
     'autodd': 'scripts/autodd_run.py',
@@ -70,7 +74,8 @@ DETECTOR_SCRIPTS = {
 
 
 def run_script(dataset_name, detector_name, run_count=None, random_seed=False,
-               progress_interval=1000, output_dir="benchmark_results", verbose=False):
+               progress_interval=1000, output_dir="benchmark_results", verbose=False,
+               base_model='gaussiannb'):
     """
     Execute a detector script for a specified dataset.
 
@@ -82,6 +87,7 @@ def run_script(dataset_name, detector_name, run_count=None, random_seed=False,
         progress_interval: Interval for progress updates
         output_dir: Directory to save results
         verbose: Enable verbose output
+        base_model: Base classifier to use ('gaussiannb' or 'hat')
     """
     if random_seed:
         seed = random.randint(1, 1000)
@@ -93,8 +99,9 @@ def run_script(dataset_name, detector_name, run_count=None, random_seed=False,
         print(f"Unknown detector: {detector_name}")
         return
 
+    base_model_name = 'HAT' if base_model == 'hat' else 'GaussianNB'
     print(f"\n{'='*60}")
-    print(f"Running {detector_name.upper()} on {dataset_name}")
+    print(f"Running {detector_name.upper()} on {dataset_name} (Base: {base_model_name})")
     print(f"Seed: {seed}, Run: {run_count if run_count else 'single'}")
     print(f"{'='*60}")
 
@@ -106,6 +113,7 @@ def run_script(dataset_name, detector_name, run_count=None, random_seed=False,
     command += ['--seed', str(seed)]
     command += ['--progress_interval', str(progress_interval)]
     command += ['--output_dir', output_dir]
+    command += ['--base_model', base_model]
 
     if verbose:
         command += ['--verbose']
@@ -129,10 +137,11 @@ def run_script(dataset_name, detector_name, run_count=None, random_seed=False,
 
 def run_all_detectors_for_dataset(dataset_name, progress_interval=1000,
                                    output_dir="benchmark_results", verbose=False,
-                                   parallel=True, max_workers=None):
+                                   parallel=True, max_workers=None, base_model='gaussiannb'):
     """Run all detectors on a single dataset."""
+    base_model_name = 'HAT' if base_model == 'hat' else 'GaussianNB'
     print(f"\n{'#'*60}")
-    print(f"Running all detectors on {dataset_name}")
+    print(f"Running all detectors on {dataset_name} (Base: {base_model_name})")
     print(f"{'#'*60}")
 
     if parallel:
@@ -141,21 +150,22 @@ def run_all_detectors_for_dataset(dataset_name, progress_interval=1000,
             for detector in DETECTORS:
                 futures.append(executor.submit(
                     run_script, dataset_name, detector, None, False,
-                    progress_interval, output_dir, verbose
+                    progress_interval, output_dir, verbose, base_model
                 ))
             concurrent.futures.wait(futures)
     else:
         for detector in DETECTORS:
             run_script(dataset_name, detector, None, False,
-                      progress_interval, output_dir, verbose)
+                      progress_interval, output_dir, verbose, base_model)
 
 
 def run_detector_on_all_datasets(detector_name, progress_interval=1000,
                                   output_dir="benchmark_results", verbose=False,
-                                  parallel=True, max_workers=None):
+                                  parallel=True, max_workers=None, base_model='gaussiannb'):
     """Run a single detector on all datasets."""
+    base_model_name = 'HAT' if base_model == 'hat' else 'GaussianNB'
     print(f"\n{'#'*60}")
-    print(f"Running {detector_name.upper()} on all datasets")
+    print(f"Running {detector_name.upper()} on all datasets (Base: {base_model_name})")
     print(f"{'#'*60}")
 
     if parallel:
@@ -164,20 +174,21 @@ def run_detector_on_all_datasets(detector_name, progress_interval=1000,
             for dataset in ALL_DATASETS:
                 futures.append(executor.submit(
                     run_script, dataset, detector_name, None, False,
-                    progress_interval, output_dir, verbose
+                    progress_interval, output_dir, verbose, base_model
                 ))
             concurrent.futures.wait(futures)
     else:
         for dataset in ALL_DATASETS:
             run_script(dataset, detector_name, None, False,
-                      progress_interval, output_dir, verbose)
+                      progress_interval, output_dir, verbose, base_model)
 
 
 def run_all_experiments(progress_interval=1000, output_dir="benchmark_results",
-                        verbose=False, parallel=True, max_workers=None):
+                        verbose=False, parallel=True, max_workers=None, base_model='gaussiannb'):
     """Run all detectors on all datasets."""
+    base_model_name = 'HAT' if base_model == 'hat' else 'GaussianNB'
     print(f"\n{'#'*60}")
-    print("Running ALL experiments")
+    print(f"Running ALL experiments (Base: {base_model_name})")
     print(f"Detectors: {len(DETECTORS)}, Datasets: {len(ALL_DATASETS)}")
     print(f"Total runs: {len(DETECTORS) * len(ALL_DATASETS)}")
     print(f"{'#'*60}")
@@ -190,21 +201,22 @@ def run_all_experiments(progress_interval=1000, output_dir="benchmark_results",
             for dataset, detector in tasks:
                 futures.append(executor.submit(
                     run_script, dataset, detector, None, False,
-                    progress_interval, output_dir, verbose
+                    progress_interval, output_dir, verbose, base_model
                 ))
             concurrent.futures.wait(futures)
     else:
         for dataset, detector in tasks:
             run_script(dataset, detector, None, False,
-                      progress_interval, output_dir, verbose)
+                      progress_interval, output_dir, verbose, base_model)
 
 
 def run_random_experiments(n_runs=10, progress_interval=1000,
                            output_dir="benchmark_results", verbose=False,
-                           parallel=True, max_workers=None):
+                           parallel=True, max_workers=None, base_model='gaussiannb'):
     """Run multiple random experiments."""
+    base_model_name = 'HAT' if base_model == 'hat' else 'GaussianNB'
     print(f"\n{'#'*60}")
-    print(f"Running {n_runs} random experiments")
+    print(f"Running {n_runs} random experiments (Base: {base_model_name})")
     print(f"Detectors: {len(DETECTORS)}, Datasets: {len(ALL_DATASETS)}")
     print(f"Total runs: {len(DETECTORS) * len(ALL_DATASETS) * n_runs}")
     print(f"{'#'*60}")
@@ -222,20 +234,21 @@ def run_random_experiments(n_runs=10, progress_interval=1000,
             for dataset, detector, run in tasks:
                 futures.append(executor.submit(
                     run_script, dataset, detector, run, True,
-                    progress_interval, output_dir, verbose
+                    progress_interval, output_dir, verbose, base_model
                 ))
             concurrent.futures.wait(futures)
     else:
         for dataset, detector, run in tasks:
             run_script(dataset, detector, run, True,
-                      progress_interval, output_dir, verbose)
+                      progress_interval, output_dir, verbose, base_model)
 
 
 def run_synthetic_only(progress_interval=1000, output_dir="benchmark_results",
-                       verbose=False, parallel=True, max_workers=None):
+                       verbose=False, parallel=True, max_workers=None, base_model='gaussiannb'):
     """Run all detectors on synthetic datasets only."""
+    base_model_name = 'HAT' if base_model == 'hat' else 'GaussianNB'
     print(f"\n{'#'*60}")
-    print("Running experiments on SYNTHETIC datasets")
+    print(f"Running experiments on SYNTHETIC datasets (Base: {base_model_name})")
     print(f"{'#'*60}")
 
     tasks = [(dataset, detector) for dataset in SYNTHETIC_DATASETS for detector in DETECTORS]
@@ -246,20 +259,21 @@ def run_synthetic_only(progress_interval=1000, output_dir="benchmark_results",
             for dataset, detector in tasks:
                 futures.append(executor.submit(
                     run_script, dataset, detector, None, False,
-                    progress_interval, output_dir, verbose
+                    progress_interval, output_dir, verbose, base_model
                 ))
             concurrent.futures.wait(futures)
     else:
         for dataset, detector in tasks:
             run_script(dataset, detector, None, False,
-                      progress_interval, output_dir, verbose)
+                      progress_interval, output_dir, verbose, base_model)
 
 
 def run_realworld_only(progress_interval=1000, output_dir="benchmark_results",
-                       verbose=False, parallel=True, max_workers=None):
+                       verbose=False, parallel=True, max_workers=None, base_model='gaussiannb'):
     """Run all detectors on real-world datasets only."""
+    base_model_name = 'HAT' if base_model == 'hat' else 'GaussianNB'
     print(f"\n{'#'*60}")
-    print("Running experiments on REAL-WORLD datasets")
+    print(f"Running experiments on REAL-WORLD datasets (Base: {base_model_name})")
     print(f"{'#'*60}")
 
     tasks = [(dataset, detector) for dataset in REALWORLD_DATASETS for detector in DETECTORS]
@@ -270,21 +284,22 @@ def run_realworld_only(progress_interval=1000, output_dir="benchmark_results",
             for dataset, detector in tasks:
                 futures.append(executor.submit(
                     run_script, dataset, detector, None, False,
-                    progress_interval, output_dir, verbose
+                    progress_interval, output_dir, verbose, base_model
                 ))
             concurrent.futures.wait(futures)
     else:
         for dataset, detector in tasks:
             run_script(dataset, detector, None, False,
-                      progress_interval, output_dir, verbose)
+                      progress_interval, output_dir, verbose, base_model)
 
 
 def run_detector_multiple_runs(detector_name, n_runs=10, progress_interval=1000,
                                 output_dir="benchmark_results", verbose=False,
-                                parallel=True, max_workers=None):
+                                parallel=True, max_workers=None, base_model='gaussiannb'):
     """Run a single detector with multiple runs on all datasets."""
+    base_model_name = 'HAT' if base_model == 'hat' else 'GaussianNB'
     print(f"\n{'#'*60}")
-    print(f"Running {detector_name.upper()} with {n_runs} runs on all datasets")
+    print(f"Running {detector_name.upper()} with {n_runs} runs on all datasets (Base: {base_model_name})")
     print(f"Datasets: {len(ALL_DATASETS)}")
     print(f"Total runs: {len(ALL_DATASETS) * n_runs}")
     print(f"{'#'*60}")
@@ -301,13 +316,13 @@ def run_detector_multiple_runs(detector_name, n_runs=10, progress_interval=1000,
             for dataset, run in tasks:
                 futures.append(executor.submit(
                     run_script, dataset, detector_name, run, True,
-                    progress_interval, output_dir, verbose
+                    progress_interval, output_dir, verbose, base_model
                 ))
             concurrent.futures.wait(futures)
     else:
         for dataset, run in tasks:
             run_script(dataset, detector_name, run, True,
-                      progress_interval, output_dir, verbose)
+                      progress_interval, output_dir, verbose, base_model)
 
 
 if __name__ == '__main__':
@@ -350,6 +365,9 @@ Examples:
                         help='Run experiments sequentially (not parallel)')
     parser.add_argument('--max_workers', type=int, default=None,
                         help='Max parallel workers (default: CPU count)')
+    parser.add_argument('--base_model', type=str, default='gaussiannb',
+                        choices=['gaussiannb', 'hat', 'all'],
+                        help='Base classifier to use (default: gaussiannb)')
 
     args = parser.parse_args()
     parallel = not args.sequential
@@ -360,56 +378,63 @@ Examples:
     # Create output directory
     os.makedirs(args.output_dir, exist_ok=True)
 
-    if args.mode == 'dataset':
-        if not args.name:
-            print("Please provide dataset name with --name")
-            print(f"Available datasets: {ALL_DATASETS}")
-        else:
-            run_all_detectors_for_dataset(
-                args.name, args.progress_interval, args.output_dir,
-                args.verbose, parallel, max_workers
+    # Determine which base models to run
+    if args.base_model == 'all':
+        base_models_to_run = BASE_MODELS
+    else:
+        base_models_to_run = [args.base_model]
+
+    for base_model in base_models_to_run:
+        if args.mode == 'dataset':
+            if not args.name:
+                print("Please provide dataset name with --name")
+                print(f"Available datasets: {ALL_DATASETS}")
+            else:
+                run_all_detectors_for_dataset(
+                    args.name, args.progress_interval, args.output_dir,
+                    args.verbose, parallel, max_workers, base_model
+                )
+
+        elif args.mode == 'detector':
+            if not args.name:
+                print("Please provide detector name with --name")
+                print(f"Available detectors: {DETECTORS}")
+            else:
+                run_detector_on_all_datasets(
+                    args.name, args.progress_interval, args.output_dir,
+                    args.verbose, parallel, max_workers, base_model
+                )
+
+        elif args.mode == 'detector_runs':
+            if not args.name:
+                print("Please provide detector name with --name")
+                print(f"Available detectors: {DETECTORS}")
+            else:
+                run_detector_multiple_runs(
+                    args.name, args.n_runs, args.progress_interval, args.output_dir,
+                    args.verbose, parallel, max_workers, base_model
+                )
+
+        elif args.mode == 'all':
+            run_all_experiments(
+                args.progress_interval, args.output_dir, args.verbose, parallel, max_workers, base_model
             )
 
-    elif args.mode == 'detector':
-        if not args.name:
-            print("Please provide detector name with --name")
-            print(f"Available detectors: {DETECTORS}")
-        else:
-            run_detector_on_all_datasets(
-                args.name, args.progress_interval, args.output_dir,
-                args.verbose, parallel, max_workers
+        elif args.mode == 'random':
+            run_random_experiments(
+                args.n_runs, args.progress_interval, args.output_dir,
+                args.verbose, parallel, max_workers, base_model
             )
 
-    elif args.mode == 'detector_runs':
-        if not args.name:
-            print("Please provide detector name with --name")
-            print(f"Available detectors: {DETECTORS}")
-        else:
-            run_detector_multiple_runs(
-                args.name, args.n_runs, args.progress_interval, args.output_dir,
-                args.verbose, parallel, max_workers
+        elif args.mode == 'synthetic':
+            run_synthetic_only(
+                args.progress_interval, args.output_dir, args.verbose, parallel, max_workers, base_model
             )
 
-    elif args.mode == 'all':
-        run_all_experiments(
-            args.progress_interval, args.output_dir, args.verbose, parallel, max_workers
-        )
-
-    elif args.mode == 'random':
-        run_random_experiments(
-            args.n_runs, args.progress_interval, args.output_dir,
-            args.verbose, parallel, max_workers
-        )
-
-    elif args.mode == 'synthetic':
-        run_synthetic_only(
-            args.progress_interval, args.output_dir, args.verbose, parallel, max_workers
-        )
-
-    elif args.mode == 'realworld':
-        run_realworld_only(
-            args.progress_interval, args.output_dir, args.verbose, parallel, max_workers
-        )
+        elif args.mode == 'realworld':
+            run_realworld_only(
+                args.progress_interval, args.output_dir, args.verbose, parallel, max_workers, base_model
+            )
 
     print(f"\n{'='*60}")
     print("Experiments completed!")

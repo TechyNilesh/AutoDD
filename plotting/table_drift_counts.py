@@ -3,14 +3,17 @@ Generate Drift Count Tables
 
 Creates:
 - tables/drift_table.txt - Main drift count comparison
-- tables/drift_<dataset>.txt - Per-dataset drift count tables
+- tables/drift_table_<base_model>.txt - Per base model drift tables
 
 Usage:
     python plotting/table_drift_counts.py
+    python plotting/table_drift_counts.py --base_model hat
+    python plotting/table_drift_counts.py --base_model all
 """
 
 import os
 import json
+import argparse
 import pandas as pd
 import numpy as np
 from glob import glob
@@ -23,9 +26,10 @@ TABLES_DIR = os.path.join(SCRIPT_DIR, "tables")
 os.makedirs(TABLES_DIR, exist_ok=True)
 
 DATASETS = ['sea', 'hyp', 'agr', 'rbf', 'rtg', 'elec', 'weather', 'spam', 'airlines', 'poker']
+BASE_MODELS = ['gaussiannb', 'hat']
 
 
-def load_results():
+def load_results(base_model=None):
     """Load all benchmark results into a DataFrame."""
     records = []
     for filepath in glob(os.path.join(RESULTS_DIR, "*.json")):
@@ -34,10 +38,17 @@ def load_results():
         try:
             with open(filepath, 'r') as f:
                 data = json.load(f)
+
+            record_base_model = data.get('base_model', 'gaussiannb')
+
+            if base_model and record_base_model != base_model:
+                continue
+
             records.append({
                 'model': data.get('model', ''),
                 'dataset': data.get('dataset', ''),
                 'n_drifts': data.get('n_drifts', 0),
+                'base_model': record_base_model,
                 'run_count': data.get('run_count', 1)
             })
         except Exception as e:
@@ -62,7 +73,7 @@ def add_mean_row(df):
     return pd.concat([df, mean_row])
 
 
-def generate_main_table(df_raw):
+def generate_main_table(df_raw, base_model_name=None):
     """Generate main drift count table in pivot format."""
     pivot_df = df_raw.pivot_table(index='dataset', columns='model', values='n_drifts', aggfunc='mean')
     pivot_df.columns.name = None
@@ -74,7 +85,10 @@ def generate_main_table(df_raw):
 
     lines = []
     lines.append("=" * 140)
-    lines.append("DRIFT COUNT COMPARISON TABLE")
+    title = "DRIFT COUNT COMPARISON TABLE"
+    if base_model_name:
+        title += f" - {base_model_name.upper()}"
+    lines.append(title)
     lines.append("=" * 140)
     lines.append("")
 
@@ -100,27 +114,47 @@ def generate_main_table(df_raw):
     return "\n".join(lines)
 
 
-def main():
+def main(base_model='all'):
     print("=" * 60)
     print("Generating Drift Count Tables")
     print("=" * 60)
 
-    df_raw = load_results()
-    if df_raw.empty:
-        print("No results found!")
-        return
+    if base_model == 'all':
+        base_models_to_run = BASE_MODELS
+    else:
+        base_models_to_run = [base_model]
 
-    print(f"Loaded {len(df_raw)} records")
+    for bm in base_models_to_run:
+        print(f"\n--- Processing {bm.upper()} ---")
 
-    table = generate_main_table(df_raw)
-    path = os.path.join(TABLES_DIR, "drift_table.txt")
-    with open(path, 'w') as f:
-        f.write(table)
-    print(f"\nMain table: {path}")
-    print(table)
+        df_raw = load_results(base_model=bm)
+        if df_raw.empty:
+            print(f"No results found for {bm}!")
+            continue
+
+        print(f"Loaded {len(df_raw)} records")
+
+        table = generate_main_table(df_raw, base_model_name=bm)
+
+        if len(base_models_to_run) > 1:
+            filename = f"drift_table_{bm}.txt"
+        else:
+            filename = "drift_table.txt"
+
+        path = os.path.join(TABLES_DIR, filename)
+        with open(path, 'w') as f:
+            f.write(table)
+        print(f"Table saved: {path}")
+        print(table)
 
     print("\nDone!")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Generate Drift Count Tables')
+    parser.add_argument('--base_model', type=str, default='all',
+                        choices=['gaussiannb', 'hat', 'all'],
+                        help='Base classifier to use (default: all)')
+    args = parser.parse_args()
+
+    main(base_model=args.base_model)

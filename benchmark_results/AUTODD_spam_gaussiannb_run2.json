@@ -1,0 +1,62 @@
+{
+    "dataset": "spam",
+    "model": "AUTODD",
+    "detector": "autodd",
+    "base_model": "gaussiannb",
+    "accuracy": 0.99,
+    "f1": 0.0,
+    "n_drifts": 0,
+    "drift_points": [],
+    "total_runtime": 1.3,
+    "total_memory_mb": 10.43,
+    "n_instances": 4601,
+    "window_metrics": {
+        "interval": 1000,
+        "instances": [
+            0.0,
+            511.22222222222223,
+            1022.4444444444445,
+            1533.6666666666667,
+            2044.888888888889,
+            2556.1111111111113,
+            3067.3333333333335,
+            3578.5555555555557,
+            4089.777777777778,
+            4601.0
+        ],
+        "accuracy_scores": [
+            0.9513,
+            0.9669,
+            0.9787,
+            0.9836,
+            0.9475,
+            0.9618,
+            0.9574,
+            0.9294,
+            0.9426,
+            0.9861
+        ],
+        "f1_scores": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+        ]
+    },
+    "run_id": 2,
+    "selection_distribution": {
+        "ADWIN": 0.235,
+        "DDM": 0.101,
+        "EDDM": 0.111,
+        "HDDM_A": 0.128,
+        "HDDM_W": 0.115,
+        "PageHinkley": 0.061,
+        "KSWIN": 0.162
+    }
+}

@@ -3,14 +3,17 @@ Generate Benchmark Memory Tables
 
 Creates:
 - tables/memory_table.txt - Main memory comparison with mean and rank
-- tables/memory_<dataset>.txt - Per-dataset memory tables
+- tables/memory_table_<base_model>.txt - Per base model memory tables
 
 Usage:
     python plotting/table_benchmark_memory.py
+    python plotting/table_benchmark_memory.py --base_model hat
+    python plotting/table_benchmark_memory.py --base_model all
 """
 
 import os
 import json
+import argparse
 import pandas as pd
 import numpy as np
 from glob import glob
@@ -23,9 +26,10 @@ TABLES_DIR = os.path.join(SCRIPT_DIR, "tables")
 os.makedirs(TABLES_DIR, exist_ok=True)
 
 DATASETS = ['sea', 'hyp', 'agr', 'rbf', 'rtg', 'elec', 'weather', 'spam', 'airlines', 'poker']
+BASE_MODELS = ['gaussiannb', 'hat']
 
 
-def load_results():
+def load_results(base_model=None):
     """Load all benchmark results into a DataFrame."""
     records = []
     for filepath in glob(os.path.join(RESULTS_DIR, "*.json")):
@@ -34,10 +38,18 @@ def load_results():
         try:
             with open(filepath, 'r') as f:
                 data = json.load(f)
+
+            record_base_model = data.get('base_model', 'gaussiannb')
+
+            if base_model and record_base_model != base_model:
+                continue
+
             records.append({
                 'model': data.get('model', ''),
+                'detector': data.get('detector', ''),
                 'dataset': data.get('dataset', ''),
                 'total_memory_mb': data.get('total_memory_mb', 0),
+                'base_model': record_base_model,
                 'run_count': data.get('run_count', 1)
             })
         except Exception as e:
@@ -78,7 +90,6 @@ def add_rank_row(df):
         rank_values[col] = ranks
 
     rank_df = pd.DataFrame(rank_values, index=data_df.index)
-    # Lower memory = rank 1 (ascending=True)
     ranks_per_row = rank_df.rank(axis=1, ascending=True)
     mean_ranks = ranks_per_row.mean()
 
@@ -86,7 +97,7 @@ def add_rank_row(df):
     return pd.concat([df, rank_row])
 
 
-def generate_main_table(df_raw):
+def generate_main_table(df_raw, base_model_name=None):
     """Generate main memory table in pivot format."""
     pivot_df = df_raw.pivot_table(index='dataset', columns='model', values='total_memory_mb', aggfunc='mean')
     pivot_df.columns.name = None
@@ -99,7 +110,10 @@ def generate_main_table(df_raw):
 
     lines = []
     lines.append("=" * 140)
-    lines.append("MEMORY COMPARISON TABLE (MB)")
+    title = "MEMORY COMPARISON TABLE (MB)"
+    if base_model_name:
+        title += f" - {base_model_name.upper()}"
+    lines.append(title)
     lines.append("=" * 140)
     lines.append("")
 
@@ -128,27 +142,47 @@ def generate_main_table(df_raw):
     return "\n".join(lines)
 
 
-def main():
+def main(base_model='all'):
     print("=" * 60)
     print("Generating Benchmark Memory Tables")
     print("=" * 60)
 
-    df_raw = load_results()
-    if df_raw.empty:
-        print("No results found!")
-        return
+    if base_model == 'all':
+        base_models_to_run = BASE_MODELS
+    else:
+        base_models_to_run = [base_model]
 
-    print(f"Loaded {len(df_raw)} records")
+    for bm in base_models_to_run:
+        print(f"\n--- Processing {bm.upper()} ---")
 
-    table = generate_main_table(df_raw)
-    path = os.path.join(TABLES_DIR, "memory_table.txt")
-    with open(path, 'w') as f:
-        f.write(table)
-    print(f"\nMain table: {path}")
-    print(table)
+        df_raw = load_results(base_model=bm)
+        if df_raw.empty:
+            print(f"No results found for {bm}!")
+            continue
+
+        print(f"Loaded {len(df_raw)} records")
+
+        table = generate_main_table(df_raw, base_model_name=bm)
+
+        if len(base_models_to_run) > 1:
+            filename = f"memory_table_{bm}.txt"
+        else:
+            filename = "memory_table.txt"
+
+        path = os.path.join(TABLES_DIR, filename)
+        with open(path, 'w') as f:
+            f.write(table)
+        print(f"Table saved: {path}")
+        print(table)
 
     print("\nDone!")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Generate Benchmark Memory Tables')
+    parser.add_argument('--base_model', type=str, default='all',
+                        choices=['gaussiannb', 'hat', 'all'],
+                        help='Base classifier to use (default: all)')
+    args = parser.parse_args()
+
+    main(base_model=args.base_model)

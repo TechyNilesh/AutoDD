@@ -3,14 +3,17 @@ Generate Benchmark Accuracy Tables
 
 Creates:
 - tables/accuracy_table.txt - Main accuracy comparison with mean and rank
-- tables/accuracy_<dataset>.txt - Per-dataset accuracy tables
+- tables/accuracy_table_<base_model>.txt - Per base model accuracy tables
 
 Usage:
     python plotting/table_benchmark_accuracy.py
+    python plotting/table_benchmark_accuracy.py --base_model hat
+    python plotting/table_benchmark_accuracy.py --base_model all
 """
 
 import os
 import json
+import argparse
 import pandas as pd
 import numpy as np
 from glob import glob
@@ -25,10 +28,15 @@ os.makedirs(TABLES_DIR, exist_ok=True)
 DATASETS = ['sea', 'hyp', 'agr', 'rbf', 'rtg', 'elec', 'weather', 'spam', 'airlines', 'poker']
 SYNTHETIC = ['sea', 'hyp', 'agr', 'rbf', 'rtg']
 REALWORLD = ['elec', 'weather', 'spam', 'airlines', 'poker']
+BASE_MODELS = ['gaussiannb', 'hat']
 
 
-def load_results():
-    """Load all benchmark results into a DataFrame."""
+def load_results(base_model=None):
+    """Load all benchmark results into a DataFrame.
+
+    Args:
+        base_model: Filter by base model ('gaussiannb', 'hat', or None for all)
+    """
     records = []
     for filepath in glob(os.path.join(RESULTS_DIR, "*.json")):
         if 'summary' in os.path.basename(filepath):
@@ -36,10 +44,19 @@ def load_results():
         try:
             with open(filepath, 'r') as f:
                 data = json.load(f)
+
+            record_base_model = data.get('base_model', 'gaussiannb')
+
+            # Filter by base_model if specified
+            if base_model and record_base_model != base_model:
+                continue
+
             records.append({
                 'model': data.get('model', ''),
+                'detector': data.get('detector', ''),
                 'dataset': data.get('dataset', ''),
                 'accuracy': data.get('accuracy', 0),
+                'base_model': record_base_model,
                 'run_count': data.get('run_count', 1)
             })
         except Exception as e:
@@ -89,10 +106,13 @@ def add_rank_row(df):
     return pd.concat([df, rank_row])
 
 
-def generate_main_table(df_raw):
+def generate_main_table(df_raw, base_model_name=None):
     """Generate main accuracy table in pivot format."""
     # Group by model and dataset, calculate mean and std
     agg_df = df_raw.groupby(['model', 'dataset'])['accuracy'].agg(['mean', 'std']).reset_index()
+
+    # Handle NaN std (single run)
+    agg_df['std'] = agg_df['std'].fillna(0)
 
     # Create score column with mean±std format
     agg_df['score'] = [f"{mean:.3f}±{std:.3f}" for mean, std in zip(agg_df['mean'], agg_df['std'])]
@@ -112,7 +132,10 @@ def generate_main_table(df_raw):
     # Format as text table
     lines = []
     lines.append("=" * 140)
-    lines.append("ACCURACY COMPARISON TABLE")
+    title = "ACCURACY COMPARISON TABLE"
+    if base_model_name:
+        title += f" - {base_model_name.upper()}"
+    lines.append(title)
     lines.append("=" * 140)
     lines.append("")
 
@@ -140,28 +163,49 @@ def generate_main_table(df_raw):
     return "\n".join(lines)
 
 
-def main():
+def main(base_model='all'):
     print("=" * 60)
     print("Generating Benchmark Accuracy Tables")
     print("=" * 60)
 
-    df_raw = load_results()
-    if df_raw.empty:
-        print("No results found!")
-        return
+    # Determine which base models to process
+    if base_model == 'all':
+        base_models_to_run = BASE_MODELS
+    else:
+        base_models_to_run = [base_model]
 
-    print(f"Loaded {len(df_raw)} records")
+    for bm in base_models_to_run:
+        print(f"\n--- Processing {bm.upper()} ---")
 
-    # Main table
-    table = generate_main_table(df_raw)
-    path = os.path.join(TABLES_DIR, "accuracy_table.txt")
-    with open(path, 'w') as f:
-        f.write(table)
-    print(f"\nMain table: {path}")
-    print(table)
+        df_raw = load_results(base_model=bm)
+        if df_raw.empty:
+            print(f"No results found for {bm}!")
+            continue
+
+        print(f"Loaded {len(df_raw)} records")
+
+        # Main table
+        table = generate_main_table(df_raw, base_model_name=bm)
+
+        if len(base_models_to_run) > 1:
+            filename = f"accuracy_table_{bm}.txt"
+        else:
+            filename = "accuracy_table.txt"
+
+        path = os.path.join(TABLES_DIR, filename)
+        with open(path, 'w') as f:
+            f.write(table)
+        print(f"Table saved: {path}")
+        print(table)
 
     print("\nDone!")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Generate Benchmark Accuracy Tables')
+    parser.add_argument('--base_model', type=str, default='all',
+                        choices=['gaussiannb', 'hat', 'all'],
+                        help='Base classifier to use (default: all)')
+    args = parser.parse_args()
+
+    main(base_model=args.base_model)
