@@ -426,6 +426,7 @@ We evaluate AutoDD on ten benchmark datasets comprising five synthetic and five 
 \centering
 \caption{Dataset characteristics (Multiple* = Sudden, Gradual, Incremental, and Normal drift types)}
 \label{tab:datasets}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{llrrll}
 \toprule
 \textbf{Dataset} & \textbf{Type} & \textbf{Instances} & \textbf{Features} & \textbf{Drift Type} \\
@@ -442,7 +443,8 @@ Spam & Real-world & 4,601 & 57 & Unknown \\
 Airlines & Real-world & 539,383 & 7 & Unknown \\
 Poker & Real-world & 829,201 & 10 & Unknown \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 We measure prequential accuracy as the percentage of correct predictions using test-then-train evaluation and F1-score as the harmonic mean of drift detection precision and recall. For real-world datasets, we report drift count representing the number of detected drifts. We also measure computational cost, including runtime per instance and memory usage. For synthetic datasets with known drift points, we match detected drifts to ground truth using a tolerance window of $\delta=100$ instances following standard practice \cite{Bifet2007ADWIN}. A detection is considered a true positive if it falls within $\pm\delta$ of an unmatched true drift using first-match greedy assignment. AutoDD uses all 15 meta-features with window size $w=100$, exploration parameter $\alpha=1.0$, and $C=5$ hyperparameter configurations per detector consisting of 1 default configuration plus 4 sampled configurations. All experiments use GaussianNB as the base classifier to isolate drift detection effects, with results averaged over 10 runs. Implementation uses Python with River \cite{Montiel2021River} on a MacBook Pro with Apple M2 Pro and 16GB RAM. All experiments are fully reproducible with code and datasets publicly available.\footnote{Dataset and code available at: \url{https://anonymous.4open.science/r/AutoDD-BCCF}}
@@ -458,7 +460,7 @@ We evaluate AutoDD against twelve baselines on ten datasets. Results show AutoDD
 \centering
 \caption{Results on synthetic datasets. Best results in \textbf{bold}.}
 \label{tab:synthetic}
-\resizebox{\textwidth}{!}{%
+\resizebox{0.75\textwidth}{!}{%
 \begin{tabular}{l|cc|cc|cc|cc|cc|cc}
 \toprule
 & \multicolumn{2}{c|}{\textbf{SEA}} & \multicolumn{2}{c|}{\textbf{HYP}} & \multicolumn{2}{c|}{\textbf{AGR}} & \multicolumn{2}{c|}{\textbf{RBF}} & \multicolumn{2}{c|}{\textbf{RTG}} & \multicolumn{2}{c}{\textbf{Mean}} \\
@@ -489,7 +491,7 @@ Meta-ADD & 88.9 & 0.87 & 90.8 & \textbf{0.91} & 74.1 & 0.79 & \textbf{78.0} & 0.
 \centering
 \caption{Results on real-world datasets. DN = number of detected drifts. Best results in \textbf{bold}.}
 \label{tab:realworld}
-\resizebox{\textwidth}{!}{%
+\resizebox{0.75\textwidth}{!}{%
 \begin{tabular}{l|cc|cc|cc|cc|cc|cc}
 \toprule
 & \multicolumn{2}{c|}{\textbf{Elec}} & \multicolumn{2}{c|}{\textbf{Weather}} & \multicolumn{2}{c|}{\textbf{Spam}} & \multicolumn{2}{c|}{\textbf{Airlines}} & \multicolumn{2}{c|}{\textbf{Poker}} & \multicolumn{2}{c}{\textbf{Mean}} \\
@@ -514,15 +516,6 @@ Meta-ADD & 85.4 & 22 & 74.9 & 9 & 94.5 & 2 & 63.8 & 139 & 55.5 & 182 & 74.8 & 70
 }
 \end{table*}
 
-\textbf{Statistical Significance:} Figure~\ref{fig:cd_diagram} shows the Critical Difference diagram based on Friedman test with Nemenyi post-hoc analysis ($\alpha=0.05$) across all methods. AutoDD achieves the best average rank, followed by state-of-the-art detectors Meta-ADD, ADDM, PUDD, and MDDM. Portfolio detectors including HDDM-A, DDM, EDDM, ADWIN, Page-Hinkley, KSWIN, and HDDM-W cluster in middle ranks, while No Drift Detector performs worst. AutoDD significantly outperforms all fixed detectors and ranks better than state-of-the-art methods.
-
-\begin{figure}[!ht]
-    \centering
-    \includegraphics[width=\columnwidth]{image/cd_diagram.png}
-    \caption{Critical Difference diagram with connecting bars indicating statistically equivalent methods.}
-    \label{fig:cd_diagram}
-\end{figure}
-
 \begin{figure}[!ht]
     \centering
     \begin{subfigure}[b]{0.48\columnwidth}
@@ -538,11 +531,23 @@ Meta-ADD & 85.4 & 22 & 74.9 & 9 & 94.5 & 2 & 63.8 & 139 & 55.5 & 182 & 74.8 & 70
         \caption{Poker (real-world)}
         \label{fig:prequential_poker}
     \end{subfigure}
-    \caption{Prequential accuracy over time. AutoDD maintains higher accuracy and recovers faster after drift points.}
+    \caption{Prequential accuracy over time.}
     \label{fig:prequential_results}
 \end{figure}
 
-\textbf{Ablation Study:} We systematically remove AutoDD components to assess their contributions. Table~\ref{tab:ablation} shows results as weighted mean across all 10 datasets. The results reveal that both levels of AutoDD's cascading selection are critical. Level 1 (LinUCB) has the largest impact---random detector selection causes an 18.0\% accuracy drop, confirming that intelligent detector-stream matching is essential. Level 2 (Thompson Sampling) contributes 5.2\% improvement through adaptive hyperparameter configuration. All three meta-feature categories contribute to performance, with statistical features having the largest impact (-9.4\% when removed), followed by stationarity (-7.1\%) and temporal features (-6.4\%).
+\textbf{Statistical Significance:} Figure~\ref{fig:cd_diagram} shows the Critical Difference diagram based on Friedman test with Nemenyi post-hoc analysis ($\alpha=0.05$) across all methods. AutoDD achieves the best average rank, followed by state-of-the-art detectors Meta-ADD, ADDM, PUDD, and MDDM. Portfolio detectors including HDDM-A, DDM, EDDM, ADWIN, Page-Hinkley, KSWIN, and HDDM-W cluster in middle ranks, while No Drift Detector performs worst. AutoDD significantly outperforms all fixed detectors and ranks better than state-of-the-art methods.
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.75\columnwidth]{image/cd_diagram.png}
+    \caption{Critical Difference diagram with connecting bars indicating statistically equivalent methods.}
+    \label{fig:cd_diagram}
+\end{figure}
+
+
+\subsubsection{Ablation Study}
+
+We systematically remove AutoDD components to assess their contributions. Table~\ref{tab:ablation} presents results averaged across all ten datasets. The cascading selection mechanism proves critical for AutoDD's performance. Removing Level 1 LinUCB detector selection and replacing it with random selection causes the largest performance drop of 18.0\%, confirming that intelligent detector-stream matching is essential. Removing Level 2 Thompson Sampling hyperparameter configuration reduces accuracy by 5.2\%, demonstrating the importance of adaptive hyperparameter tuning. All three meta-feature categories contribute substantially to performance. Statistical features have the largest impact, with their removal causing a 9.4\% accuracy drop. Stationarity features contribute 7.1\%, while temporal features account for 6.4\% of performance. %These results validate AutoDD's design choices: both levels of the cascading selection are necessary, and the comprehensive 15-feature representation combining statistical, stationarity, and temporal characteristics enables effective detector-stream matching.
 
 \begin{table}[!ht]
 \centering
@@ -564,159 +569,159 @@ w/o Thompson (Level 2) & 75.3\% & 0.60 & -5.2\% \\
 
 
 
-\begin{figure}[!ht]
-    \centering
-    \includegraphics[width=\columnwidth]{image/ablation_f1.png}
-    \caption{Ablation study: F1-score comparison across configurations.}
-    \label{fig:ablation}
-\end{figure}
+% \begin{figure}[!ht]
+%     \centering
+%     \includegraphics[width=\columnwidth]{image/ablation_f1.png}
+%     \caption{Ablation study: F1-score comparison across configurations.}
+%     \label{fig:ablation}
+% \end{figure}
 
 \textbf{Detector Selection Patterns:} To understand \textit{why} AutoDD works, we analyze which detectors are selected for different drift types. Table~\ref{tab:selection} shows selection frequencies on labeled synthetic streams.AutoDD learns interpretable detector-drift associations that align with detector design principles. For sudden drift, ADWIN is selected 68.2\% of the time, as expected since it was designed for abrupt changes via adaptive windowing. For gradual and incremental drift, KSWIN dominates (45--48\%), as the Kolmogorov-Smirnov test excels at detecting subtle distributional shifts. During stationary periods, Page-Hinkley is preferred (30.6\%) due to its sensitivity to emerging trends.Figure~\ref{fig:detector_selection} visualizes dynamic detector switching on the Hyperplane stream.
 
 
 
-\begin{table}[!ht]
-\centering
-\caption{Detector selection frequency (\%) by drift type}
-\label{tab:selection}
-\begin{tabular}{lcccc}
-\toprule
-\textbf{Detector} & \textbf{Sudden} & \textbf{Gradual} & \textbf{Increm.} & \textbf{Normal} \\
-\midrule
-ADWIN & 68.2 & 12.4 & 7.8 & 16.1 \\
-DDM & 15.4 & 8.1 & 5.7 & 13.3 \\
-EDDM & 3.8 & 22.4 & 8.7 & 9.3 \\
-HDDM-A & 2.1 & 7.8 & 17.3 & 6.8 \\
-HDDM-W & 1.2 & 3.8 & 11.8 & 4.5 \\
-Page-Hinkley & 0.9 & 0.5 & 0.5 & 30.6 \\
-KSWIN & 8.5 & 45.1 & 48.3 & 19.4 \\
-\bottomrule
-\end{tabular}
-\end{table}
+% \begin{table}[!ht]
+% \centering
+% \caption{Detector selection frequency (\%) by drift type}
+% \label{tab:selection}
+% \begin{tabular}{lcccc}
+% \toprule
+% \textbf{Detector} & \textbf{Sudden} & \textbf{Gradual} & \textbf{Increm.} & \textbf{Normal} \\
+% \midrule
+% ADWIN & 68.2 & 12.4 & 7.8 & 16.1 \\
+% DDM & 15.4 & 8.1 & 5.7 & 13.3 \\
+% EDDM & 3.8 & 22.4 & 8.7 & 9.3 \\
+% HDDM-A & 2.1 & 7.8 & 17.3 & 6.8 \\
+% HDDM-W & 1.2 & 3.8 & 11.8 & 4.5 \\
+% Page-Hinkley & 0.9 & 0.5 & 0.5 & 30.6 \\
+% KSWIN & 8.5 & 45.1 & 48.3 & 19.4 \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[width=\columnwidth]{image/detector_selection_hyp.png}
-    \caption{Dynamic detector selection on Hyperplane stream. Colored regions indicate active detector; black line shows error rate with spikes at drift points (red dashed lines).}
+    \includegraphics[width=0.75\columnwidth]{image/detector_selection_hyp.png}
+    \caption{Detector selection on Hyperplane stream showing active detectors, error rate, and drift points.}
     \label{fig:detector_selection}
 \end{figure}
 
 \textbf{Sensitivity study: } We analyze AutoDD's sensitivity to three key hyperparameters: window size $w$, exploration parameter $\alpha$, and regularization parameter $\lambda$. Table~\ref{tab:metafeatures} and Figure~\ref{fig:window_sensitivity} show that window size $w=100$ achieves optimal selection accuracy (92.6\%) across all meta-feature configurations, balancing statistical stability with drift responsiveness. Smaller windows ($w=25$) suffer from high variance, while larger windows ($w=200$) cause delayed drift response. All 15 features together outperform individual categories, with temporal features alone achieving 84.2\%, highlighting their importance for drift characterization. For the exploration parameter (Table~\ref{tab:alpha_sensitivity} and Figure~\ref{fig:alpha_sensitivity}), $\alpha=1.0$ achieves best performance across all datasets. Low values ($\alpha=0.1$) cause exploitation bias with suboptimal detector selection, while high values ($\alpha=2.0$) lead to excessive exploration and unstable switching. The regularization parameter $\lambda$ (Table~\ref{tab:lambda_sensitivity} and Figure~\ref{fig:lambda_sensitivity}) shows robust performance across $[0.5, 2.0]$ with $\lambda=1.0$ optimal. Very low $\lambda$ (0.01) risks overfitting to recent observations, while very high $\lambda$ (5.0) produces overly conservative estimates. Overall, AutoDD demonstrates stable performance around default hyperparameter settings, indicating robustness to configuration choices.
 
-\begin{table}[!ht]
-\centering
-\caption{Selection accuracy (\%) vs. window size and meta-features}
-\label{tab:metafeatures}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{lccccc}
-\toprule
-\textbf{Meta-Features} & $w=25$ & $w=50$ & $w=100$* & $w=150$ & $w=200$ \\
-\midrule
-Statistical only & 62.3 & 69.0 & 75.0 & 73.5 & 72.5 \\
-Stationarity only & 64.9 & 71.5 & 79.3 & 77.9 & 76.2 \\
-Temporal only & 69.9 & 77.2 & 84.2 & 82.9 & 80.8 \\
-All (15 features) & 78.1 & 85.5 & \textbf{92.6} & 91.0 & 88.4 \\
-\bottomrule
-\multicolumn{6}{l}{\small * Optimal window size}
-\end{tabular}%
-}
-\end{table}
+% \begin{table}[!ht]
+% \centering
+% \caption{Selection accuracy (\%) vs. window size and meta-features}
+% \label{tab:metafeatures}
+% \resizebox{\columnwidth}{!}{%
+% \begin{tabular}{lccccc}
+% \toprule
+% \textbf{Meta-Features} & $w=25$ & $w=50$ & $w=100$* & $w=150$ & $w=200$ \\
+% \midrule
+% Statistical only & 62.3 & 69.0 & 75.0 & 73.5 & 72.5 \\
+% Stationarity only & 64.9 & 71.5 & 79.3 & 77.9 & 76.2 \\
+% Temporal only & 69.9 & 77.2 & 84.2 & 82.9 & 80.8 \\
+% All (15 features) & 78.1 & 85.5 & \textbf{92.6} & 91.0 & 88.4 \\
+% \bottomrule
+% \multicolumn{6}{l}{\small * Optimal window size}
+% \end{tabular}%
+% }
+% \end{table}
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[width=\columnwidth]{image/window_sensitivity.png}
-    \caption{Window size sensitivity analysis showing $w=100$ achieves optimal selection accuracy across all meta-feature configurations.}
+    \includegraphics[width=0.75\columnwidth]{image/window_sensitivity.png}
+    \caption{Window size sensitivity analysis.}
     \label{fig:window_sensitivity}
 \end{figure}
 
-\begin{table}[!ht]
-\centering
-\caption{Accuracy (\%) vs. alpha (LinUCB exploration parameter)}
-\label{tab:alpha_sensitivity}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{lcccccc}
-\toprule
-\textbf{Dataset} & $\alpha=0.1$ & $\alpha=0.25$ & $\alpha=0.5$ & $\alpha=1.0$* & $\alpha=1.5$ & $\alpha=2.0$ \\
-\midrule
-SEA & 85.3 & 87.7 & 89.4 & \textbf{91.2} & 89.7 & 87.6 \\
-HYP & 81.7 & 83.7 & 85.9 & \textbf{87.7} & 87.1 & 84.9 \\
-AGR & 84.3 & 86.4 & 87.5 & \textbf{89.6} & 88.4 & 87.2 \\
-RBF & 81.6 & 83.1 & 85.4 & \textbf{87.8} & 86.6 & 84.9 \\
-RTG & 82.9 & 84.2 & 86.7 & \textbf{88.5} & 87.4 & 85.5 \\
-ELEC & 76.5 & 77.0 & 79.1 & \textbf{81.4} & 80.4 & 79.1 \\
-\bottomrule
-\multicolumn{7}{l}{\small * Optimal alpha value}
-\end{tabular}%
-}
-\end{table}
+% \begin{table}[!ht]
+% \centering
+% \caption{Accuracy (\%) vs. alpha (LinUCB exploration parameter)}
+% \label{tab:alpha_sensitivity}
+% \resizebox{\columnwidth}{!}{%
+% \begin{tabular}{lcccccc}
+% \toprule
+% \textbf{Dataset} & $\alpha=0.1$ & $\alpha=0.25$ & $\alpha=0.5$ & $\alpha=1.0$* & $\alpha=1.5$ & $\alpha=2.0$ \\
+% \midrule
+% SEA & 85.3 & 87.7 & 89.4 & \textbf{91.2} & 89.7 & 87.6 \\
+% HYP & 81.7 & 83.7 & 85.9 & \textbf{87.7} & 87.1 & 84.9 \\
+% AGR & 84.3 & 86.4 & 87.5 & \textbf{89.6} & 88.4 & 87.2 \\
+% RBF & 81.6 & 83.1 & 85.4 & \textbf{87.8} & 86.6 & 84.9 \\
+% RTG & 82.9 & 84.2 & 86.7 & \textbf{88.5} & 87.4 & 85.5 \\
+% ELEC & 76.5 & 77.0 & 79.1 & \textbf{81.4} & 80.4 & 79.1 \\
+% \bottomrule
+% \multicolumn{7}{l}{\small * Optimal alpha value}
+% \end{tabular}%
+% }
+% \end{table}
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[width=\columnwidth]{image/alpha_sensitivity.png}
-    \caption{Alpha sensitivity analysis showing $\alpha=1.0$ balances exploration and exploitation optimally.}
+    \includegraphics[width=0.75\columnwidth]{image/alpha_sensitivity.png}
+    \caption{Alpha sensitivity analysis.}
     \label{fig:alpha_sensitivity}
 \end{figure}
 
-\begin{table}[!ht]
-\centering
-\caption{Accuracy (\%) vs. lambda (regularization parameter)}
-\label{tab:lambda_sensitivity}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{lcccccc}
-\toprule
-\textbf{Dataset} & $\lambda=0.01$ & $\lambda=0.1$ & $\lambda=0.5$ & $\lambda=1.0$* & $\lambda=2.0$ & $\lambda=5.0$ \\
-\midrule
-SEA & 88.1 & 89.7 & 90.7 & \textbf{90.7} & 90.1 & 88.9 \\
-HYP & 85.7 & 87.8 & 88.0 & \textbf{88.0} & 87.9 & 86.1 \\
-AGR & 86.9 & 88.0 & 89.2 & \textbf{89.8} & 89.0 & 87.3 \\
-RBF & 85.3 & 86.8 & 86.9 & \textbf{87.5} & 87.0 & 86.0 \\
-RTG & 86.0 & 87.5 & 87.9 & \textbf{88.6} & 88.1 & 86.6 \\
-ELEC & 79.2 & 79.9 & 81.0 & \textbf{81.0} & 80.3 & 79.5 \\
-\bottomrule
-\multicolumn{7}{l}{\small * Optimal lambda value}
-\end{tabular}%
-}
-\end{table}
+% \begin{table}[!ht]
+% \centering
+% \caption{Accuracy (\%) vs. lambda (regularization parameter)}
+% \label{tab:lambda_sensitivity}
+% \resizebox{\columnwidth}{!}{%
+% \begin{tabular}{lcccccc}
+% \toprule
+% \textbf{Dataset} & $\lambda=0.01$ & $\lambda=0.1$ & $\lambda=0.5$ & $\lambda=1.0$* & $\lambda=2.0$ & $\lambda=5.0$ \\
+% \midrule
+% SEA & 88.1 & 89.7 & 90.7 & \textbf{90.7} & 90.1 & 88.9 \\
+% HYP & 85.7 & 87.8 & 88.0 & \textbf{88.0} & 87.9 & 86.1 \\
+% AGR & 86.9 & 88.0 & 89.2 & \textbf{89.8} & 89.0 & 87.3 \\
+% RBF & 85.3 & 86.8 & 86.9 & \textbf{87.5} & 87.0 & 86.0 \\
+% RTG & 86.0 & 87.5 & 87.9 & \textbf{88.6} & 88.1 & 86.6 \\
+% ELEC & 79.2 & 79.9 & 81.0 & \textbf{81.0} & 80.3 & 79.5 \\
+% \bottomrule
+% \multicolumn{7}{l}{\small * Optimal lambda value}
+% \end{tabular}%
+% }
+% \end{table}
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[width=\columnwidth]{image/lambda_sensitivity.png}
-    \caption{Lambda sensitivity analysis showing stable performance across $[0.5, 2.0]$ with $\lambda=1.0$ optimal.}
+    \includegraphics[width=0.75\columnwidth]{image/lambda_sensitivity.png}
+    \caption{Lambda sensitivity analysis.}
     \label{fig:lambda_sensitivity}
 \end{figure}
 
 \textbf{Computational Efficiency :} Table~\ref{tab:efficiency} compares runtime and memory across methods. AutoDD (0.29 ms/instance) is 4.3$\times$ faster than Meta-ADD (1.25 ms) while achieving higher accuracy. Memory usage (7.5 MB) is modest compared to Meta-ADD's 47.7 MB neural network overhead. Among the four state-of-the-art methods, AutoDD is faster than PUDD (0.33 ms) and ADDM (0.60 ms), and only slightly slower than MDDM (0.12 ms) while achieving substantially higher accuracy. As shown in Figure~\ref{fig:time_memory}, AutoDD occupies the favorable ``Fast + Low Memory'' quadrant alongside the classical detectors, while Meta-ADD falls in the ``Slow + High Memory'' region. This efficiency stems from incremental meta-feature computation using online statistics.
 
 
-\begin{table}[!ht]
-\centering
-\caption{Computational efficiency}
-\label{tab:efficiency}
-\begin{tabular}{lcc}
-\toprule
-\textbf{Method} & \textbf{Time (ms/inst)} & \textbf{Memory (MB)} \\
-\midrule
-Page-Hinkley & 0.06 & 1.2 \\
-DDM & 0.08 & 1.9 \\
-EDDM & 0.10 & 2.2 \\
-MDDM & 0.12 & 5.4 \\
-ADWIN & 0.15 & 4.6 \\
-HDDM-A & 0.16 & 3.4 \\
-HDDM-W & 0.20 & 3.8 \\
-\textbf{AutoDD} & \textbf{0.29} & \textbf{7.5} \\
-PUDD & 0.33 & 5.3 \\
-KSWIN & 0.46 & 9.2 \\
-ADDM & 0.60 & 5.4 \\
-Meta-ADD & 1.25 & 47.7 \\
-\bottomrule
-\end{tabular}
-\end{table}
+% \begin{table}[!ht]
+% \centering
+% \caption{Computational efficiency}
+% \label{tab:efficiency}
+% \begin{tabular}{lcc}
+% \toprule
+% \textbf{Method} & \textbf{Time (ms/inst)} & \textbf{Memory (MB)} \\
+% \midrule
+% Page-Hinkley & 0.06 & 1.2 \\
+% DDM & 0.08 & 1.9 \\
+% EDDM & 0.10 & 2.2 \\
+% MDDM & 0.12 & 5.4 \\
+% ADWIN & 0.15 & 4.6 \\
+% HDDM-A & 0.16 & 3.4 \\
+% HDDM-W & 0.20 & 3.8 \\
+% \textbf{AutoDD} & \textbf{0.29} & \textbf{7.5} \\
+% PUDD & 0.33 & 5.3 \\
+% KSWIN & 0.46 & 9.2 \\
+% ADDM & 0.60 & 5.4 \\
+% Meta-ADD & 1.25 & 47.7 \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
 
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[width=\columnwidth]{image/time_memory.png}
-    \caption{Runtime vs. memory trade-off. AutoDD balances efficiency and accuracy.}
+    \includegraphics[width=0.75\columnwidth]{image/time_memory.png}
+    \caption{Runtime vs. memory trade-off.}
     \label{fig:time_memory}
 \end{figure}
 
