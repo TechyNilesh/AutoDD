@@ -1,6 +1,9 @@
 """
 AutoDD: Automated Drift Detector Selection and Configuration
 
+AutoDD is a **framework** for automatic drift detection in data streams.
+Any River-compatible drift detector and classifier can be plugged in.
+
 Main class that orchestrates the automatic selection and configuration
 of drift detectors using contextual multi-armed bandits (LinUCB).
 
@@ -10,14 +13,21 @@ Algorithm:
 3. Apply selected detector to check for drift
 4. Compute reward based on accuracy drop
 5. Update LinUCB with observed reward
+
+Default Components:
+- Detectors: ADWIN, DDM, EDDM, HDDM-A, HDDM-W, PageHinkley, KSWIN
+- Classifier: GaussianNB
+
+All components are pluggable - use any River-compatible detector or classifier.
 """
 
 import numpy as np
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Tuple, Any, Union
 from collections import deque
 
 from .meta_feature_extractor import MetaFeatureExtractor
 from .detector_portfolio import DetectorPortfolio
+from .classifier_portfolio import ClassifierPortfolio
 from .linucb_agent import LinUCBAgent
 from .hyperparameter_selector import CascadingHyperparameterSelector
 
@@ -481,13 +491,28 @@ class AutoDDClassifier:
     """
     AutoDD integrated with a base classifier.
 
+    AutoDD is a **framework** - any River-compatible classifier can be used.
     This class combines AutoDD drift detection with automatic model
     retraining upon drift detection.
 
     Parameters
     ----------
-    base_classifier : river classifier
-        The base classifier to use.
+    base_classifier : river classifier or str or None, default=None
+        The base classifier to use. Can be:
+        - A River classifier instance (e.g., naive_bayes.GaussianNB())
+        - A string name from ClassifierPortfolio (e.g., 'GaussianNB', 'HoeffdingTreeClassifier')
+        - None to use default (GaussianNB)
+    classifier_params : dict, optional
+        Custom parameters for the classifier.
+        Example: {'grace_period': 100} for HoeffdingTreeClassifier
+    classifier_portfolio : ClassifierPortfolio, optional
+        Custom classifier portfolio. If None, uses default portfolio.
+    detector_portfolio : DetectorPortfolio, optional
+        Custom detector portfolio. If None, uses default portfolio.
+    detector_param_ranges : dict, optional
+        Custom hyperparameter search ranges for detectors.
+        Format: {detector_name: {param_name: (min, max, default, scale)}}
+        Example: {'ADWIN': {'delta': (0.001, 0.1, 0.01, 'log')}}
     window_size : int, default=100
         Window size for AutoDD.
     alpha : float, default=1.0
@@ -495,24 +520,91 @@ class AutoDDClassifier:
 
     Examples
     --------
-    >>> from river import naive_bayes
-    >>> from AutoDD import AutoDDClassifier
-    >>> clf = AutoDDClassifier(base_classifier=naive_bayes.GaussianNB())
+    >>> # Use default classifier (GaussianNB)
+    >>> clf = AutoDDClassifier()
     >>> for x, y in stream:
     ...     y_pred = clf.predict_one(x)
     ...     clf.learn_one(x, y)
+
+    >>> # Use a specific classifier by name
+    >>> clf = AutoDDClassifier(base_classifier='HoeffdingTreeClassifier')
+
+    >>> # Use a custom River classifier
+    >>> from river import ensemble
+    >>> clf = AutoDDClassifier(base_classifier=ensemble.AdaBoostClassifier())
+
+    >>> # Custom detector HP ranges for search
+    >>> clf = AutoDDClassifier(
+    ...     detector_param_ranges={
+    ...         'ADWIN': {'delta': (0.001, 0.1, 0.01, 'log')},
+    ...         'DDM': {'drift_threshold': (2.5, 4.0, 3.0, 'linear')}
+    ...     }
+    ... )
+
+    >>> # Use custom portfolios
+    >>> from AutoDD import ClassifierPortfolio, DetectorPortfolio
+    >>> clf_portfolio = ClassifierPortfolio(classifiers=['GaussianNB', 'LogisticRegression'])
+    >>> det_portfolio = DetectorPortfolio(detectors=['ADWIN', 'DDM'])
+    >>> clf = AutoDDClassifier(
+    ...     base_classifier='GaussianNB',
+    ...     classifier_portfolio=clf_portfolio,
+    ...     detector_portfolio=det_portfolio
+    ... )
     """
 
     def __init__(
         self,
-        base_classifier,
+        base_classifier: Optional[Union[Any, str]] = None,
+        classifier_params: Optional[Dict] = None,
+        classifier_portfolio: Optional[ClassifierPortfolio] = None,
+        detector_portfolio: Optional[DetectorPortfolio] = None,
+        detector_param_ranges: Optional[Dict[str, Dict[str, Tuple]]] = None,
         window_size: int = 100,
         alpha: float = 1.0
     ):
-        self.base_classifier = base_classifier
-        self.classifier_class = type(base_classifier)
+        # Initialize classifier portfolio
+        if classifier_portfolio is None:
+            self.classifier_portfolio = ClassifierPortfolio()
+        else:
+            self.classifier_portfolio = classifier_portfolio
 
-        self.autodd = AutoDD(window_size=window_size, alpha=alpha)
+        # Determine classifier to use
+        if base_classifier is None:
+            # Use default (GaussianNB)
+            self.classifier_name = self.classifier_portfolio.default_classifier
+            self.base_classifier = self.classifier_portfolio.create_classifier(params=classifier_params)
+            self._use_portfolio = True
+            self._classifier_params = classifier_params
+        elif isinstance(base_classifier, str):
+            # Use classifier from portfolio by name
+            self.classifier_name = base_classifier
+            self.base_classifier = self.classifier_portfolio.create_classifier(base_classifier, classifier_params)
+            self._use_portfolio = True
+            self._classifier_params = classifier_params
+        else:
+            # Use custom River classifier instance
+            self.classifier_name = type(base_classifier).__name__
+            self.base_classifier = base_classifier
+            self._classifier_class = type(base_classifier)
+            self._use_portfolio = False
+            self._classifier_params = None
+
+        # Initialize detector portfolio with custom HP ranges
+        if detector_portfolio is None:
+            self.detector_portfolio = DetectorPortfolio(param_ranges=detector_param_ranges)
+        else:
+            self.detector_portfolio = detector_portfolio
+            # Apply custom ranges if provided
+            if detector_param_ranges:
+                for detector_name, ranges in detector_param_ranges.items():
+                    self.detector_portfolio.set_param_ranges(detector_name, ranges)
+
+        # Initialize AutoDD with detector portfolio
+        self.autodd = AutoDD(
+            window_size=window_size,
+            alpha=alpha,
+            detectors=self.detector_portfolio.detector_names
+        )
 
         self._n_drifts = 0
 
@@ -541,15 +633,24 @@ class AutoDDClassifier:
         # Update AutoDD
         self.autodd.update(x, y, y_pred)
 
-        # Check for drift and reset if needed
+        # Check for drift and reset classifier if needed
         if self.autodd.drift_detected:
             self._n_drifts += 1
-            self.base_classifier = self.classifier_class()
+            self._reset_classifier()
 
         # Learn from instance
         self.base_classifier.learn_one(x, y)
 
         return self
+
+    def _reset_classifier(self):
+        """Reset classifier after drift detection."""
+        if self._use_portfolio:
+            self.base_classifier = self.classifier_portfolio.create_classifier(
+                self.classifier_name, self._classifier_params
+            )
+        else:
+            self.base_classifier = self._classifier_class()
 
     @property
     def drift_detected(self) -> bool:
@@ -568,4 +669,61 @@ class AutoDDClassifier:
 
     def get_drift_info(self) -> Dict:
         """Get drift information."""
-        return self.autodd.get_drift_info()
+        info = self.autodd.get_drift_info()
+        info['classifier'] = self.classifier_name
+        return info
+
+    def get_classifier_info(self) -> Dict:
+        """Get information about the current classifier."""
+        if self._use_portfolio:
+            info = self.classifier_portfolio.get_classifier_info(self.classifier_name)
+            # Override with custom params if provided
+            if self._classifier_params:
+                info['params'] = {**info['params'], **self._classifier_params}
+            return info
+        return {
+            'name': self.classifier_name,
+            'type': 'custom',
+            'params': {},
+            'description': f'Custom classifier: {self.classifier_name}'
+        }
+
+    def get_detector_info(self) -> List[Dict]:
+        """Get information about available detectors."""
+        return self.detector_portfolio.list_detectors()
+
+    def get_detector_param_ranges(self, detector_name: Optional[str] = None) -> Dict:
+        """
+        Get hyperparameter search ranges for detectors.
+
+        Parameters
+        ----------
+        detector_name : str, optional
+            Specific detector name. If None, returns all ranges.
+
+        Returns
+        -------
+        ranges : dict
+            Hyperparameter ranges.
+        """
+        if detector_name:
+            return self.detector_portfolio.get_param_ranges(detector_name)
+        return self.detector_portfolio.get_all_param_ranges()
+
+    def set_detector_param_ranges(self, detector_name: str, ranges: Dict[str, Tuple]):
+        """
+        Set custom hyperparameter search ranges for a detector.
+
+        Parameters
+        ----------
+        detector_name : str
+            Detector name.
+        ranges : dict
+            Parameter ranges: {param_name: (min, max, default, scale)}
+            Scale can be: 'linear', 'log', or 'int'
+
+        Example
+        -------
+        >>> clf.set_detector_param_ranges('ADWIN', {'delta': (0.001, 0.1, 0.01, 'log')})
+        """
+        self.detector_portfolio.set_param_ranges(detector_name, ranges)

@@ -52,7 +52,10 @@ TRUE_DRIFT_POINTS = {
 MODEL_CONFIG = {
     'AUTODD': {'color': '#d62728', 'linestyle': '-', 'linewidth': 2.5, 'label': 'AutoDD'},
     'MetaADD': {'color': '#1f77b4', 'linestyle': '--', 'linewidth': 2.0, 'label': 'Meta-ADD'},
-    'GaussianNB': {'color': '#7f7f7f', 'linestyle': ':', 'linewidth': 2.0, 'label': 'No Detector (*)'},
+    'PUDD': {'color': '#ff6b6b', 'linestyle': '-', 'linewidth': 2.0, 'label': 'PUDD'},
+    'ADDM': {'color': '#4ecdc4', 'linestyle': '-', 'linewidth': 2.0, 'label': 'ADDM'},
+    'MDDM': {'color': '#95e1d3', 'linestyle': '-', 'linewidth': 2.0, 'label': 'MDDM'},
+    'GaussianNB': {'color': '#7f7f7f', 'linestyle': ':', 'linewidth': 2.0, 'label': 'No Drift Detector'},
     'ADWIN': {'color': '#2ca02c', 'linestyle': '-', 'linewidth': 1.5, 'label': 'ADWIN'},
     'DDM': {'color': '#bcbd22', 'linestyle': '-', 'linewidth': 1.5, 'label': 'DDM'},
     'EDDM': {'color': '#9467bd', 'linestyle': '-', 'linewidth': 1.5, 'label': 'EDDM'},
@@ -62,8 +65,8 @@ MODEL_CONFIG = {
     'KSWIN': {'color': '#e377c2', 'linestyle': '--', 'linewidth': 1.5, 'label': 'KSWIN'},
 }
 
-# Fixed order: AutoDD first, Meta-ADD second, then others
-MODEL_ORDER = ['AUTODD', 'MetaADD', 'GaussianNB', 'ADWIN', 'DDM', 'EDDM', 'HDDM_A', 'HDDM_W', 'PAGEHINKLEY', 'KSWIN']
+# Fixed order: AutoDD first, Meta-ADD second, new detectors, then others
+MODEL_ORDER = ['AUTODD', 'MetaADD', 'PUDD', 'ADDM', 'MDDM', 'GaussianNB', 'ADWIN', 'DDM', 'EDDM', 'HDDM_A', 'HDDM_W', 'PAGEHINKLEY', 'KSWIN']
 
 
 def load_results():

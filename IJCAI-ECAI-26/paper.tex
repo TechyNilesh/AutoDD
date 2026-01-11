@@ -89,15 +89,15 @@ The survey of literature related to drift detection methods reveals that these c
 
 \subsection{Error Rate-based Drift Detection}
 
-Error rate-based methods form the largest category of drift detection algorithms. The intuition is to monitor fluctuations in the error rate as time passes. Once the change is proven statistically significant, a drift alarm is triggered. The Drift Detection Method (DDM) \cite{Gama2004DDM} was the first algorithm to define warning and drift levels. Many subsequent algorithms adopted similar implementations: Early Drift Detection Method (EDDM) \cite{BaenaGarcia2006EDDM}, Hoeffding's inequality-based Drift Detection Method (HDDM) \cite{FriasBlanco2015Hoeffding}, and Adaptive Windowing (ADWIN) \cite{Bifet2007ADWIN} which adjusts window sizes automatically.
+Error rate-based methods form the largest category of drift detection algorithms. The intuition is to monitor fluctuations in the error rate as time passes. Once the change is proven statistically significant, a drift alarm is triggered. The Drift Detection Method (DDM) \cite{Gama2004DDM} was the first algorithm to define warning and drift levels. Many subsequent algorithms adopted similar implementations: Early Drift Detection Method (EDDM) \cite{BaenaGarcia2006EDDM}, Hoeffding's inequality-based Drift Detection Method (HDDM) \cite{FriasBlanco2015Hoeffding}, and Adaptive Windowing (ADWIN) \cite{Bifet2007ADWIN} which adjusts window sizes automatically. More recently, MDDM \cite{Pesaranghader2017MDDM} leverages McDiarmid's inequality with weighted sliding windows, achieving shorter detection delays. ADDM \cite{Mayaki2022ADDM} models the error rate as a time series using Self-Exciting Threshold Autoregressive (SETAR) models, providing theoretical guarantees and low false alarm rates.
 
 \subsection{Data Distribution-based Drift Detection}
 
 In this category, the dissimilarity between distributions of new and historical data is quantified using distance metrics. Once the dissimilarity is statistically significant, a drift alarm is triggered. The first formal treatment was proposed by \cite{Kifer2004ChangeDetection}. Other methods include Information-Theoretic Approach (ITA) \cite{Dasu2006InformationTheoretic}, Competence Model-based detection (CM) \cite{Lu2014CompetenceModels}, and KSWIN \cite{Raab2020KSWIN} which applies the Kolmogorov-Smirnov test.
 
-\subsection{Learning-based Drift Detection}
+\subsection{Uncertainty and Learning-based Drift Detection}
 
-Recent work employs machine learning for drift detection. Meta-ADD \cite{Yu2021MetaADD} uses meta-learning with prototypical networks to classify drift types, transforming detection into a few-shot learning problem. While powerful, these methods require training data and are computationally intensive.
+Recent work addresses limitations of error rate-based methods by leveraging prediction uncertainty and machine learning. PUDD \cite{Lu2025PUDD} introduces a Prediction Uncertainty Index that can detect drift earlier than error rate methods, particularly when error rates remain temporarily stable. Meta-ADD \cite{Yu2021MetaADD} uses meta-learning with prototypical networks to classify drift types, transforming detection into a few-shot learning problem. While powerful, learning-based methods require training data and are computationally intensive.
 
 \subsection{AutoML for Streaming Data}
 
@@ -360,9 +360,11 @@ Poker & Real-world & 829,201 & 10 & Unknown \\
 \end{tabular}
 \end{table}
 
-\textbf{Baselines.} We compare AutoDD against nine baselines: (1) GaussianNB without drift detection (*), (2-8) seven individual detectors from AutoDD's portfolio (ADWIN, DDM, EDDM, HDDM-A, HDDM-W, Page-Hinkley, KSWIN), and (9) Meta-ADD \cite{Yu2021MetaADD}, a meta-learning approach using prototypical networks. All detectors use recommended hyperparameter settings from the literature.
+\textbf{Baselines.} We compare AutoDD against twelve baselines: (1) GaussianNB without drift detection (*), (2-8) seven individual detectors from AutoDD's portfolio (ADWIN, DDM, EDDM, HDDM-A, HDDM-W, Page-Hinkley, KSWIN), (9-11) three recent state-of-the-art detectors---MDDM \cite{Pesaranghader2017MDDM} using McDiarmid's inequality, ADDM \cite{Mayaki2022ADDM} using autoregressive modeling, and PUDD \cite{Lu2025PUDD} using prediction uncertainty---and (12) Meta-ADD \cite{Yu2021MetaADD}, a meta-learning approach using prototypical networks. All detectors use recommended hyperparameter settings from the literature.
 
 \textbf{Metrics.} We measure: (1) \textit{Prequential accuracy}---percentage of correct predictions using test-then-train evaluation, (2) \textit{F1-score}---harmonic mean of drift detection precision and recall (synthetic only), (3) \textit{Drift count}---number of detected drifts (real-world only), and (4) \textit{Computational cost}---runtime per instance and memory usage.
+
+\textbf{F1 Evaluation Protocol.} For synthetic datasets with known drift points, we match detected drifts to ground truth using a tolerance window of $\delta=100$ instances, following standard practice \cite{Bifet2007ADWIN}. A detection is a \textit{true positive} if it falls within $\pm\delta$ of an unmatched true drift; each true drift can match at most one detection (first-match greedy). Multiple alarms near the same drift contribute to false positives. Zero F1 scores in Table~\ref{tab:synthetic} occur when a detector fails to trigger any alarm within the tolerance window of any true drift---common for detectors with high thresholds (e.g., ADWIN on HYP) or those designed for different drift types than present in the stream.
 
 \textbf{Configuration.} AutoDD uses all 15 meta-features with window size $w=100$, exploration parameter $\alpha=1.0$, and $C=5$ hyperparameter configurations per detector (1 default + 4 sampled). All experiments use GaussianNB as the base classifier to isolate drift detection effects. Results are averaged over 10 runs. Implementation uses Python with River \cite{Montiel2021River} on a MacBook Pro with Apple M2 Pro and 16GB RAM.
 
@@ -376,25 +378,31 @@ AutoDD excels on abrupt drift scenarios (SEA: 93.0\%, AGR: 78.4\%) where rapid d
 
 \begin{table*}[!ht]
 \centering
-\caption{Results on synthetic datasets. * = GaussianNB without drift detection. Best results in \textbf{bold}.}
+\caption{Results on synthetic datasets. Best results in \textbf{bold}.}
 \label{tab:synthetic}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{l|cc|cc|cc|cc|cc|cc}
 \toprule
 & \multicolumn{2}{c|}{\textbf{SEA}} & \multicolumn{2}{c|}{\textbf{HYP}} & \multicolumn{2}{c|}{\textbf{AGR}} & \multicolumn{2}{c|}{\textbf{RBF}} & \multicolumn{2}{c|}{\textbf{RTG}} & \multicolumn{2}{c}{\textbf{Mean}} \\
 & Acc & F1 & Acc & F1 & Acc & F1 & Acc & F1 & Acc & F1 & Acc & F1 \\
 \midrule
-* & 83.8 & 0.42 & 76.1 & 0.35 & 79.2 & 0.43 & 49.5 & 0.10 & 57.9 & 0.11 & 69.3 & 0.28 \\
-ADWIN & 84.0 & 0.60 & 81.9 & 0.00 & 71.4 & 0.51 & 69.5 & 0.00 & 64.6 & 0.00 & 74.3 & 0.22 \\
-DDM & 83.6 & 0.00 & 86.1 & 0.64 & 71.7 & 0.48 & 71.4 & 0.65 & 64.5 & 0.00 & 75.5 & 0.35 \\
-EDDM & 84.2 & 0.40 & 85.6 & 0.63 & 65.2 & 0.24 & 67.7 & 0.39 & 65.0 & 0.40 & 73.5 & 0.41 \\
-HDDM-A & 84.6 & 0.69 & 81.6 & 0.00 & 72.3 & 0.62 & 69.8 & 0.00 & 64.4 & 0.00 & 74.5 & 0.26 \\
-HDDM-W & 84.3 & 0.66 & 86.7 & 0.70 & 73.1 & 0.67 & 70.2 & 0.51 & 65.7 & 0.56 & 76.0 & 0.62 \\
-Page-Hinkley & 84.8 & 0.70 & 81.5 & 0.00 & 71.7 & 0.49 & 69.3 & 0.00 & 64.6 & 0.00 & 74.4 & 0.24 \\
-KSWIN & 83.8 & 0.35 & 85.7 & 0.66 & 71.4 & 0.49 & 70.1 & 0.62 & 65.2 & 0.39 & 75.2 & 0.50 \\
-Meta-ADD & 89.0 & 0.86 & 90.9 & \textbf{0.91} & 74.2 & 0.80 & \textbf{78.2} & 0.70 & \textbf{72.9} & 0.77 & 81.0 & 0.81 \\
-\textbf{AutoDD} & \textbf{93.0} & \textbf{0.90} & \textbf{94.6} & 0.90 & \textbf{78.4} & \textbf{0.84} & 74.3 & \textbf{0.81} & 69.2 & \textbf{0.83} & \textbf{81.9} & \textbf{0.86} \\
+No Detector & 83.8 & 0.40 & 76.4 & 0.34 & 78.8 & 0.41 & 50.4 & 0.09 & 58.2 & 0.10 & 69.5 & 0.27 \\
+ADWIN & 84.0 & 0.61 & 81.9 & 0.00 & 71.5 & 0.51 & 69.6 & 0.00 & 64.5 & 0.00 & 74.3 & 0.22 \\
+DDM & 83.8 & 0.00 & 86.1 & 0.63 & 71.6 & 0.49 & 71.3 & 0.64 & 64.4 & 0.00 & 75.4 & 0.35 \\
+EDDM & 84.3 & 0.40 & 85.7 & 0.63 & 65.3 & 0.24 & 67.7 & 0.38 & 65.0 & 0.40 & 73.6 & 0.41 \\
+HDDM-A & 84.6 & 0.69 & 81.5 & 0.00 & 72.2 & 0.63 & 69.7 & 0.00 & 64.4 & 0.00 & 74.5 & 0.26 \\
+HDDM-W & 84.4 & 0.66 & 86.6 & 0.71 & 73.1 & 0.67 & 70.1 & 0.51 & 65.8 & 0.56 & 76.0 & 0.62 \\
+Page-Hinkley & 84.7 & 0.70 & 81.5 & 0.00 & 71.5 & 0.49 & 69.4 & 0.00 & 64.5 & 0.00 & 74.3 & 0.24 \\
+KSWIN & 83.7 & 0.35 & 85.7 & 0.65 & 71.5 & 0.50 & 70.0 & 0.61 & 65.2 & 0.39 & 75.2 & 0.50 \\
+\midrule
+MDDM & 86.7 & 0.65 & 87.2 & 0.68 & 72.3 & 0.71 & 69.8 & 0.56 & 66.1 & 0.56 & 76.4 & 0.63 \\
+ADDM & 87.7 & 0.83 & 88.7 & 0.73 & 73.6 & 0.67 & 70.9 & 0.62 & 67.6 & 0.71 & 77.7 & 0.71 \\
+PUDD & 86.2 & 0.81 & 89.5 & 0.84 & 73.7 & 0.72 & 73.4 & 0.72 & 67.8 & 0.71 & 78.1 & 0.76 \\
+Meta-ADD & 88.9 & 0.87 & 90.8 & \textbf{0.91} & 74.1 & 0.79 & \textbf{78.0} & 0.70 & \textbf{72.9} & 0.76 & 80.9 & 0.81 \\
+\textbf{AutoDD} & \textbf{93.1} & \textbf{0.90} & \textbf{94.6} & 0.91 & \textbf{78.5} & \textbf{0.84} & 74.3 & \textbf{0.81} & 69.2 & \textbf{0.84} & \textbf{81.9} & \textbf{0.86} \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table*}
 
 \textbf{Real-world Datasets.} Table~\ref{tab:realworld} shows results on real-world benchmarks where drift patterns are unknown. AutoDD achieves the highest mean accuracy (79.2\%), outperforming Meta-ADD by +4.4\%.
@@ -405,23 +413,29 @@ AutoDD consistently ranks first across all five datasets, with gains of +4.3\% (
 \centering
 \caption{Results on real-world datasets. DN = number of detected drifts. Best results in \textbf{bold}.}
 \label{tab:realworld}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{l|cc|cc|cc|cc|cc|cc}
 \toprule
 & \multicolumn{2}{c|}{\textbf{Elec}} & \multicolumn{2}{c|}{\textbf{Weather}} & \multicolumn{2}{c|}{\textbf{Spam}} & \multicolumn{2}{c|}{\textbf{Airlines}} & \multicolumn{2}{c|}{\textbf{Poker}} & \multicolumn{2}{c}{\textbf{Mean}} \\
 & Acc & DN & Acc & DN & Acc & DN & Acc & DN & Acc & DN & Acc & DN \\
 \midrule
-* & 73.1 & 2 & 68.9 & 2 & 76.7 & 0 & 59.4 & 1 & 54.7 & 3 & 66.6 & 1.6 \\
-ADWIN & 79.3 & 22 & 69.2 & 8 & 92.1 & 2 & 62.5 & 76 & 54.4 & 2 & 71.5 & 22.0 \\
-DDM & 82.5 & 22 & 70.5 & 5 & 91.8 & 2 & 61.9 & 21 & 54.2 & 3 & 72.2 & 10.6 \\
-EDDM & 82.4 & 22 & 73.9 & 9 & 92.8 & 2 & 61.3 & 184 & 53.5 & 5 & 72.8 & 44.4 \\
-HDDM-A & 82.7 & 22 & 72.3 & 9 & 92.4 & 2 & 62.5 & 114 & 54.7 & 6 & 72.9 & 30.6 \\
-HDDM-W & 81.8 & 22 & 72.5 & 9 & 92.0 & 1 & 61.1 & 269 & 52.3 & 391 & 71.9 & 138.4 \\
-Page-Hinkley & 77.9 & 15 & 69.4 & 6 & 91.8 & 1 & 62.8 & 64 & 54.3 & 18 & 71.2 & 20.8 \\
-KSWIN & 81.1 & 22 & 68.0 & 9 & 92.5 & 2 & 61.6 & 269 & 53.6 & 271 & 71.4 & 114.6 \\
-Meta-ADD & 85.4 & 22 & 74.8 & 9 & 94.5 & 2 & 63.9 & 143 & 55.4 & 173 & 74.8 & 69.8 \\
-\textbf{AutoDD} & \textbf{89.7} & 22 & \textbf{80.1} & 9 & \textbf{98.0} & 2 & \textbf{68.2} & 113 & \textbf{59.8} & 182 & \textbf{79.2} & 65.6 \\
+No Detector & 73.2 & 2 & 68.9 & 2 & 77.2 & 1 & 59.3 & 2 & 54.6 & 2 & 66.6 & 1.8 \\
+ADWIN & 79.2 & 22 & 69.3 & 7 & 92.1 & 2 & 62.5 & 76 & 54.3 & 3 & 71.5 & 22.0 \\
+DDM & 82.3 & 22 & 70.6 & 5 & 91.8 & 2 & 61.8 & 20 & 54.2 & 3 & 72.1 & 10.4 \\
+EDDM & 82.4 & 22 & 73.8 & 9 & 92.9 & 2 & 61.3 & 182 & 53.6 & 4 & 72.8 & 43.8 \\
+HDDM-A & 82.7 & 22 & 72.2 & 9 & 92.5 & 2 & 62.6 & 114 & 54.6 & 6 & 72.9 & 30.6 \\
+HDDM-W & 81.9 & 22 & 72.6 & 9 & 91.9 & 1 & 61.0 & 269 & 52.3 & 394 & 72.0 & 139.0 \\
+Page-Hinkley & 78.0 & 16 & 69.4 & 6 & 91.8 & 1 & 62.8 & 64 & 54.3 & 17 & 71.3 & 20.8 \\
+KSWIN & 81.1 & 22 & 68.0 & 9 & 92.6 & 2 & 61.6 & 269 & 53.7 & 266 & 71.4 & 113.6 \\
+\midrule
+MDDM & 83.9 & 22 & 74.8 & 9 & 92.8 & 2 & 62.2 & 110 & 56.1 & 190 & 74.0 & 66.6 \\
+ADDM & 84.8 & 22 & 76.3 & 9 & 93.9 & 2 & 63.9 & 74 & 56.5 & 177 & 75.1 & 56.8 \\
+PUDD & 84.4 & 22 & 75.4 & 9 & 93.2 & 2 & 64.0 & 117 & 56.2 & 81 & 74.6 & 46.2 \\
+Meta-ADD & 85.4 & 22 & 74.9 & 9 & 94.5 & 2 & 63.8 & 139 & 55.5 & 182 & 74.8 & 70.8 \\
+\textbf{AutoDD} & \textbf{89.6} & 22 & \textbf{80.0} & 9 & \textbf{97.9} & 2 & \textbf{68.2} & 118 & \textbf{59.7} & 188 & \textbf{79.1} & 67.8 \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table*}
 
 \textbf{Statistical Significance.} Figure~\ref{fig:cd_diagram} shows the Critical Difference diagram based on Friedman test with Nemenyi post-hoc analysis ($\alpha=0.10$). AutoDD achieves rank 1.3, significantly outperforming all fixed detectors. Meta-ADD ranks second (1.9), while fixed detectors cluster between ranks 5--7.
@@ -466,17 +480,17 @@ We systematically remove AutoDD components to assess their contributions. Table~
 \toprule
 \textbf{Configuration} & \textbf{Accuracy} & \textbf{F1} & \textbf{$\Delta$Acc} \\
 \midrule
-Full AutoDD & \textbf{79.5\%} & \textbf{0.63} & -- \\
-w/o Temporal & 73.1\% & 0.58 & -6.3\% \\
-w/o Statistical & 70.2\% & 0.56 & -9.3\% \\
-w/o Stationarity & 72.6\% & 0.58 & -6.9\% \\
-w/o LinUCB (Random) & 61.4\% & 0.49 & -18.0\% \\
-Fixed ADWIN & 72.8\% & 0.35 & -6.7\% \\
+Full AutoDD & \textbf{80.5\%} & \textbf{0.73} & -- \\
+w/o Temporal & 74.2\% & 0.65 & -6.3\% \\
+w/o Statistical & 71.2\% & 0.61 & -9.3\% \\
+w/o Stationarity & 73.6\% & 0.64 & -6.9\% \\
+w/o LinUCB (Random) & 62.5\% & 0.52 & -18.0\% \\
+Fixed ADWIN & 72.9\% & 0.36 & -7.6\% \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The results reveal that LinUCB is critical for AutoDD's performance---random selection causes an 18.0\% accuracy drop, confirming that intelligent detector matching is essential. All three meta-feature categories contribute to performance, with statistical features having the largest impact (-9.3\% when removed), followed by stationarity (-6.9\%) and temporal features (-6.3\%). Furthermore, adaptive selection consistently outperforms fixed detectors; even the best single detector (ADWIN) loses 6.7\% compared to AutoDD's adaptive approach.
+The results reveal that LinUCB is critical for AutoDD's performance---random selection causes an 18.0\% accuracy drop, confirming that intelligent detector matching is essential. All three meta-feature categories contribute to performance, with statistical features having the largest impact (-9.3\% when removed), followed by stationarity (-6.9\%) and temporal features (-6.3\%). Furthermore, adaptive selection consistently outperforms fixed detectors; even the best single detector (ADWIN) loses 7.6\% compared to AutoDD's adaptive approach.
 
 \begin{figure}[!ht]
     \centering
@@ -631,20 +645,23 @@ Table~\ref{tab:efficiency} compares runtime and memory across methods.
 \toprule
 \textbf{Method} & \textbf{Time (ms/inst)} & \textbf{Memory (MB)} \\
 \midrule
-Page-Hinkley & 0.09 & 1.2 \\
-DDM & 0.13 & 1.9 \\
-EDDM & 0.15 & 2.0 \\
-ADWIN & 0.24 & 4.8 \\
-HDDM-A & 0.25 & 3.1 \\
-HDDM-W & 0.26 & 4.1 \\
-\textbf{AutoDD} & \textbf{0.47} & \textbf{7.4} \\
-KSWIN & 0.66 & 9.3 \\
-Meta-ADD & 2.00 & 47.6 \\
+Page-Hinkley & 0.06 & 1.2 \\
+DDM & 0.08 & 1.9 \\
+EDDM & 0.10 & 2.2 \\
+MDDM & 0.12 & 5.4 \\
+ADWIN & 0.15 & 4.6 \\
+HDDM-A & 0.16 & 3.4 \\
+HDDM-W & 0.20 & 3.8 \\
+\textbf{AutoDD} & \textbf{0.29} & \textbf{7.5} \\
+PUDD & 0.33 & 5.3 \\
+KSWIN & 0.46 & 9.2 \\
+ADDM & 0.60 & 5.4 \\
+Meta-ADD & 1.25 & 47.7 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-AutoDD (0.47 ms/instance) is 4.3$\times$ faster than Meta-ADD (2.00 ms) while achieving higher accuracy. Memory usage (7.4 MB) is modest compared to Meta-ADD's 47.6 MB neural network overhead. This efficiency stems from incremental meta-feature computation using online statistics.
+AutoDD (0.29 ms/instance) is 4.3$\times$ faster than Meta-ADD (1.25 ms) while achieving higher accuracy. Memory usage (7.5 MB) is modest compared to Meta-ADD's 47.7 MB neural network overhead. Importantly, AutoDD is faster than uncertainty-based detectors (PUDD: 0.33 ms) and autoregressive methods (ADDM: 0.60 ms) while achieving higher accuracy. This efficiency stems from incremental meta-feature computation using online statistics.
 
 \begin{figure}[!ht]
     \centering
@@ -659,7 +676,7 @@ AutoDD (0.47 ms/instance) is 4.3$\times$ faster than Meta-ADD (2.00 ms) while ac
 
 \textbf{Detector Portfolio Scope.} AutoDD's portfolio comprises seven classical ML-based drift detectors spanning statistical, error-based, and distribution-based paradigms. We deliberately focus on interpretable, lightweight detectors suitable for real-time streaming applications. While deep learning-based detectors exist, they introduce significant computational overhead and require extensive training data, making them less suitable for the online learning setting where AutoDD operates.
 
-\textbf{Computational Overhead.} AutoDD introduces modest overhead (0.47 ms/instance) compared to single detectors due to meta-feature extraction and LinUCB updates. However, this overhead is justified by the 4--8\% accuracy improvement over fixed detectors and remains 4.3$\times$ faster than Meta-ADD. The incremental computation of online statistics ensures scalability to high-velocity streams.
+\textbf{Computational Overhead.} AutoDD introduces modest overhead (0.29 ms/instance) compared to single detectors due to meta-feature extraction and LinUCB updates. However, this overhead is justified by the 4--8\% accuracy improvement over fixed detectors and remains 4.3$\times$ faster than Meta-ADD. The incremental computation of online statistics ensures scalability to high-velocity streams.
 
 \textbf{Adaptation Policy and Confounding.} A potential confound in detector evaluation is the choice of model adaptation strategy upon drift detection. Since the reward function depends on accuracy change post-adaptation, different adaptation policies could bias detector selection. To control for this, we use \textit{complete model reset} consistently across AutoDD and all baselines: when drift is detected, the classifier is reinitialized and resumes learning from scratch. This ensures that observed performance differences reflect detector selection quality rather than adaptation effects. While alternative strategies (windowed retraining, ensemble updates, gradual adaptation) may be more appropriate for specific applications, we deliberately fix this component to isolate AutoDD's contribution. Future work could extend AutoDD to jointly optimize detector selection and adaptation strategy.
 

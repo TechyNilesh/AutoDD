@@ -7,6 +7,9 @@ on:
     paths:
       - 'code/**'
 
+permissions:
+  contents: write
+
 jobs:
   sync-code-branch:
     runs-on: ubuntu-latest

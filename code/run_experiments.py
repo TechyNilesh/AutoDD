@@ -44,6 +44,9 @@ DETECTORS = [
     'hddm_w',
     'pagehinkley',
     'kswin',
+    'mddm',      # MDDM (McDiarmid Drift Detection Method)
+    'pudd',      # PUDD (Prediction Uncertainty-based Drift Detector)
+    'addm',      # ADDM (Autoregressive-Based Drift Detection Method)
     'meta_add',  # Meta-ADD baseline
     'autodd',    # AutoDD (our method)
 ]
@@ -60,6 +63,9 @@ DETECTOR_SCRIPTS = {
     'hddm_w': 'scripts/hddm_w_run.py',
     'pagehinkley': 'scripts/pagehinkley_run.py',
     'kswin': 'scripts/kswin_run.py',
+    'mddm': 'scripts/mddm_run.py',
+    'pudd': 'scripts/pudd_run.py',
+    'addm': 'scripts/addm_run.py',
 }
 
 

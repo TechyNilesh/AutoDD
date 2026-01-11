@@ -7,6 +7,9 @@ on:
     paths:
       - 'IJCAI-ECAI-26/**'
 
+permissions:
+  contents: write
+
 jobs:
   sync-paper-branch:
     runs-on: ubuntu-latest
