@@ -21,15 +21,15 @@ CHARTS_DIR = os.path.join(SCRIPT_DIR, "charts")
 
 os.makedirs(CHARTS_DIR, exist_ok=True)
 
-# Plot settings
+# Plot settings - larger fonts for subfigure display
 rcParams['font.weight'] = 'bold'
 rcParams['axes.titleweight'] = 'bold'
 rcParams['axes.labelweight'] = 'bold'
-rcParams['axes.titlesize'] = 14
-rcParams['axes.labelsize'] = 14
-rcParams['xtick.labelsize'] = 12
-rcParams['ytick.labelsize'] = 12
-rcParams['legend.fontsize'] = 10
+rcParams['axes.titlesize'] = 22
+rcParams['axes.labelsize'] = 22
+rcParams['xtick.labelsize'] = 18
+rcParams['ytick.labelsize'] = 18
+rcParams['legend.fontsize'] = 16
 
 CONFIG_NAMES = {
     'statistical': 'Statistical',
@@ -82,7 +82,7 @@ def plot_window_sensitivity(data):
         name = CONFIG_NAMES.get(config, config)
 
         ax.plot(window_sizes, accuracies, marker=marker, color=color,
-                linewidth=2, markersize=8, label=name)
+                linewidth=3, markersize=12, label=name)
         ax.fill_between(window_sizes,
                         np.array(accuracies) - np.array(stds),
                         np.array(accuracies) + np.array(stds),
@@ -92,15 +92,15 @@ def plot_window_sensitivity(data):
     ax.axvline(x=optimal, color='black', linestyle='--', linewidth=1.5,
                label=f'Optimal (w={optimal})')
 
-    ax.set_xlabel('Window Size (w)', fontsize=14, fontweight='bold')
-    ax.set_ylabel('Selection Accuracy (%)', fontsize=14, fontweight='bold')
+    ax.set_xlabel('Window Size (w)', fontsize=22, fontweight='bold')
+    ax.set_ylabel('Selection Accuracy (%)', fontsize=22, fontweight='bold')
 
     ax.set_xlim(20, 210)
     ax.set_ylim(58, 98)
 
-    ax.legend(loc='lower right', framealpha=0.9)
+    ax.legend(loc='lower right', framealpha=0.9, fontsize=16)
 
-    ax.tick_params(axis='both', which='major', labelsize=12)
+    ax.tick_params(axis='both', which='major', labelsize=18)
     for label in ax.get_xticklabels() + ax.get_yticklabels():
         label.set_fontweight('bold')
 

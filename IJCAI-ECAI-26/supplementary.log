@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.12.8)  11 JAN 2026 19:38
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.12.8)  12 JAN 2026 12:38
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -616,188 +616,97 @@ Missing character: There is no 2 in font nullfont!
 Missing character: There is no 3 in font nullfont!
 Missing character: There is no 2 in font nullfont!
 Missing character: There is no 4 in font nullfont!
-Missing character: There is no 2 in font nullfont!
-Missing character: There is no 5 in font nullfont!
-Missing character: There is no 2 in font nullfont!
-Missing character: There is no 6 in font nullfont!
-Missing character: There is no 2 in font nullfont!
-Missing character: There is no 7 in font nullfont!
-Missing character: There is no 2 in font nullfont!
-Missing character: There is no 8 in font nullfont!
-Missing character: There is no 2 in font nullfont!
-Missing character: There is no 9 in font nullfont!
-Missing character: There is no 3 in font nullfont!
-Missing character: There is no 0 in font nullfont!
-Missing character: There is no 3 in font nullfont!
-Missing character: There is no 1 in font nullfont!
-Missing character: There is no 3 in font nullfont!
-Missing character: There is no 2 in font nullfont!
-Missing character: There is no 3 in font nullfont!
-Missing character: There is no 3 in font nullfont!
-Missing character: There is no 3 in font nullfont!
-Missing character: There is no 4 in font nullfont!
-Missing character: There is no 3 in font nullfont!
-Missing character: There is no 5 in font nullfont!
+<images_supply/cd_diagram_hat.png, id=36, 549.7338pt x 375.5631pt>
+File: images_supply/cd_diagram_hat.png Graphic file (type png)
+<use images_supply/cd_diagram_hat.png>
+Package pdftex.def Info: images_supply/cd_diagram_hat.png  used on input line 1
+18.
+(pdftex.def)             Requested size: 225.4804pt x 154.04489pt.
+<images_supply/time_memory_hat.png, id=38, 571.1739pt x 426.393pt>
+File: images_supply/time_memory_hat.png Graphic file (type png)
+<use images_supply/time_memory_hat.png>
+Package pdftex.def Info: images_supply/time_memory_hat.png  used on input line 
+124.
+(pdftex.def)             Requested size: 225.4804pt x 168.32254pt.
+No file supplementary.bbl.
 
 
 [1
 
 {/usr/local/texlive/2025basic/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/us
 r/local/texlive/2025basic/texmf-dist/fonts/enc/dvips/base/8r.enc}]
-Missing character: There is no 3 in font nullfont!
-Missing character: There is no 6 in font nullfont!
-Missing character: There is no 3 in font nullfont!
-Missing character: There is no 7 in font nullfont!
-Missing character: There is no 3 in font nullfont!
-Missing character: There is no 8 in font nullfont!
-Missing character: There is no 3 in font nullfont!
-Missing character: There is no 9 in font nullfont!
-Missing character: There is no 4 in font nullfont!
-Missing character: There is no 0 in font nullfont!
-Missing character: There is no 4 in font nullfont!
-Missing character: There is no 1 in font nullfont!
-Missing character: There is no 4 in font nullfont!
-Missing character: There is no 2 in font nullfont!
-Missing character: There is no 4 in font nullfont!
-Missing character: There is no 3 in font nullfont!
-<image_hat/prequential_sea_hat.png, id=44, 426.393pt x 426.393pt>
-File: image_hat/prequential_sea_hat.png Graphic file (type png)
-<use image_hat/prequential_sea_hat.png>
-Package pdftex.def Info: image_hat/prequential_sea_hat.png  used on input line 
-124.
-(pdftex.def)             Requested size: 225.4804pt x 225.47972pt.
-<image_hat/prequential_poker_hat.png, id=46, 424.7067pt x 426.6339pt>
-File: image_hat/prequential_poker_hat.png Graphic file (type png)
-<use image_hat/prequential_poker_hat.png>
-Package pdftex.def Info: image_hat/prequential_poker_hat.png  used on input lin
-e 129.
-(pdftex.def)             Requested size: 225.4804pt x 226.49896pt.
-Missing character: There is no 4 in font nullfont!
-Missing character: There is no 4 in font nullfont!
-Missing character: There is no 4 in font nullfont!
-Missing character: There is no 5 in font nullfont!
-Missing character: There is no 4 in font nullfont!
-Missing character: There is no 6 in font nullfont!
-Missing character: There is no 4 in font nullfont!
-Missing character: There is no 7 in font nullfont!
-Missing character: There is no 4 in font nullfont!
-Missing character: There is no 8 in font nullfont!
-Missing character: There is no 4 in font nullfont!
-Missing character: There is no 9 in font nullfont!
-Missing character: There is no 5 in font nullfont!
-Missing character: There is no 0 in font nullfont!
 
-
-[2]
-Missing character: There is no 5 in font nullfont!
-Missing character: There is no 1 in font nullfont!
-<image_hat/cd_diagram_hat.png, id=56, 549.7338pt x 375.5631pt>
-File: image_hat/cd_diagram_hat.png Graphic file (type png)
-<use image_hat/cd_diagram_hat.png>
-Package pdftex.def Info: image_hat/cd_diagram_hat.png  used on input line 142.
-(pdftex.def)             Requested size: 352.31625pt x 240.69766pt.
-Missing character: There is no 5 in font nullfont!
-Missing character: There is no 2 in font nullfont!
-Missing character: There is no 5 in font nullfont!
-Missing character: There is no 3 in font nullfont!
-Missing character: There is no 5 in font nullfont!
-Missing character: There is no 4 in font nullfont!
-Missing character: There is no 5 in font nullfont!
-Missing character: There is no 5 in font nullfont!
-Missing character: There is no 5 in font nullfont!
-Missing character: There is no 6 in font nullfont!
-Missing character: There is no 5 in font nullfont!
-Missing character: There is no 7 in font nullfont!
-Missing character: There is no 5 in font nullfont!
-Missing character: There is no 8 in font nullfont!
-Missing character: There is no 5 in font nullfont!
-Missing character: There is no 9 in font nullfont!
-Missing character: There is no 6 in font nullfont!
-Missing character: There is no 0 in font nullfont!
-Missing character: There is no 6 in font nullfont!
-Missing character: There is no 1 in font nullfont!
-<image_hat/time_memory_hat.png, id=58, 571.1739pt x 426.393pt>
-File: image_hat/time_memory_hat.png Graphic file (type png)
-<use image_hat/time_memory_hat.png>
-Package pdftex.def Info: image_hat/time_memory_hat.png  used on input line 153.
-
-(pdftex.def)             Requested size: 328.82707pt x 245.47986pt.
-Missing character: There is no 6 in font nullfont!
-Missing character: There is no 2 in font nullfont!
-Missing character: There is no 6 in font nullfont!
-Missing character: There is no 3 in font nullfont!
-Missing character: There is no 6 in font nullfont!
-Missing character: There is no 4 in font nullfont!
-LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 1
-62.
-(/usr/local/texlive/2025basic/texmf-dist/tex/latex/psnfss/ts1ptm.fd
-File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
-)
-Missing character: There is no 6 in font nullfont!
-Missing character: There is no 5 in font nullfont!
-Missing character: There is no 6 in font nullfont!
-Missing character: There is no 6 in font nullfont!
-Missing character: There is no 6 in font nullfont!
-Missing character: There is no 7 in font nullfont!
-Missing character: There is no 6 in font nullfont!
-Missing character: There is no 8 in font nullfont!
-Missing character: There is no 6 in font nullfont!
-Missing character: There is no 9 in font nullfont!
-Missing character: There is no 7 in font nullfont!
-Missing character: There is no 0 in font nullfont!
-
-
-[3 <./image_hat/prequential_sea_hat.png> <./image_hat/prequential_poker_hat.png
->]
-Missing character: There is no 7 in font nullfont!
-Missing character: There is no 1 in font nullfont!
-Missing character: There is no 7 in font nullfont!
-Missing character: There is no 2 in font nullfont!
-Missing character: There is no 7 in font nullfont!
-Missing character: There is no 3 in font nullfont!
-Missing character: There is no 7 in font nullfont!
-Missing character: There is no 4 in font nullfont!
-Missing character: There is no 7 in font nullfont!
-Missing character: There is no 5 in font nullfont!
-Missing character: There is no 7 in font nullfont!
-Missing character: There is no 6 in font nullfont!
-Missing character: There is no 7 in font nullfont!
-Missing character: There is no 7 in font nullfont!
-Missing character: There is no 7 in font nullfont!
-Missing character: There is no 8 in font nullfont!
-Missing character: There is no 7 in font nullfont!
-Missing character: There is no 9 in font nullfont!
-No file supplementary.bbl.
-
-
-[4 <./image_hat/cd_diagram_hat.png>]
-
-[5 <./image_hat/time_memory_hat.png>] (./supplementary.aux)
+[2 <./images_supply/cd_diagram_hat.png> <./images_supply/time_memory_hat.png>]
+(./supplementary.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
-Package rerunfilecheck Info: File `supplementary.out' has not changed.
-(rerunfilecheck)             Checksum: CFAAA0087141693DBA923725F12BFC96;1155.
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+
+Package rerunfilecheck Warning: File `supplementary.out' has changed.
+(rerunfilecheck)                Rerun to get outlines right
+(rerunfilecheck)                or use package `bookmark'.
+
+Package rerunfilecheck Info: Checksums for `supplementary.out':
+(rerunfilecheck)             Before: CFAAA0087141693DBA923725F12BFC96;1155
+(rerunfilecheck)             After:  BF979BA83A5BBDC54574BA7E86FEC092;137.
  ) 
 Here is how much of TeX's memory you used:
- 15825 strings out of 474662
- 298056 string characters out of 5751109
- 702499 words of memory out of 5000000
- 38669 multiletter control sequences out of 15000+600000
- 580676 words of font info for 76 fonts, out of 8000000 for 9000
+ 15783 strings out of 474662
+ 297138 string characters out of 5751109
+ 709499 words of memory out of 5000000
+ 38634 multiletter control sequences out of 15000+600000
+ 578736 words of font info for 73 fonts, out of 8000000 for 9000
  319 hyphenation exceptions out of 8191
- 75i,10n,79p,1102b,1115s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</usr/local/texlive/2025basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi1
-0.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/type1/public/amsfonts/cm/c
-mr10.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/type1/public/amsfonts/c
-m/cmsy10.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/type1/urw/times/utm
-b8a.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/type1/urw/times/utmr8a.p
-fb>
-Output written on supplementary.pdf (5 pages, 1149468 bytes).
+ 75i,10n,79p,585b,1033s stack positions out of 10000i,1000n,20000p,200000b,200000s
+
+pdfTeX warning (dest): name{figure.caption.11} has been referenced but does not
+ exist, replaced by a fixed one
+
+
+pdfTeX warning (dest): name{figure.caption.9} has been referenced but does not 
+exist, replaced by a fixed one
+
+
+pdfTeX warning (dest): name{table.caption.5} has been referenced but does not e
+xist, replaced by a fixed one
+
+
+pdfTeX warning (dest): name{section*.12} has been referenced but does not exist
+, replaced by a fixed one
+
+
+pdfTeX warning (dest): name{section*.10} has been referenced but does not exist
+, replaced by a fixed one
+
+
+pdfTeX warning (dest): name{section*.8} has been referenced but does not exist,
+ replaced by a fixed one
+
+
+pdfTeX warning (dest): name{section*.6} has been referenced but does not exist,
+ replaced by a fixed one
+
+
+pdfTeX warning (dest): name{section*.4} has been referenced but does not exist,
+ replaced by a fixed one
+
+
+pdfTeX warning (dest): name{section*.2} has been referenced but does not exist,
+ replaced by a fixed one
+
+</usr/local/texlive/2025basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.
+pfb></usr/local/texlive/2025basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmr
+10.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/type1/urw/times/utmb8a.pf
+b></usr/local/texlive/2025basic/texmf-dist/fonts/type1/urw/times/utmr8a.pfb>
+Output written on supplementary.pdf (2 pages, 337294 bytes).
 PDF statistics:
- 106 PDF objects out of 1000 (max. 8388607)
- 80 compressed objects within 1 object stream
- 18 named destinations out of 1000 (max. 500000)
- 77 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 85 PDF objects out of 1000 (max. 8388607)
+ 68 compressed objects within 1 object stream
+ 16 named destinations out of 1000 (max. 500000)
+ 67 words of extra memory for PDF output out of 10000 (max. 10000000)
 

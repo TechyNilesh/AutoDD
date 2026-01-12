@@ -21,15 +21,15 @@ CHARTS_DIR = os.path.join(SCRIPT_DIR, "charts")
 
 os.makedirs(CHARTS_DIR, exist_ok=True)
 
-# Plot settings
+# Plot settings - larger fonts for subfigure display
 rcParams['font.weight'] = 'bold'
 rcParams['axes.titleweight'] = 'bold'
 rcParams['axes.labelweight'] = 'bold'
-rcParams['axes.titlesize'] = 14
-rcParams['axes.labelsize'] = 14
-rcParams['xtick.labelsize'] = 12
-rcParams['ytick.labelsize'] = 12
-rcParams['legend.fontsize'] = 10
+rcParams['axes.titlesize'] = 22
+rcParams['axes.labelsize'] = 22
+rcParams['xtick.labelsize'] = 18
+rcParams['ytick.labelsize'] = 18
+rcParams['legend.fontsize'] = 16
 
 DATASET_NAMES = {
     'sea': 'SEA',
@@ -85,26 +85,26 @@ def plot_lambda_sensitivity(data):
         name = DATASET_NAMES.get(ds, ds.upper())
 
         ax.plot(lambda_values, accuracies, marker=marker, color=color,
-                linewidth=2, markersize=8, label=name)
+                linewidth=3, markersize=12, label=name)
         ax.fill_between(lambda_values,
                         np.array(accuracies) - np.array(stds),
                         np.array(accuracies) + np.array(stds),
                         color=color, alpha=0.15)
 
     # Mark optimal lambda
-    ax.axvline(x=optimal, color='black', linestyle='--', linewidth=1.5,
+    ax.axvline(x=optimal, color='black', linestyle='--', linewidth=2,
                label=f'Optimal (λ={optimal})')
 
-    ax.set_xlabel('Lambda (λ)', fontsize=14, fontweight='bold')
-    ax.set_ylabel('Accuracy (%)', fontsize=14, fontweight='bold')
+    ax.set_xlabel('Lambda (λ)', fontsize=22, fontweight='bold')
+    ax.set_ylabel('Accuracy (%)', fontsize=22, fontweight='bold')
 
     ax.set_xscale('log')
     ax.set_xlim(0.008, 6)
     ax.set_ylim(77, 93)
 
-    ax.legend(loc='lower right', framealpha=0.9, ncol=2)
+    ax.legend(loc='lower right', framealpha=0.9, ncol=2, fontsize=14)
 
-    ax.tick_params(axis='both', which='major', labelsize=12)
+    ax.tick_params(axis='both', which='major', labelsize=18)
     for label in ax.get_xticklabels() + ax.get_yticklabels():
         label.set_fontweight('bold')
 

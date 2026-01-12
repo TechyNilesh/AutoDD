@@ -1,5 +1,24 @@
 \begin{thebibliography}{}
 
+\bibitem[\protect\citeauthoryear{Abbasi-Yadkori \bgroup \em et al.\egroup
+  }{2011}]{Abbasi2011Improved}
+Yasin Abbasi-Yadkori, D{\'a}vid P{\'a}l, and Csaba Szepesv{\'a}ri.
+\newblock Improved algorithms for linear stochastic bandits.
+\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)},
+  volume~24, pages 2312--2320, 2011.
+
+\bibitem[\protect\citeauthoryear{Agrawal and Goyal}{2012}]{Agrawal2012Thompson}
+Shipra Agrawal and Navin Goyal.
+\newblock Analysis of {T}hompson sampling for the multi-armed bandit problem.
+\newblock In {\em Proceedings of the 25th Annual Conference on Learning Theory
+  (COLT)}, pages 39.1--39.26. PMLR, 2012.
+
+\bibitem[\protect\citeauthoryear{Agrawal and Goyal}{2013}]{Agrawal2013Further}
+Shipra Agrawal and Navin Goyal.
+\newblock Further optimal regret bounds for {Thompson} sampling.
+\newblock In {\em Proceedings of the 16th International Conference on
+  Artificial Intelligence and Statistics}, pages 99--107. PMLR, 2013.
+
 \bibitem[\protect\citeauthoryear{ao Gama \bgroup \em et al.\egroup
   }{2014}]{Gama2014Survey}
 Jo\ ao~Gama, Indr\.e \v{Z}liobait\.e, Albert Bifet, Mykola Pechenizkiy, and
@@ -36,6 +55,13 @@ Bilge Celik, Prabhant Singh, and Joaquin Vanschoren.
 \newblock Online {AutoML}: An adaptive {AutoML} framework for online learning.
 \newblock {\em Machine Learning}, 112(6):1897--1921, 2023.
 
+\bibitem[\protect\citeauthoryear{Dani \bgroup \em et al.\egroup
+  }{2008}]{Dani2008Stochastic}
+Varsha Dani, Thomas~P Hayes, and Sham~M Kakade.
+\newblock Stochastic linear optimization under bandit feedback.
+\newblock In {\em Proceedings of the 21st Annual Conference on Learning
+  Theory}, pages 355--366, 2008.
+
 \bibitem[\protect\citeauthoryear{Dasu \bgroup \em et al.\egroup
   }{2006}]{Dasu2006InformationTheoretic}
 Tamraparni Dasu, Shankar Krishnan, Suresh Venkatasubramanian, and Ke~Yi.
@@ -43,6 +69,13 @@ Tamraparni Dasu, Shankar Krishnan, Suresh Venkatasubramanian, and Ke~Yi.
   multidimensional data streams.
 \newblock In {\em Proceedings of Symposium on the Interface of Statistics,
   Computing Science, and Applications}, 2006.
+
+\bibitem[\protect\citeauthoryear{Domingos and
+  Hulten}{2000}]{domingos2000mining}
+Pedro Domingos and Geoff Hulten.
+\newblock Mining high-speed data streams.
+\newblock In {\em Proceedings of the Sixth ACM SIGKDD International Conference
+  on Knowledge Discovery and Data Mining}, pages 71--80. ACM Press, 2000.
 
 \bibitem[\protect\citeauthoryear{Fri\'as-Blanco \bgroup \em et al.\egroup
   }{2015}]{FriasBlanco2015Hoeffding}
@@ -63,8 +96,8 @@ Joao Gama, Pedro Medas, Gladys Castillo, and Pedro Rodrigues.
 \bibitem[\protect\citeauthoryear{Hutter \bgroup \em et al.\egroup
   }{2019}]{Hutter2019AutoML}
 Frank Hutter, Lars Kotthoff, and Joaquin Vanschoren.
-\newblock {\em Automated Machine Learning: Methods, Systems, Challenges}.
-\newblock Springer, 2019.
+\newblock Automated machine learning: Methods, systems, challenges.
+\newblock In {\em Automated Machine Learning}. Springer, 2019.
 
 \bibitem[\protect\citeauthoryear{Kifer \bgroup \em et al.\egroup
   }{2004}]{Kifer2004ChangeDetection}
@@ -72,6 +105,12 @@ Daniel Kifer, Shai Ben-David, and Johannes Gehrke.
 \newblock Detecting change in data streams.
 \newblock In {\em Proceedings of the 30th International Conference on Very
   Large Data Bases (VLDB)}, volume~4, pages 180--191, 2004.
+
+\bibitem[\protect\citeauthoryear{Lattimore and
+  Szepesv{\'a}ri}{2020}]{Lattimore2020Bandit}
+Tor Lattimore and Csaba Szepesv{\'a}ri.
+\newblock {\em Bandit Algorithms}.
+\newblock Cambridge University Press, 2020.
 
 \bibitem[\protect\citeauthoryear{Li \bgroup \em et al.\egroup
   }{2010}]{Li2010LinUCB}
@@ -101,19 +140,50 @@ J.~Lu, A.~Liu, F.~Dong, F.~Gu, J.~Gama, and G.~Zhang.
 \newblock {\em IEEE Transactions on Knowledge and Data Engineering},
   31(12):2346--2363, 2019.
 
+\bibitem[\protect\citeauthoryear{Lu \bgroup \em et al.\egroup
+  }{2025}]{Lu2025PUDD}
+Pengqian Lu, Jie Lu, Anjin Liu, and Guangquan Zhang.
+\newblock Early concept drift detection via prediction uncertainty.
+\newblock In {\em Proceedings of the AAAI Conference on Artificial Intelligence
+  (AAAI)}, 2025.
+
+\bibitem[\protect\citeauthoryear{Mayaki and Riveill}{2022}]{Mayaki2022ADDM}
+Mansour Zoubeirou~A Mayaki and Michel Riveill.
+\newblock Autoregressive based drift detection method.
+\newblock In {\em Proceedings of the International Joint Conference on Neural
+  Networks (IJCNN)}. IEEE, 2022.
+
 \bibitem[\protect\citeauthoryear{Montiel \bgroup \em et al.\egroup
-  }{2021}]{Montiel2021River}
+  }{2021}]{montiel2021river}
 Jacob Montiel, Max Halford, Saulo~Martiello Mastelini, Geoffrey Bolmier,
   Raphael Sourty, Robin Vaysse, Adil Zouitine, Heitor~Murilo Gomes, Jesse Read,
   Talel Abdessalem, and Albert Bifet.
 \newblock River: Machine learning for streaming data in {P}ython.
 \newblock {\em Journal of Machine Learning Research}, 22(110):1--8, 2021.
 
+\bibitem[\protect\citeauthoryear{Page}{1954}]{Page1954Continuous}
+E.~S. Page.
+\newblock Continuous inspection schemes.
+\newblock {\em Biometrika}, 41(1/2):100--115, 1954.
+
+\bibitem[\protect\citeauthoryear{Pesaranghader \bgroup \em et al.\egroup
+  }{2017}]{Pesaranghader2017MDDM}
+Ali Pesaranghader, Herna Viktor, and Eric Paquet.
+\newblock {McDiarmid} drift detection methods for evolving data streams.
+\newblock In {\em Proceedings of the International Joint Conference on Neural
+  Networks (IJCNN)}, pages 1663--1670. IEEE, 2017.
+
 \bibitem[\protect\citeauthoryear{Raab \bgroup \em et al.\egroup
   }{2020}]{Raab2020KSWIN}
 Christoph Raab, Moritz Heusinger, and Frank-Michael Schleif.
 \newblock Reactive soft prototype computing for concept drift streams.
 \newblock {\em Neurocomputing}, 416:340--351, 2020.
+
+\bibitem[\protect\citeauthoryear{Tsay}{1989}]{Tsay1989TestingAM}
+Ruey~S. Tsay.
+\newblock Testing and modeling threshold autoregressive processes.
+\newblock {\em Journal of the American Statistical Association}, 84:231--240,
+  1989.
 
 \bibitem[\protect\citeauthoryear{Verma \bgroup \em et al.\egroup
   }{2024}]{Verma2024ASML}

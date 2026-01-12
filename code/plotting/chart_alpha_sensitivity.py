@@ -21,15 +21,15 @@ CHARTS_DIR = os.path.join(SCRIPT_DIR, "charts")
 
 os.makedirs(CHARTS_DIR, exist_ok=True)
 
-# Plot settings
+# Plot settings - larger fonts for subfigure display
 rcParams['font.weight'] = 'bold'
 rcParams['axes.titleweight'] = 'bold'
 rcParams['axes.labelweight'] = 'bold'
-rcParams['axes.titlesize'] = 14
-rcParams['axes.labelsize'] = 14
-rcParams['xtick.labelsize'] = 12
-rcParams['ytick.labelsize'] = 12
-rcParams['legend.fontsize'] = 10
+rcParams['axes.titlesize'] = 22
+rcParams['axes.labelsize'] = 22
+rcParams['xtick.labelsize'] = 18
+rcParams['ytick.labelsize'] = 18
+rcParams['legend.fontsize'] = 16
 
 DATASET_NAMES = {
     'sea': 'SEA',
@@ -85,25 +85,25 @@ def plot_alpha_sensitivity(data):
         name = DATASET_NAMES.get(ds, ds.upper())
 
         ax.plot(alpha_values, accuracies, marker=marker, color=color,
-                linewidth=2, markersize=8, label=name)
+                linewidth=3, markersize=12, label=name)
         ax.fill_between(alpha_values,
                         np.array(accuracies) - np.array(stds),
                         np.array(accuracies) + np.array(stds),
                         color=color, alpha=0.15)
 
     # Mark optimal alpha
-    ax.axvline(x=optimal, color='black', linestyle='--', linewidth=1.5,
+    ax.axvline(x=optimal, color='black', linestyle='--', linewidth=2,
                label=f'Optimal (α={optimal})')
 
-    ax.set_xlabel('Alpha (α)', fontsize=14, fontweight='bold')
-    ax.set_ylabel('Accuracy (%)', fontsize=14, fontweight='bold')
+    ax.set_xlabel('Alpha (α)', fontsize=22, fontweight='bold')
+    ax.set_ylabel('Accuracy (%)', fontsize=22, fontweight='bold')
 
     ax.set_xlim(0, 2.1)
     ax.set_ylim(74, 94)
 
-    ax.legend(loc='lower right', framealpha=0.9, ncol=2)
+    ax.legend(loc='lower right', framealpha=0.9, ncol=2, fontsize=14)
 
-    ax.tick_params(axis='both', which='major', labelsize=12)
+    ax.tick_params(axis='both', which='major', labelsize=18)
     for label in ax.get_xticklabels() + ax.get_yticklabels():
         label.set_fontweight('bold')
 
