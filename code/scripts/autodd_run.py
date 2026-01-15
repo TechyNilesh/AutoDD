@@ -31,7 +31,8 @@ warnings.filterwarnings("ignore")
 
 def run_autodd(dataset_name, run_count=None, seed=42, progress_interval=1000,
                output_dir="benchmark_results", verbose=False,
-               window_size=100, alpha=1.0, base_model='gaussiannb'):
+               window_size=100, alpha=1.0, lambda_reg=1.0, n_hp_configs=5,
+               base_model='gaussiannb'):
     """
     Run AutoDD drift detector on a dataset with prequential evaluation.
 
@@ -42,8 +43,10 @@ def run_autodd(dataset_name, run_count=None, seed=42, progress_interval=1000,
         progress_interval: Interval for progress updates
         output_dir: Directory to save results
         verbose: Enable verbose output
-        window_size: Window size for meta-feature extraction
-        alpha: LinUCB exploration parameter
+        window_size: Window size for meta-feature extraction (w in paper)
+        alpha: LinUCB exploration parameter (α_ucb in paper)
+        lambda_reg: LinUCB regularization parameter (λ_reg in paper)
+        n_hp_configs: Hyperparameter configurations per detector (C in paper)
         base_model: Base classifier to use ('gaussiannb' or 'hat')
     """
     os.makedirs(output_dir, exist_ok=True)
@@ -56,7 +59,7 @@ def run_autodd(dataset_name, run_count=None, seed=42, progress_interval=1000,
     try:
         # Initialize model and AutoDD detector
         model = get_base_model(base_model)
-        detector = AutoDD(window_size=window_size, alpha=alpha)
+        detector = AutoDD(window_size=window_size, alpha=alpha, lambda_reg=lambda_reg, n_hp_configs=n_hp_configs, seed=seed)
 
         # Initialize metrics
         accuracy = metrics.Accuracy()
@@ -79,7 +82,7 @@ def run_autodd(dataset_name, run_count=None, seed=42, progress_interval=1000,
         dataset_path = f"datasets/{dataset_name}.csv"
 
         print(f"Processing {dataset_path}...")
-        print(f"Parameters: window_size={window_size}, alpha={alpha}")
+        print(f"Parameters: window_size={window_size}, alpha={alpha}, lambda_reg={lambda_reg}, n_hp_configs={n_hp_configs}")
 
         for x, y in stream.iter_csv(dataset_path, target='class', converters={'class': str}):
             # Convert features to float
@@ -155,6 +158,8 @@ def run_autodd(dataset_name, run_count=None, seed=42, progress_interval=1000,
             "detector_params": {
                 "window_size": window_size,
                 "alpha": alpha,
+                "lambda_reg": lambda_reg,
+                "n_hp_configs": n_hp_configs,
                 "n_detectors": detector.n_arms
             },
             "accuracy": final_accuracy,
@@ -222,8 +227,10 @@ if __name__ == "__main__":
     parser.add_argument('--progress_interval', type=int, default=1000, help='Progress update interval')
     parser.add_argument('--output_dir', type=str, default="benchmark_results", help='Output directory')
     parser.add_argument('--verbose', action='store_true', help='Enable verbose output')
-    parser.add_argument('--window_size', type=int, default=100, help='Window size for meta-features')
-    parser.add_argument('--alpha', type=float, default=1.0, help='LinUCB exploration parameter')
+    parser.add_argument('--window_size', type=int, default=100, help='Window size for meta-features (w in paper)')
+    parser.add_argument('--alpha', type=float, default=1.0, help='LinUCB exploration parameter (α_ucb in paper)')
+    parser.add_argument('--lambda_reg', type=float, default=1.0, help='LinUCB regularization parameter (λ_reg in paper)')
+    parser.add_argument('--n_hp_configs', type=int, default=5, help='Hyperparameter configs per detector (C in paper)')
     parser.add_argument('--base_model', type=str, default='gaussiannb',
                         choices=['gaussiannb', 'hat'],
                         help='Base classifier to use (default: gaussiannb)')
@@ -239,5 +246,7 @@ if __name__ == "__main__":
         verbose=args.verbose,
         window_size=args.window_size,
         alpha=args.alpha,
+        lambda_reg=args.lambda_reg,
+        n_hp_configs=args.n_hp_configs,
         base_model=args.base_model
     )
