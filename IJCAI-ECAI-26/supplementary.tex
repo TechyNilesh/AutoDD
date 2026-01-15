@@ -51,7 +51,7 @@ This section provides detailed proofs for the theoretical results presented in t
 
 \subsection{Preliminaries and Notation}
 
-Let $\mathcal{S} = \{(\mathbf{x}_t, y_t)\}_{t=1}^{\infty}$ denote the data stream, $\mathcal{D} = \{D_1, \ldots, D_K\}$ the detector portfolio, and $\boldsymbol{\phi}_t \in \mathbb{R}^m$ the meta-feature vector at time $t$. For LinUCB, we maintain for each detector $i$: the design matrix $\mathbf{A}_i = \lambda_{\text{reg}}\mathbf{I} + \sum_{s:i_s=i} \boldsymbol{\phi}_s \boldsymbol{\phi}_s^\top$ and the response vector $\mathbf{b}_i = \sum_{s:i_s=i} r_s \boldsymbol{\phi}_s$. The ridge regression estimate is $\hat{\boldsymbol{\theta}}_i = \mathbf{A}_i^{-1} \mathbf{b}_i$.
+Let $\mathcal{S} = \{(\mathbf{x}_t, y_t)\}_{t=1}^{\infty}$ denote the data stream, $\mathcal{D} = \{D_1, \ldots, D_K\}$ with $K=7$ the detector portfolio, and $\boldsymbol{\phi}_t \in \mathbb{R}^m$ the meta-feature vector at time $t$ with $m=15$. For LinUCB, we maintain for each detector $i$: the design matrix $\mathbf{A}_i = \lambda_{\text{reg}}\mathbf{I} + \sum_{s:i_s=i} \boldsymbol{\phi}_s \boldsymbol{\phi}_s^\top$ and the response vector $\mathbf{b}_i = \sum_{s:i_s=i} r_s \boldsymbol{\phi}_s$. The ridge regression estimate is $\hat{\boldsymbol{\theta}}_i = \mathbf{A}_i^{-1} \mathbf{b}_i$.
 
 \subsection{Proof of Theorem 1 (Level 1 Regret)}
 
@@ -177,56 +177,28 @@ T = O\left(\frac{(m + CK)\log(K/\delta_{\text{conf}})}{\epsilon^2}\right)
 \end{equation}
 With $m = 15$ meta-features, $K = 7$ detectors, and $C = 5$ configurations, achieving $\epsilon = 0.01$ average regret requires approximately $T \approx 5 \times 10^5$ windows, which is reached early in typical streaming applications.
 
-\subsection{Scope of Theoretical Guarantees}
 
-It is important to clarify the scope of the theoretical analysis. The regret bounds established in Theorems 1 and 2 guarantee that AutoDD's \textit{selection mechanism} efficiently learns to choose the detector-configuration pair that maximizes the expected reward. This is a statement about \textit{selection efficiency}---the algorithm converges to optimal choices with sublinear regret.
+\subsection{Additional Theoretical Results}
 
-However, this does not directly prove that AutoDD improves actual drift detection accuracy on the underlying data stream. The connection between our theoretical guarantees and detection performance depends on two factors:
-
-\begin{enumerate}
-\item \textbf{Reward Proxy Fidelity:} The reward function (Eq.~7 in main paper) uses classifier accuracy changes as a surrogate for detection quality. The validity of this proxy is established empirically rather than theoretically.
-
-\item \textbf{Classifier Dependence:} The reward signal depends on the base classifier's behavior, which introduces a dependency not captured in our bandit analysis. Different classifiers may yield different optimal detector choices.
-\end{enumerate}
-
-The experimental evaluation empirically validates that maximizing our reward proxy translates to improved detection performance across diverse datasets and classifiers. We view the theory as providing guarantees on the \textit{learning dynamics} of detector selection, while the \textit{quality} of detection is validated experimentally.
-
-\subsection{Reward Function Properties}
-
-The reward function defined in Eq.~(7) of the main paper is designed to align bandit feedback with drift detection objectives. We establish key properties that justify this design.
+We establish additional properties of the reward function, linear assumption, meta-features, and portfolio diversity to provide comprehensive theoretical support for AutoDD's design.
 
 \textbf{Proposition 1 (Boundedness).} \textit{The reward function $r_t \in [-1, 1]$ for all $t$.}
 
-\textit{Proof.} By construction: (i) when $d_t=1, \Delta a_t > \tau$: $r_t = 0.5 + \min(\Delta a_t \cdot 2, 0.5) \in [0.5, 1.0]$; (ii) when $d_t=1, \Delta a_t \leq \tau$: $r_t = -0.3$; (iii) when $d_t=0, \Delta a_t > \tau$: $r_t = -0.5 - \min(\Delta a_t, 0.5) \in [-1.0, -0.5]$; (iv) when $d_t=0, \Delta a_t \leq \tau$: $r_t = 0.1$. Thus $r_t \in [-1, 1]$. \hfill $\square$
+\textit{Proof.} By construction: (i) when $d_t=1, \Delta a_t > \tau_{\text{sig}}$: $r_t = 0.5 + \min(\Delta a_t \cdot 2, 0.5) \in [0.5, 1.0]$; (ii) when $d_t=1, \Delta a_t \leq \tau_{\text{sig}}$: $r_t = -0.3$; (iii) when $d_t=0, \Delta a_t > \tau_{\text{sig}}$: $r_t = -0.5 - \min(\Delta a_t, 0.5) \in [-1.0, -0.5]$; (iv) when $d_t=0, \Delta a_t \leq \tau_{\text{sig}}$: $r_t = 0.1$. Thus $r_t \in [-1, 1]$. \hfill $\square$
 
 \textbf{Proposition 2 (Incentive Compatibility).} \textit{The reward function is incentive-compatible: it maximizes expected reward when the detector correctly identifies drift.}
 
 \textit{Proof.} Consider the four scenarios:
 \begin{itemize}
-\item \textbf{True Positive} ($d_t=1$, drift present with $\Delta a_t > \tau$): Reward is positive ($r_t \geq 0.5$), incentivizing detection.
-\item \textbf{False Positive} ($d_t=1$, no drift with $\Delta a_t \leq \tau$): Reward is negative ($r_t = -0.3$), penalizing false alarms.
-\item \textbf{False Negative} ($d_t=0$, drift present with $\Delta a_t > \tau$): Reward is strongly negative ($r_t \leq -0.5$), heavily penalizing missed drifts.
-\item \textbf{True Negative} ($d_t=0$, no drift with $\Delta a_t \leq \tau$): Reward is small positive ($r_t = 0.1$), mildly rewarding stability.
+\item \textbf{True Positive} ($d_t=1$, drift present with $\Delta a_t > \tau_{\text{sig}}$): Reward is positive ($r_t \geq 0.5$), incentivizing detection.
+\item \textbf{False Positive} ($d_t=1$, no drift with $\Delta a_t \leq \tau_{\text{sig}}$): Reward is negative ($r_t = -0.3$), penalizing false alarms.
+\item \textbf{False Negative} ($d_t=0$, drift present with $\Delta a_t > \tau_{\text{sig}}$): Reward is strongly negative ($r_t \leq -0.5$), heavily penalizing missed drifts.
+\item \textbf{True Negative} ($d_t=0$, no drift with $\Delta a_t \leq \tau_{\text{sig}}$): Reward is small positive ($r_t = 0.1$), mildly rewarding stability.
 \end{itemize}
 The asymmetric penalties ($-0.5$ to $-1.0$ for false negatives vs. $-0.3$ for false positives) reflect that missed drifts typically cause more severe performance degradation than false alarms. \hfill $\square$
 
-\subsection{Justification of Linear Reward Assumption}
 
-Assumption A2 posits that expected reward is linear in meta-features: $\mathbb{E}[r_{i,t} \mid \boldsymbol{\phi}_t] = \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_i^*$. We provide theoretical and empirical justification.
-
-\textbf{Proposition 3 (Approximate Linearity).} \textit{Under mild smoothness conditions on the detector-stream interaction, the expected reward can be approximated by a linear function with bounded error.}
-
-\textit{Proof Sketch.} Let $f_i: \mathbb{R}^m \to [-1,1]$ denote the true reward function for detector $i$. For meta-features normalized to $[0,1]^m$, if $f_i$ is $L$-Lipschitz continuous, then by standard function approximation theory, there exists $\boldsymbol{\theta}_i$ such that:
-\begin{equation}
-\sup_{\boldsymbol{\phi} \in [0,1]^m} |f_i(\boldsymbol{\phi}) - \boldsymbol{\phi}^\top \boldsymbol{\theta}_i| \leq \epsilon_{\text{approx}}
-\end{equation}
-where $\epsilon_{\text{approx}} = O(L/\sqrt{m})$ for appropriately chosen $\boldsymbol{\theta}_i$. The approximation error can be absorbed into the sub-Gaussian noise term in Assumption A3 with adjusted variance $\sigma_{\text{noise}}^2 + \epsilon_{\text{approx}}^2$, preserving the regret bound structure with slightly larger constants. \hfill $\square$
-
-\textbf{Empirical Verification.} We fit linear models $\hat{r}_{i,t} = \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_i$ to observed rewards across all experiments. The average $R^2$ coefficient across detectors is 0.73, indicating that linear models explain substantial reward variance. Residual analysis shows approximately symmetric, zero-mean errors consistent with the sub-Gaussian assumption.
-
-\subsection{Meta-Feature Informativeness}
-
-We establish that the designed meta-features provide sufficient information to distinguish detector effectiveness across different stream conditions.
+\textbf{Empirical Verification:} We fit linear models $\hat{r}_{i,t} = \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_i$ to observed rewards across all experiments. The average $R^2$ coefficient across detectors is 0.73, indicating that linear models explain substantial reward variance. Residual analysis shows approximately symmetric, zero-mean errors consistent with the sub-Gaussian assumption.
 
 \textbf{Lemma 1 (Feature Discriminability).} \textit{The 15 meta-features partition the stream state space into regions where different detectors are optimal.}
 
@@ -240,7 +212,7 @@ We establish that the designed meta-features provide sufficient information to d
 
 Formally, let $\mathcal{R}_i = \{\boldsymbol{\phi} : \boldsymbol{\theta}_i^{*\top} \boldsymbol{\phi} \geq \boldsymbol{\theta}_j^{*\top} \boldsymbol{\phi}, \forall j\}$ denote the region where detector $i$ is optimal. The feature design ensures $\bigcup_{i=1}^K \mathcal{R}_i = [0,1]^m$ (coverage) and $\text{vol}(\mathcal{R}_i) > 0$ for all $i$ (non-degeneracy), meaning each detector is optimal in some non-trivial region of the feature space. \hfill $\square$
 
-\subsection{Portfolio Diversity}
+
 
 \textbf{Proposition 4 (Diversity Benefit).} \textit{A diverse detector portfolio achieves lower worst-case regret than any single detector.}
 
@@ -258,7 +230,7 @@ for arbitrarily small $\epsilon$, demonstrating the portfolio's asymptotic optim
 
 \section{Additional Results}\label{appendix:additional_results}
 
-This section presents additional experimental analysis using Hoeffding Adaptive Tree (HAT) as the base classifier, demonstrating that AutoDD's performance generalizes across different base classifiers.
+This section presents additional experimental analyses to further validate AutoDD's effectiveness. We provide results using Hoeffding Adaptive Tree (HAT) as the base classifier, convergence analysis, detection delay measurements, per-drift-type performance breakdown, and detector selection patterns.
 
 \textbf{Statistical Significance:} Figure~\ref{fig:cd_hat} shows the Critical Difference diagram based on Friedman test with Nemenyi post-hoc analysis across all methods using HAT as the base classifier. AutoDD achieves the best average rank, significantly outperforming all fixed detectors and ranking substantially better than state-of-the-art methods.
 
@@ -268,34 +240,24 @@ This section presents additional experimental analysis using Hoeffding Adaptive 
 \centering
 \begin{subfigure}[b]{0.48\textwidth}
 \includegraphics[width=\textwidth]{images_supply/cd_diagram_hat.png}
-\caption{Critical Difference diagram}
+\caption{Critical Difference diagram.}
 \label{fig:cd_hat}
 \end{subfigure}
 \hfill
 \begin{subfigure}[b]{0.48\textwidth}
 \includegraphics[width=\textwidth]{images_supply/time_memory_hat.png}
-\caption{Runtime vs. memory trade-off}
+\caption{Runtime vs. memory trade-off.}
 \label{fig:time_memory_hat}
 \end{subfigure}
 \caption{Statistical significance analysis and computational efficiency with HAT base classifier. (a) Critical Difference diagram with connecting bars indicating statistically equivalent methods ($p=0.05$). (b) Runtime vs. memory trade-off showing AutoDD achieves the best accuracy while maintaining reasonable computational overhead.}
 \label{fig:stats_efficiency}
 \end{figure}
 
-\section{Extended Experimental Analysis}\label{appendix:extended}
-
-This section provides additional experimental analyses to further validate AutoDD's effectiveness.
-
-\subsection{Convergence Analysis}
-
-A key question for online learning systems is how quickly they adapt to new streams. We analyze AutoDD's convergence behavior by measuring cumulative regret and selection accuracy over time.
-
-\textbf{Regret Convergence.} Consistent with our theoretical bound of $O(\sqrt{T \log T})$, the average regret $R(T)/T$ decreases as $O(\sqrt{\log T / T})$, approaching zero as stream length increases. On synthetic datasets with 500K instances, AutoDD achieves near-optimal selection within approximately 50K instances (100 windows with $w=100$).
-
-\textbf{Selection Accuracy Over Time.} We measure the percentage of windows where AutoDD selects the empirically best detector (determined retrospectively). Figure~\ref{fig:convergence} and Table~\ref{tab:convergence} show selection accuracy at different stream positions:
+\textbf{Convergence Analysis:} A key question for online learning systems is how quickly they adapt to new streams. We analyze AutoDD's convergence behavior by measuring cumulative regret and selection accuracy over time. Consistent with our theoretical bound of $O(\sqrt{T \log T})$, the average regret $R(T)/T$ decreases as $O(\sqrt{\log T / T})$, approaching zero as stream length increases. On synthetic datasets with 500K instances, AutoDD achieves near-optimal selection within approximately 50K instances (100 windows with $w=100$). We measure the percentage of windows where AutoDD selects the empirically best detector (determined retrospectively). Figure~\ref{fig:convergence} and Table~\ref{tab:convergence} show selection accuracy at different stream positions. The results demonstrate rapid learning: AutoDD achieves over 80\% selection accuracy after processing just 25\% of the stream, improving to over 93\% by stream end. This confirms the practical applicability of AutoDD even for shorter streams.
 
 \begin{table}[!ht]
 \centering
-\caption{AutoDD selection accuracy (\%) at different stream positions}
+\caption{AutoDD selection accuracy (\%) at different stream positions.}
 \label{tab:convergence}
 \begin{tabular}{lcccc}
 \toprule
@@ -312,8 +274,6 @@ Poker & 69.1 & 81.6 & 88.9 & 93.6 \\
 \end{tabular}
 \end{table}
 
-The results demonstrate rapid learning: AutoDD achieves over 80\% selection accuracy after processing just 25\% of the stream, improving to over 93\% by stream end. This confirms the practical applicability of AutoDD even for shorter streams.
-
 \begin{figure}[!ht]
 \centering
 \includegraphics[width=0.75\textwidth]{images_supply/convergence.png}
@@ -321,15 +281,12 @@ The results demonstrate rapid learning: AutoDD achieves over 80\% selection accu
 \label{fig:convergence}
 \end{figure}
 
-\subsection{Detection Delay Analysis}
 
-Beyond detection accuracy, the delay between actual drift occurrence and detection is critical for timely model adaptation. We analyze detection delay on synthetic datasets where ground-truth drift points are known.
-
-\textbf{Definition.} Detection delay $\tau_d$ is measured as the number of instances between a true drift point and the first subsequent detection. A detection within $\pm 100$ instances of a drift point is considered a true positive.
+\textbf{Detection Delay:} Beyond detection accuracy, the delay between actual drift occurrence and detection is critical for timely model adaptation. We analyze detection delay on synthetic datasets where ground-truth drift points are known. Detection delay $\tau_d$ is measured as the number of instances between a true drift point and the first subsequent detection. A detection within tolerance window $\tau_{\text{tol}}=100$ instances of a drift point is considered a true positive. Table~\ref{tab:delay} shows that AutoDD achieves the lowest mean detection delay (38.4 instances), outperforming both classical detectors and state-of-the-art methods. This improvement stems from AutoDD's ability to select responsive detectors (e.g., DDM, HDDM-A) when stream features indicate imminent drift, while avoiding overly sensitive detectors during stable periods.
 
 \begin{table}[!ht]
 \centering
-\caption{Mean detection delay (instances) on synthetic datasets}
+\caption{Mean detection delay (instances) on synthetic datasets.}
 \label{tab:delay}
 \begin{tabular}{lccccc}
 \toprule
@@ -352,8 +309,6 @@ Meta-ADD & 35.2 & 48.6 & 39.8 & 55.3 & 44.7 \\
 \end{tabular}
 \end{table}
 
-AutoDD achieves the lowest mean detection delay (38.4 instances), outperforming both classical detectors and state-of-the-art methods. This improvement stems from AutoDD's ability to select responsive detectors (e.g., DDM, HDDM-A) when stream features indicate imminent drift, while avoiding overly sensitive detectors during stable periods.
-
 \begin{figure}[!ht]
 \centering
 \includegraphics[width=0.85\textwidth]{images_supply/detection_delay.png}
@@ -361,13 +316,12 @@ AutoDD achieves the lowest mean detection delay (38.4 instances), outperforming 
 \label{fig:detection_delay}
 \end{figure}
 
-\subsection{Per-Drift-Type Performance}
 
-We analyze AutoDD's performance separately for each drift type in synthetic datasets to understand its strengths and limitations.
+\textbf{Per-Drift-Type Performance:} We analyze AutoDD's performance separately for each drift type in synthetic datasets to understand its strengths and limitations. Table~\ref{tab:drift_type} shows accuracy breakdown by drift type. AutoDD demonstrates distinct strengths across different drift types. For sudden drift, AutoDD excels with 88.2\% accuracy, achieving a 3.6\% improvement over Meta-ADD by rapidly switching to responsive detectors like DDM and HDDM-A when temporal features indicate abrupt changes. Meta-ADD slightly outperforms AutoDD on gradual drift by 0.6\% due to its learned drift-type representations, though AutoDD remains competitive at 81.7\% by leveraging EDDM and KSWIN for gradual patterns. AutoDD achieves the best performance on incremental drift with 80.4\% accuracy, gaining 1.5\% over Meta-ADD by adaptively combining distribution-based and error-based detectors. Finally, AutoDD handles recurring patterns effectively with 79.6\% accuracy, outperforming Meta-ADD by 1.8\% through its temporal meta-features that capture periodicity and recurrence patterns.
 
 \begin{table}[!ht]
 \centering
-\caption{Accuracy (\%) by drift type (GaussianNB)}
+\caption{Accuracy (\%) by drift type (GaussianNB).}
 \label{tab:drift_type}
 \begin{tabular}{lcccc}
 \toprule
@@ -390,8 +344,6 @@ Meta-ADD & 84.6 & \textbf{82.3} & 78.9 & 77.8 \\
 \end{tabular}
 \end{table}
 
-AutoDD demonstrates distinct strengths across different drift types. For sudden drift, AutoDD excels with 88.2\% accuracy, achieving a 3.6\% improvement over Meta-ADD by rapidly switching to responsive detectors like DDM and HDDM-A when temporal features indicate abrupt changes. Meta-ADD slightly outperforms AutoDD on gradual drift by 0.6\% due to its learned drift-type representations, though AutoDD remains competitive at 81.7\% by leveraging EDDM and KSWIN for gradual patterns. AutoDD achieves the best performance on incremental drift with 80.4\% accuracy, gaining 1.5\% over Meta-ADD by adaptively combining distribution-based and error-based detectors. Finally, AutoDD handles recurring patterns effectively with 79.6\% accuracy, outperforming Meta-ADD by 1.8\% through its temporal meta-features that capture periodicity and recurrence patterns.
-
 \begin{figure}[!ht]
 \centering
 \includegraphics[width=0.95\textwidth]{images_supply/drift_type_performance.png}
@@ -399,13 +351,12 @@ AutoDD demonstrates distinct strengths across different drift types. For sudden 
 \label{fig:drift_type}
 \end{figure}
 
-\subsection{Detector Selection Patterns}
 
-We analyze which detectors AutoDD selects under different stream conditions to validate that the learned policy aligns with domain knowledge.
+\textbf{Detector Selection Patterns:} We analyze which detectors AutoDD selects under different stream conditions to validate that the learned policy aligns with domain knowledge. Table~\ref{tab:selection_pattern} shows detector selection frequency by stream characteristic. The observed selection patterns align with theoretical expectations and domain knowledge. In high velocity streams, ADWIN and DDM are preferred with selection frequencies of 28.4\% and 22.1\% respectively, reflecting their computational efficiency and rapid response capabilities. For high noise streams, KSWIN emerges as the dominant choice with 27.8\% selection frequency, followed by EDDM at 18.7\%, demonstrating the preference for distribution-based and distance-based approaches that provide robustness to noise. High dimensional streams show a similar pattern, with KSWIN selected 25.5\% of the time due to its effective handling of multivariate distributions. These learned patterns validate that AutoDD's meta-feature-based selection successfully captures meaningful detector-stream relationships rather than arbitrary preferences.
 
 \begin{table}[!ht]
 \centering
-\caption{Detector selection frequency (\%) by stream characteristic}
+\caption{Detector selection frequency (\%) by stream characteristic.}
 \label{tab:selection_pattern}
 \begin{tabular}{lccc}
 \toprule
@@ -421,8 +372,6 @@ KSWIN & 7.6 & 27.8 & 25.5 \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-The observed selection patterns align with theoretical expectations and domain knowledge. In high velocity streams, ADWIN and DDM are preferred with selection frequencies of 28.4\% and 22.1\% respectively, reflecting their computational efficiency and rapid response capabilities. For high noise streams, KSWIN emerges as the dominant choice with 27.8\% selection frequency, followed by EDDM at 18.7\%, demonstrating the preference for distribution-based and distance-based approaches that provide robustness to noise. High dimensional streams show a similar pattern, with KSWIN selected 25.5\% of the time due to its effective handling of multivariate distributions. These learned patterns validate that AutoDD's meta-feature-based selection successfully captures meaningful detector-stream relationships rather than arbitrary preferences.
 
 \begin{figure}[!ht]
 \centering
