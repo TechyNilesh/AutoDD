@@ -1,6 +1,6 @@
 {
-    "generated_at": "2026-01-11T19:02:49.526676",
-    "n_runs": 10,
+    "generated_at": "2026-01-14T13:02:18.368072",
+    "n_runs": 1,
     "base_model": "gaussiannb",
     "base_model_name": "GaussianNB",
     "synthetic_datasets": [
@@ -33,34 +33,34 @@
         "autodd"
     ],
     "mean_accuracy": {
-        "no_detector": 0.6799,
-        "adwin": 0.7287,
-        "ddm": 0.7375,
-        "eddm": 0.732,
-        "hddm_a": 0.7367,
-        "hddm_w": 0.7382,
-        "pagehinkley": 0.7283,
-        "kswin": 0.7347,
-        "mddm": 0.7512,
+        "no_detector": 0.6808,
+        "adwin": 0.726,
+        "ddm": 0.74,
+        "eddm": 0.7325,
+        "hddm_a": 0.7394,
+        "hddm_w": 0.7416,
+        "pagehinkley": 0.7289,
+        "kswin": 0.7333,
+        "mddm": 0.7478,
         "addm": 0.7628,
-        "pudd": 0.7637,
-        "meta_add": 0.783,
-        "autodd": 0.8131
+        "pudd": 0.7651,
+        "meta_add": 0.7857,
+        "autodd": 0.811
     },
     "std_accuracy": {
-        "no_detector": 0.008,
-        "adwin": 0.0086,
-        "ddm": 0.0082,
-        "eddm": 0.0076,
-        "hddm_a": 0.0077,
-        "hddm_w": 0.0082,
-        "pagehinkley": 0.0084,
-        "kswin": 0.0077,
-        "mddm": 0.008,
-        "addm": 0.0085,
-        "pudd": 0.0086,
-        "meta_add": 0.0079,
-        "autodd": 0.0052
+        "no_detector": 0,
+        "adwin": 0,
+        "ddm": 0,
+        "eddm": 0,
+        "hddm_a": 0,
+        "hddm_w": 0,
+        "pagehinkley": 0,
+        "kswin": 0,
+        "mddm": 0,
+        "addm": 0,
+        "pudd": 0,
+        "meta_add": 0,
+        "autodd": 0
     },
     "rankings": [
         "autodd",
@@ -73,8 +73,8 @@
         "hddm_a",
         "kswin",
         "eddm",
-        "adwin",
         "pagehinkley",
+        "adwin",
         "no_detector"
     ]
 }

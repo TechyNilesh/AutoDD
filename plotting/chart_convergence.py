@@ -9,11 +9,14 @@ Usage:
 """
 
 import os
+import json
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+CODE_DIR = os.path.dirname(SCRIPT_DIR)
+RESULTS_DIR = os.path.join(CODE_DIR, "benchmark_results")
 CHARTS_DIR = os.path.join(SCRIPT_DIR, "charts")
 
 os.makedirs(CHARTS_DIR, exist_ok=True)
@@ -28,65 +31,71 @@ rcParams['xtick.labelsize'] = 12
 rcParams['ytick.labelsize'] = 12
 rcParams['legend.fontsize'] = 11
 
-# Data from Table in supplementary
-datasets = ['SEA', 'HYP', 'AGR', 'Elec', 'Poker']
-positions = ['0-25%', '25-50%', '50-75%', '75-100%']
-data = {
-    'SEA': [71.2, 85.4, 91.8, 94.3],
-    'HYP': [68.5, 82.1, 89.6, 93.1],
-    'AGR': [65.8, 79.3, 87.2, 91.5],
-    'Elec': [72.4, 84.7, 90.3, 92.8],
-    'Poker': [69.1, 81.6, 88.9, 93.6],
-}
 
-colors = {
-    'SEA': '#1f77b4',
-    'HYP': '#ff7f0e',
-    'AGR': '#2ca02c',
-    'Elec': '#d62728',
-    'Poker': '#9467bd',
-}
+def load_convergence_data():
+    """Load convergence data from JSON."""
+    filepath = os.path.join(RESULTS_DIR, 'supplementary_convergence.json')
+    with open(filepath, 'r') as f:
+        return json.load(f)
 
-markers = {
-    'SEA': 'o',
-    'HYP': 's',
-    'AGR': '^',
-    'Elec': 'D',
-    'Poker': 'v',
-}
 
-fig, ax = plt.subplots(figsize=(8, 5))
+def main():
+    data = load_convergence_data()
 
-x = np.arange(len(positions))
+    positions = data['positions']
+    datasets = list(data['datasets'].keys())
 
-for dataset in datasets:
-    ax.plot(x, data[dataset], marker=markers[dataset], color=colors[dataset],
-            linewidth=2.5, markersize=10, label=dataset)
+    colors = {
+        'SEA': '#1f77b4',
+        'HYP': '#ff7f0e',
+        'AGR': '#2ca02c',
+        'Elec': '#d62728',
+        'Poker': '#9467bd',
+    }
 
-# Mean line
-mean_data = [69.4, 82.6, 89.6, 93.1]
-ax.plot(x, mean_data, marker='*', color='black', linewidth=3,
-        markersize=12, label='Mean', linestyle='--')
+    markers = {
+        'SEA': 'o',
+        'HYP': 's',
+        'AGR': '^',
+        'Elec': 'D',
+        'Poker': 'v',
+    }
 
-ax.set_xlabel('Stream Position', fontsize=14, fontweight='bold')
-ax.set_ylabel('Selection Accuracy (%)', fontsize=14, fontweight='bold')
-ax.set_xticks(x)
-ax.set_xticklabels(positions)
-ax.set_ylim(60, 100)
+    fig, ax = plt.subplots(figsize=(8, 5))
 
-ax.legend(loc='lower right', framealpha=0.95, fontsize=11)
+    x = np.arange(len(positions))
 
-ax.tick_params(axis='both', which='major', labelsize=12)
-for label in ax.get_xticklabels() + ax.get_yticklabels():
-    label.set_fontweight('bold')
+    for dataset in datasets:
+        ax.plot(x, data['datasets'][dataset], marker=markers.get(dataset, 'o'),
+                color=colors.get(dataset, 'gray'), linewidth=2.5, markersize=10, label=dataset)
 
-ax.grid(True, alpha=0.3, linestyle='--')
-ax.set_axisbelow(True)
+    # Mean line
+    ax.plot(x, data['mean'], marker='*', color='black', linewidth=3,
+            markersize=12, label='Mean', linestyle='--')
 
-plt.tight_layout()
+    ax.set_xlabel('Stream Position', fontsize=14, fontweight='bold')
+    ax.set_ylabel('Selection Accuracy (%)', fontsize=14, fontweight='bold')
+    ax.set_xticks(x)
+    ax.set_xticklabels(positions)
+    ax.set_ylim(60, 100)
 
-output_path = os.path.join(CHARTS_DIR, "convergence.png")
-plt.savefig(output_path, dpi=300, bbox_inches='tight')
-plt.close()
+    ax.legend(loc='lower right', framealpha=0.95, fontsize=11)
 
-print(f"Chart saved: {output_path}")
+    ax.tick_params(axis='both', which='major', labelsize=12)
+    for label in ax.get_xticklabels() + ax.get_yticklabels():
+        label.set_fontweight('bold')
+
+    ax.grid(True, alpha=0.3, linestyle='--')
+    ax.set_axisbelow(True)
+
+    plt.tight_layout()
+
+    output_path = os.path.join(CHARTS_DIR, "convergence.png")
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close()
+
+    print(f"Chart saved: {output_path}")
+
+
+if __name__ == "__main__":
+    main()

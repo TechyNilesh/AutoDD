@@ -196,13 +196,8 @@ def plot_scores(dataset, results, base_model=None, actual_base_model=None):
         padding = (y_max - y_min) * 0.05
         ax.set_ylim(max(0, y_min - padding - 2), min(100, y_max + padding + 2))
 
-    # Legend - position depends on dataset and base model
-    # For poker with GaussianNB, use upper left; for all others, use lower right
-    if dataset == 'poker' and actual_base_model == 'gaussiannb':
-        legend_loc = 'upper left'
-    else:
-        legend_loc = 'lower right'
-    ax.legend(fontsize=10, loc=legend_loc, ncol=2, framealpha=0.9)
+    # Legend - always bottom right
+    ax.legend(fontsize=10, loc='lower right', ncol=2, framealpha=0.9)
 
     # Grid for readability
     ax.grid(True, alpha=0.3, linestyle='--')

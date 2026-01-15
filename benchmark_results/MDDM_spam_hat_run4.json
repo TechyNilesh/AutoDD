@@ -3,12 +3,12 @@
     "model": "MDDM",
     "detector": "mddm",
     "base_model": "hat",
-    "accuracy": 0.949616,
+    "accuracy": 0.957581,
     "f1": 0.0,
     "n_drifts": 0,
     "drift_points": [],
-    "total_runtime": 1.43,
-    "total_memory_mb": 11.72,
+    "total_runtime": 1.85,
+    "total_memory_mb": 21.48,
     "n_instances": 4601,
     "window_metrics": {
         "interval": 1000,
@@ -25,16 +25,16 @@
             4601.0
         ],
         "accuracy_scores": [
-            0.9324,
-            0.9313,
-            0.9395,
-            0.9467,
-            0.9185,
-            0.9132,
-            0.9243,
-            0.8959,
-            0.9038,
-            0.9537
+            0.9368,
+            0.9478,
+            0.951,
+            0.9564,
+            0.9311,
+            0.9392,
+            0.9403,
+            0.9175,
+            0.9255,
+            0.9535
         ],
         "f1_scores": [
             0.0,

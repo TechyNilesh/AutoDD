@@ -3,12 +3,12 @@
     "model": "PAGEHINKLEY",
     "detector": "pagehinkley",
     "base_model": "gaussiannb",
-    "accuracy": 0.912932,
+    "accuracy": 0.920897,
     "f1": 0.0,
     "n_drifts": 0,
     "drift_points": [],
-    "total_runtime": 0.36,
-    "total_memory_mb": 1.1,
+    "total_runtime": 0.4,
+    "total_memory_mb": 1.19,
     "n_instances": 4601,
     "window_metrics": {
         "interval": 1000,
@@ -25,16 +25,16 @@
             4601.0
         ],
         "accuracy_scores": [
-            0.8722,
-            0.8948,
-            0.9029,
-            0.9021,
-            0.8256,
-            0.8462,
-            0.8577,
-            0.7798,
-            0.793,
-            0.9085
+            0.8214,
+            0.8328,
+            0.8476,
+            0.8612,
+            0.8334,
+            0.8349,
+            0.8456,
+            0.7957,
+            0.8089,
+            0.9252
         ],
         "f1_scores": [
             0.0,

@@ -9,11 +9,14 @@ Usage:
 """
 
 import os
+import json
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+CODE_DIR = os.path.dirname(SCRIPT_DIR)
+RESULTS_DIR = os.path.join(CODE_DIR, "benchmark_results")
 CHARTS_DIR = os.path.join(SCRIPT_DIR, "charts")
 
 os.makedirs(CHARTS_DIR, exist_ok=True)
@@ -28,46 +31,55 @@ rcParams['xtick.labelsize'] = 12
 rcParams['ytick.labelsize'] = 12
 rcParams['legend.fontsize'] = 11
 
-# Data from supplementary table
-detectors = ['ADWIN', 'DDM', 'EDDM', 'HDDM-A', 'HDDM-W', 'Page-H', 'KSWIN']
-conditions = ['High Velocity', 'High Noise', 'High Dim.']
 
-data = {
-    'High Velocity': [28.4, 22.1, 8.3, 15.2, 12.6, 5.8, 7.6],
-    'High Noise': [12.3, 8.5, 18.7, 10.4, 14.2, 8.1, 27.8],
-    'High Dim.': [15.7, 11.2, 14.5, 12.8, 13.1, 7.2, 25.5],
-}
+def load_selection_pattern_data():
+    """Load selection pattern data from JSON."""
+    filepath = os.path.join(RESULTS_DIR, 'supplementary_selection_pattern.json')
+    with open(filepath, 'r') as f:
+        return json.load(f)
 
-x = np.arange(len(detectors))
-width = 0.25
 
-colors = ['#1f77b4', '#ff7f0e', '#2ca02c']
+def main():
+    data = load_selection_pattern_data()
 
-fig, ax = plt.subplots(figsize=(10, 5))
+    detectors = data['detectors']
+    conditions = data['conditions']
+    frequencies = data['frequencies']
 
-for i, condition in enumerate(conditions):
-    offset = (i - 1) * width
-    ax.bar(x + offset, data[condition], width, label=condition,
-           color=colors[i], edgecolor='black', linewidth=1)
+    x = np.arange(len(detectors))
+    width = 0.25
 
-ax.set_ylabel('Selection Frequency (%)', fontsize=14, fontweight='bold')
-ax.set_xticks(x)
-ax.set_xticklabels(detectors, fontweight='bold')
-ax.set_ylim(0, 35)
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c']
 
-ax.legend(loc='upper right', framealpha=0.95, fontsize=11)
+    fig, ax = plt.subplots(figsize=(10, 5))
 
-ax.tick_params(axis='both', which='major', labelsize=12)
-for label in ax.get_yticklabels():
-    label.set_fontweight('bold')
+    for i, condition in enumerate(conditions):
+        offset = (i - 1) * width
+        ax.bar(x + offset, frequencies[condition], width, label=condition,
+               color=colors[i], edgecolor='black', linewidth=1)
 
-ax.grid(True, alpha=0.3, linestyle='--', axis='y')
-ax.set_axisbelow(True)
+    ax.set_ylabel('Selection Frequency (%)', fontsize=14, fontweight='bold')
+    ax.set_xticks(x)
+    ax.set_xticklabels(detectors, fontweight='bold')
+    ax.set_ylim(0, 35)
 
-plt.tight_layout()
+    ax.legend(loc='upper right', framealpha=0.95, fontsize=11)
 
-output_path = os.path.join(CHARTS_DIR, "selection_pattern.png")
-plt.savefig(output_path, dpi=300, bbox_inches='tight')
-plt.close()
+    ax.tick_params(axis='both', which='major', labelsize=12)
+    for label in ax.get_yticklabels():
+        label.set_fontweight('bold')
 
-print(f"Chart saved: {output_path}")
+    ax.grid(True, alpha=0.3, linestyle='--', axis='y')
+    ax.set_axisbelow(True)
+
+    plt.tight_layout()
+
+    output_path = os.path.join(CHARTS_DIR, "selection_pattern.png")
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close()
+
+    print(f"Chart saved: {output_path}")
+
+
+if __name__ == "__main__":
+    main()
