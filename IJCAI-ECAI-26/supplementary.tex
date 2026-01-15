@@ -177,6 +177,20 @@ T = O\left(\frac{(m + CK)\log(K/\delta_{\text{conf}})}{\epsilon^2}\right)
 \end{equation}
 With $m = 15$ meta-features, $K = 7$ detectors, and $C = 5$ configurations, achieving $\epsilon = 0.01$ average regret requires approximately $T \approx 5 \times 10^5$ windows, which is reached early in typical streaming applications.
 
+\subsection{Scope of Theoretical Guarantees}
+
+It is important to clarify the scope of the theoretical analysis. The regret bounds established in Theorems 1 and 2 guarantee that AutoDD's \textit{selection mechanism} efficiently learns to choose the detector-configuration pair that maximizes the expected reward. This is a statement about \textit{selection efficiency}---the algorithm converges to optimal choices with sublinear regret.
+
+However, this does not directly prove that AutoDD improves actual drift detection accuracy on the underlying data stream. The connection between our theoretical guarantees and detection performance depends on two factors:
+
+\begin{enumerate}
+\item \textbf{Reward Proxy Fidelity:} The reward function (Eq.~7 in main paper) uses classifier accuracy changes as a surrogate for detection quality. The validity of this proxy is established empirically rather than theoretically.
+
+\item \textbf{Classifier Dependence:} The reward signal depends on the base classifier's behavior, which introduces a dependency not captured in our bandit analysis. Different classifiers may yield different optimal detector choices.
+\end{enumerate}
+
+The experimental evaluation empirically validates that maximizing our reward proxy translates to improved detection performance across diverse datasets and classifiers. We view the theory as providing guarantees on the \textit{learning dynamics} of detector selection, while the \textit{quality} of detection is validated experimentally.
+
 \subsection{Reward Function Properties}
 
 The reward function defined in Eq.~(7) of the main paper is designed to align bandit feedback with drift detection objectives. We establish key properties that justify this design.

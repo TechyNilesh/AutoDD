@@ -298,13 +298,13 @@ We formalize AutoDD's optimization objective and provide regret guarantees for t
 \exists t, t' : P_t(\mathbf{X}, Y) \neq P_{t'}(\mathbf{X}, Y)
 \end{equation}
 
-Given detector portfolio $\mathcal{D} = \{D_1, \ldots, D_K\}$ where each $D_i$ has configuration space $\mathcal{H}_i$, AutoDD solves the streaming CASH problem \cite{Hutter2019AutoML}:
+Given detector portfolio $\mathcal{D} = \{D_1, \ldots, D_K\}$ where each $D_i$ has configuration space $\mathcal{H}_i$, AutoDD addresses the streaming detector selection and configuration problem. Inspired by the CASH framework \cite{Hutter2019AutoML}, we formulate this as jointly optimizing the detector choice and its hyperparameters:
 \begin{equation}
 \resizebox{0.95\columnwidth}{!}{$
 (D^*_t, \boldsymbol{\eta}^*_t) = \arg\max_{D_i \in \mathcal{D}, \boldsymbol{\eta} \in \mathcal{H}_i} \mathbb{E}[\mathcal{M}(D_i(\boldsymbol{\eta}), \mathcal{S}_t) \mid \boldsymbol{\phi}_t]
 $}
 \end{equation}
-where $\boldsymbol{\phi}_t$ is the stream context. The hierarchical approach decomposes this into two sequential decisions: detector selection (Level 1) and hyperparameter configuration (Level 2).
+where $\boldsymbol{\phi}_t$ is the stream context and $\mathcal{M}$ denotes the downstream model performance. Note that unlike full CASH, we optimize only the drift detector and its configuration while keeping the base classifier fixed. The hierarchical approach decomposes this into two sequential decisions: detector selection (Level 1) and hyperparameter configuration (Level 2).
 
 \textbf{Assumptions.} We make three standard assumptions from the contextual bandit literature \cite{Abbasi2011Improved,Lattimore2020Bandit}:
 \begin{itemize}
@@ -347,10 +347,9 @@ This sublinear regret guarantees convergence to optimal detector-configuration p
 \lim_{T \to \infty} \frac{R(T)}{T} = 0
 \end{equation}
 
-\textbf{Sample Complexity.} To achieve average regret $\epsilon$, AutoDD requires $T = O\left(\frac{(m + CK) \log(K/\delta_{\text{conf}})}{\epsilon^2}\right)$ samples, following from inverting the regret bound.
+\textbf{Sample Complexity.} The regret bound implies that to achieve average regret at most $\epsilon$, it suffices to have $T = O\left(\frac{(m + CK) \log(K/\delta_{\text{conf}})}{\epsilon^2}\right)$ windows. This is a theoretical guideline indicating the order-of-magnitude number of selections needed for near-optimal performance; the hidden constants depend on problem-specific parameters ($L$, $S$, $\sigma_{\text{noise}}$).
 
-
-
+\textbf{Remark (Scope of Theoretical Guarantees).} The above analysis establishes that AutoDD's \textit{selection mechanism} efficiently converges to the detector-configuration pair that maximizes the reward proxy. The regret bounds guarantee that the cumulative loss from suboptimal selections vanishes over time. However, the connection between reward maximization and actual drift detection accuracy depends on the fidelity of the reward proxy (Eq.~\eqref{eq:reward}), which uses classifier accuracy changes as a surrogate for detection quality. While this proxy aligns incentives (rewarding true positives and penalizing false alarms), the theoretical guarantees apply to selection efficiency rather than detection accuracy directly. The experimental evaluation in Section~\ref{sec:results} empirically validates that optimizing this proxy translates to improved detection performance.
 \section{Experiments}
 \label{sec:experiments}
 
