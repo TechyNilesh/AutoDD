@@ -3,12 +3,12 @@
     "model": "HDDM_W",
     "detector": "hddm_w",
     "base_model": "hat",
-    "accuracy": 0.950587,
+    "accuracy": 0.947066,
     "f1": 0.0,
     "n_drifts": 0,
     "drift_points": [],
-    "total_runtime": 2.56,
-    "total_memory_mb": 16.74,
+    "total_runtime": 2.93,
+    "total_memory_mb": 9.48,
     "n_instances": 4601,
     "window_metrics": {
         "interval": 1000,
@@ -25,16 +25,16 @@
             4601.0
         ],
         "accuracy_scores": [
-            0.9086,
-            0.9201,
-            0.9346,
-            0.9387,
-            0.9029,
-            0.9107,
-            0.9108,
-            0.8798,
-            0.8865,
-            0.9522
+            0.9253,
+            0.9308,
+            0.9336,
+            0.9343,
+            0.9051,
+            0.9183,
+            0.9167,
+            0.8908,
+            0.9073,
+            0.9431
         ],
         "f1_scores": [
             0.0,

@@ -3,15 +3,12 @@
     "model": "AUTODD",
     "detector": "autodd",
     "base_model": "gaussiannb",
-    "accuracy": 0.99,
-    "f1": 0.6778,
-    "n_drifts": 2,
-    "drift_points": [
-        1904,
-        2907
-    ],
-    "total_runtime": 1.74,
-    "total_memory_mb": 4.35,
+    "accuracy": 0.989615,
+    "f1": 0.0,
+    "n_drifts": 0,
+    "drift_points": [],
+    "total_runtime": 0.88,
+    "total_memory_mb": 6.86,
     "n_instances": 4601,
     "window_metrics": {
         "interval": 1000,
@@ -28,38 +25,38 @@
             4601.0
         ],
         "accuracy_scores": [
-            0.9197,
-            0.9545,
-            0.9679,
-            0.9771,
-            0.9583,
-            0.9684,
-            0.969,
-            0.9484,
-            0.9565,
-            0.9883
+            0.9547,
+            0.9707,
+            0.9736,
+            0.982,
+            0.9434,
+            0.9512,
+            0.9589,
+            0.9233,
+            0.9416,
+            0.9916
         ],
         "f1_scores": [
-            0.6681,
-            0.6729,
-            0.6747,
-            0.676,
-            0.6734,
-            0.6748,
-            0.6749,
-            0.6721,
-            0.6732,
-            0.6775
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
         ]
     },
     "run_id": 3,
     "selection_distribution": {
-        "ADWIN": 0.171,
-        "DDM": 0.105,
-        "EDDM": 0.116,
-        "HDDM_A": 0.137,
-        "HDDM_W": 0.1,
-        "PageHinkley": 0.079,
-        "KSWIN": 0.221
+        "ADWIN": 0.194,
+        "DDM": 0.114,
+        "EDDM": 0.089,
+        "HDDM_A": 0.117,
+        "HDDM_W": 0.126,
+        "PageHinkley": 0.088,
+        "KSWIN": 0.174
     }
 }

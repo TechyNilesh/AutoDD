@@ -3,12 +3,12 @@
     "model": "DDM",
     "detector": "ddm",
     "base_model": "hat",
-    "accuracy": 0.954627,
+    "accuracy": 0.93034,
     "f1": 0.0,
     "n_drifts": 0,
     "drift_points": [],
-    "total_runtime": 0.74,
-    "total_memory_mb": 5.67,
+    "total_runtime": 1.0,
+    "total_memory_mb": 4.67,
     "n_instances": 4601,
     "window_metrics": {
         "interval": 1000,
@@ -25,16 +25,16 @@
             4601.0
         ],
         "accuracy_scores": [
-            0.923,
-            0.9404,
-            0.9452,
-            0.95,
-            0.9104,
-            0.9226,
-            0.9282,
-            0.877,
-            0.8816,
-            0.9497
+            0.9095,
+            0.9153,
+            0.9191,
+            0.9173,
+            0.8788,
+            0.8852,
+            0.8941,
+            0.8525,
+            0.8656,
+            0.9319
         ],
         "f1_scores": [
             0.0,

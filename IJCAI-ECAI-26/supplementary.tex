@@ -1,4 +1,4 @@
-%%%% supplementary_material_autodsc_2026.tex
+%%%% supplementary_material_autodd.tex
 
 \typeout{IJCAI--ECAI 26 Supplementary Material}
 
@@ -51,11 +51,11 @@ This section provides detailed proofs for the theoretical results presented in t
 
 \subsection{Preliminaries and Notation}
 
-Let $\mathcal{S} = \{(\mathbf{x}_t, y_t)\}_{t=1}^{\infty}$ denote the data stream, $\mathcal{D} = \{D_1, \ldots, D_K\}$ the detector portfolio, and $\boldsymbol{\phi}_t \in \mathbb{R}^m$ the meta-feature vector at time $t$. For LinUCB, we maintain for each detector $i$: the design matrix $\mathbf{A}_i = \lambda\mathbf{I} + \sum_{s:i_s=i} \boldsymbol{\phi}_s \boldsymbol{\phi}_s^\top$ and the response vector $\mathbf{b}_i = \sum_{s:i_s=i} r_s \boldsymbol{\phi}_s$. The ridge regression estimate is $\hat{\boldsymbol{\theta}}_i = \mathbf{A}_i^{-1} \mathbf{b}_i$.
+Let $\mathcal{S} = \{(\mathbf{x}_t, y_t)\}_{t=1}^{\infty}$ denote the data stream, $\mathcal{D} = \{D_1, \ldots, D_K\}$ the detector portfolio, and $\boldsymbol{\phi}_t \in \mathbb{R}^m$ the meta-feature vector at time $t$. For LinUCB, we maintain for each detector $i$: the design matrix $\mathbf{A}_i = \lambda_{\text{reg}}\mathbf{I} + \sum_{s:i_s=i} \boldsymbol{\phi}_s \boldsymbol{\phi}_s^\top$ and the response vector $\mathbf{b}_i = \sum_{s:i_s=i} r_s \boldsymbol{\phi}_s$. The ridge regression estimate is $\hat{\boldsymbol{\theta}}_i = \mathbf{A}_i^{-1} \mathbf{b}_i$.
 
 \subsection{Proof of Theorem 1 (Level 1 Regret)}
 
-\textbf{Theorem 1.} \textit{Under assumptions A1--A3, with exploration parameter $\alpha = \sigma\sqrt{m \log(KT/\delta)} + S$, LinUCB detector selection achieves with probability at least $1 - \delta$:}
+\textbf{Theorem 1.} \textit{Under assumptions A1--A3, with exploration parameter $\alpha_{\text{ucb}} = \sigma_{\text{noise}}\sqrt{m \log(KT/\delta_{\text{conf}})} + S$, LinUCB detector selection achieves with probability at least $1 - \delta_{\text{conf}}$:}
 \begin{equation}
 R_1(T) = \sum_{t=1}^{T} \left( \max_{i} \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_i^* - \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i_t}^* \right) = O(\sqrt{mT \log T})
 \end{equation}
@@ -63,42 +63,42 @@ R_1(T) = \sum_{t=1}^{T} \left( \max_{i} \boldsymbol{\phi}_t^\top \boldsymbol{\th
 \textbf{Proof.} The proof proceeds in three steps.
 
 \textit{Step 1: Confidence Ellipsoid Construction.}
-By the self-normalized martingale inequality \citep{Abbasi2011Improved}, for any $\delta > 0$, with probability at least $1 - \delta/K$, for all $t \geq 1$:
+By the self-normalized martingale inequality \cite{Abbasi2011Improved}, for any $\delta_{\text{conf}} > 0$, with probability at least $1 - \delta_{\text{conf}}/K$, for all $t \geq 1$:
 \begin{equation}
-\|\hat{\boldsymbol{\theta}}_{i,t} - \boldsymbol{\theta}_i^*\|_{\mathbf{A}_{i,t}} \leq \sigma\sqrt{2\log\left(\frac{\det(\mathbf{A}_{i,t})^{1/2} \det(\lambda\mathbf{I})^{-1/2}}{\delta/K}\right)} + \sqrt{\lambda}S
+\|\hat{\boldsymbol{\theta}}_{i,t} - \boldsymbol{\theta}_i^*\|_{\mathbf{A}_{i,t}} \leq \sigma_{\text{noise}}\sqrt{2\log\left(\frac{\det(\mathbf{A}_{i,t})^{1/2} \det(\lambda_{\text{reg}}\mathbf{I})^{-1/2}}{\delta_{\text{conf}}/K}\right)} + \sqrt{\lambda_{\text{reg}}}S
 \end{equation}
-Using the determinant-trace inequality $\det(\mathbf{A}_{i,t}) \leq \left(\frac{\text{tr}(\mathbf{A}_{i,t})}{m}\right)^m \leq \left(\lambda + \frac{tL^2}{m}\right)^m$ and applying a union bound over all $K$ detectors, with probability at least $1 - \delta$, for all $i \in [K]$ and $t \geq 1$:
+Using the determinant-trace inequality $\det(\mathbf{A}_{i,t}) \leq \left(\frac{\text{tr}(\mathbf{A}_{i,t})}{m}\right)^m \leq \left(\lambda_{\text{reg}} + \frac{tL^2}{m}\right)^m$ and applying a union bound over all $K$ detectors, with probability at least $1 - \delta_{\text{conf}}$, for all $i \in [K]$ and $t \geq 1$:
 \begin{equation}
-\|\hat{\boldsymbol{\theta}}_{i,t} - \boldsymbol{\theta}_i^*\|_{\mathbf{A}_{i,t}} \leq \alpha_t
+\|\hat{\boldsymbol{\theta}}_{i,t} - \boldsymbol{\theta}_i^*\|_{\mathbf{A}_{i,t}} \leq \alpha_{\text{ucb},t}
 \end{equation}
-where $\alpha_t = \sigma\sqrt{m\log(1 + tL^2/\lambda) + 2\log(K/\delta)} + \sqrt{\lambda}S \leq \alpha$ for our choice of $\alpha$.
+where $\alpha_{\text{ucb},t} = \sigma_{\text{noise}}\sqrt{m\log(1 + tL^2/\lambda_{\text{reg}}) + 2\log(K/\delta_{\text{conf}})} + \sqrt{\lambda_{\text{reg}}}S \leq \alpha_{\text{ucb}}$ for our choice of $\alpha_{\text{ucb}}$.
 
 \textit{Step 2: Instantaneous Regret Bound.}
 Let $i^* = \arg\max_i \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_i^*$ be the optimal detector at time $t$. The UCB selection rule chooses:
 \begin{equation}
-i_t = \arg\max_i \left( \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_i + \alpha \|\boldsymbol{\phi}_t\|_{\mathbf{A}_i^{-1}} \right)
+i_t = \arg\max_i \left( \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_i + \alpha_{\text{ucb}} \|\boldsymbol{\phi}_t\|_{\mathbf{A}_i^{-1}} \right)
 \end{equation}
 Under the confidence event, we have:
 \begin{align}
-\boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i^*}^* &\leq \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_{i^*} + \alpha \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i^*}^{-1}} \\
-&\leq \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_{i_t} + \alpha \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t}^{-1}} \\
-&\leq \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i_t}^* + 2\alpha \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t}^{-1}}
+\boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i^*}^* &\leq \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_{i^*} + \alpha_{\text{ucb}} \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i^*}^{-1}} \\
+&\leq \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_{i_t} + \alpha_{\text{ucb}} \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t}^{-1}} \\
+&\leq \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i_t}^* + 2\alpha_{\text{ucb}} \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t}^{-1}}
 \end{align}
 where the first inequality uses the confidence bound, the second uses the UCB selection, and the third applies the confidence bound again. Thus, the instantaneous regret is:
 \begin{equation}
-r_t^{(1)} = \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i^*}^* - \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i_t}^* \leq 2\alpha \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t}^{-1}}
+r_t^{(1)} = \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i^*}^* - \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i_t}^* \leq 2\alpha_{\text{ucb}} \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t}^{-1}}
 \end{equation}
 
 \textit{Step 3: Cumulative Regret via Elliptical Potential Lemma.}
-By the elliptical potential lemma \citep{Dani2008Stochastic}:
+By the elliptical potential lemma \cite{Dani2008Stochastic}:
 \begin{equation}
-\sum_{t=1}^T \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t,t-1}^{-1}}^2 \leq 2m\log\left(1 + \frac{TL^2}{\lambda m}\right)
+\sum_{t=1}^T \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t,t-1}^{-1}}^2 \leq 2m\log\left(1 + \frac{TL^2}{\lambda_{\text{reg}} m}\right)
 \end{equation}
 Applying Cauchy-Schwarz:
 \begin{align}
-R_1(T) &= \sum_{t=1}^T r_t^{(1)} \leq 2\alpha \sum_{t=1}^T \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t}^{-1}} \\
-&\leq 2\alpha \sqrt{T \sum_{t=1}^T \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t}^{-1}}^2} \\
-&\leq 2\alpha \sqrt{2mT\log\left(1 + \frac{TL^2}{\lambda m}\right)} \\
+R_1(T) &= \sum_{t=1}^T r_t^{(1)} \leq 2\alpha_{\text{ucb}} \sum_{t=1}^T \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t}^{-1}} \\
+&\leq 2\alpha_{\text{ucb}} \sqrt{T \sum_{t=1}^T \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t}^{-1}}^2} \\
+&\leq 2\alpha_{\text{ucb}} \sqrt{2mT\log\left(1 + \frac{TL^2}{\lambda_{\text{reg}} m}\right)} \\
 &= O(\sqrt{mT \log T})
 \end{align}
 This completes the proof. \hfill $\square$
@@ -116,7 +116,7 @@ R_2(T) = \sum_{i=1}^{K} O(\sqrt{C \cdot N_i(T) \log N_i(T)})
 Conditioned on detector $i$ being selected at times $\{t : i_t = i\}$, the hyperparameter selection problem reduces to a standard $C$-armed bandit over $N_i(T)$ rounds. The rewards $r_t \in [-1, 1]$ are normalized to $\tilde{r}_t = (r_t + 1)/2 \in [0, 1]$.
 
 \textit{Step 2: Beta-Bernoulli Thompson Sampling Analysis.}
-For bounded rewards in $[0,1]$, we model the normalized reward as a Bernoulli-like outcome and maintain Beta posterior distributions. By Theorem 1 of \citet{Agrawal2013Further}, for a $C$-armed bandit with bounded rewards, Thompson Sampling with Beta$(1,1)$ priors achieves expected regret:
+For bounded rewards in $[0,1]$, we model the normalized reward as a Bernoulli-like outcome and maintain Beta posterior distributions. By Theorem 1 of \cite{Agrawal2013Further}, for a $C$-armed bandit with bounded rewards, Thompson Sampling with Beta$(1,1)$ priors achieves expected regret:
 \begin{equation}
 \mathbb{E}[R_i(N_i)] \leq O\left(\sum_{c: \Delta_c > 0} \frac{\log N_i}{\Delta_c}\right)
 \end{equation}
@@ -124,7 +124,7 @@ where $\Delta_c = \mu^* - \mu_c$ is the suboptimality gap for configuration $c$.
 \begin{equation}
 \mathbb{E}[R_i(N_i)] \leq O(\sqrt{C \cdot N_i(T) \log N_i(T)})
 \end{equation}
-using the gap-free bound from \citet{Agrawal2012Thompson}.
+using the gap-free bound from \cite{Agrawal2012Thompson}.
 
 \textit{Step 3: Aggregation Across Detectors.}
 Since the detector selections partition the time horizon (i.e., $\sum_{i=1}^K N_i(T) = T$), and each detector's hyperparameter selection is an independent bandit problem, the total Level 2 regret is:
@@ -135,7 +135,7 @@ This completes the proof. \hfill $\square$
 
 \subsection{Proof of Corollary (Combined Regret)}
 
-\textbf{Corollary.} \textit{The total regret of the hierarchical system is:}
+\textbf{Corollary.} \textit{Let $(i^*, c^*)$ denote the optimal detector-configuration pair. The total regret decomposes as $R(T) = R_1(T) + R_2(T)$, where $R_1(T)$ captures suboptimality from detector selection and $R_2(T)$ from configuration selection. The combined bound is:}
 \begin{equation}
 R(T) = R_1(T) + R_2(T) = O(\sqrt{mT \log T} + \sqrt{CKT \log T})
 \end{equation}
@@ -173,26 +173,26 @@ To achieve average regret at most $\epsilon$, we require $R(T)/T \leq \epsilon$.
 \end{equation}
 for constants $c_1, c_2$. Setting this equal to $\epsilon$ and solving:
 \begin{equation}
-T = O\left(\frac{(m + CK)\log(K/\delta)}{\epsilon^2}\right)
+T = O\left(\frac{(m + CK)\log(K/\delta_{\text{conf}})}{\epsilon^2}\right)
 \end{equation}
 With $m = 15$ meta-features, $K = 7$ detectors, and $C = 5$ configurations, achieving $\epsilon = 0.01$ average regret requires approximately $T \approx 5 \times 10^5$ windows, which is reached early in typical streaming applications.
 
 \subsection{Reward Function Properties}
 
-The reward function defined in Eq. (7) of the main paper is designed to align bandit feedback with drift detection objectives. We establish key properties that justify this design.
+The reward function defined in Eq.~(7) of the main paper is designed to align bandit feedback with drift detection objectives. We establish key properties that justify this design.
 
 \textbf{Proposition 1 (Boundedness).} \textit{The reward function $r_t \in [-1, 1]$ for all $t$.}
 
-\textit{Proof.} By construction: (i) when $d=1, \Delta a > \tau$: $r_t = 0.5 + \min(\Delta a \cdot 2, 0.5) \in [0.5, 1.0]$; (ii) when $d=1, \Delta a \leq \tau$: $r_t = -0.3$; (iii) when $d=0, \Delta a > \tau$: $r_t = -0.5 - \min(\Delta a, 0.5) \in [-1.0, -0.5]$; (iv) when $d=0, \Delta a \leq \tau$: $r_t = 0.1$. Thus $r_t \in [-1, 1]$. \hfill $\square$
+\textit{Proof.} By construction: (i) when $d_t=1, \Delta a_t > \tau$: $r_t = 0.5 + \min(\Delta a_t \cdot 2, 0.5) \in [0.5, 1.0]$; (ii) when $d_t=1, \Delta a_t \leq \tau$: $r_t = -0.3$; (iii) when $d_t=0, \Delta a_t > \tau$: $r_t = -0.5 - \min(\Delta a_t, 0.5) \in [-1.0, -0.5]$; (iv) when $d_t=0, \Delta a_t \leq \tau$: $r_t = 0.1$. Thus $r_t \in [-1, 1]$. \hfill $\square$
 
 \textbf{Proposition 2 (Incentive Compatibility).} \textit{The reward function is incentive-compatible: it maximizes expected reward when the detector correctly identifies drift.}
 
 \textit{Proof.} Consider the four scenarios:
 \begin{itemize}
-\item \textbf{True Positive} ($d=1$, drift present with $\Delta a > \tau$): Reward is positive ($r_t \geq 0.5$), incentivizing detection.
-\item \textbf{False Positive} ($d=1$, no drift with $\Delta a \leq \tau$): Reward is negative ($r_t = -0.3$), penalizing false alarms.
-\item \textbf{False Negative} ($d=0$, drift present with $\Delta a > \tau$): Reward is strongly negative ($r_t \leq -0.5$), heavily penalizing missed drifts.
-\item \textbf{True Negative} ($d=0$, no drift with $\Delta a \leq \tau$): Reward is small positive ($r_t = 0.1$), mildly rewarding stability.
+\item \textbf{True Positive} ($d_t=1$, drift present with $\Delta a_t > \tau$): Reward is positive ($r_t \geq 0.5$), incentivizing detection.
+\item \textbf{False Positive} ($d_t=1$, no drift with $\Delta a_t \leq \tau$): Reward is negative ($r_t = -0.3$), penalizing false alarms.
+\item \textbf{False Negative} ($d_t=0$, drift present with $\Delta a_t > \tau$): Reward is strongly negative ($r_t \leq -0.5$), heavily penalizing missed drifts.
+\item \textbf{True Negative} ($d_t=0$, no drift with $\Delta a_t \leq \tau$): Reward is small positive ($r_t = 0.1$), mildly rewarding stability.
 \end{itemize}
 The asymmetric penalties ($-0.5$ to $-1.0$ for false negatives vs. $-0.3$ for false positives) reflect that missed drifts typically cause more severe performance degradation than false alarms. \hfill $\square$
 
@@ -206,7 +206,7 @@ Assumption A2 posits that expected reward is linear in meta-features: $\mathbb{E
 \begin{equation}
 \sup_{\boldsymbol{\phi} \in [0,1]^m} |f_i(\boldsymbol{\phi}) - \boldsymbol{\phi}^\top \boldsymbol{\theta}_i| \leq \epsilon_{\text{approx}}
 \end{equation}
-where $\epsilon_{\text{approx}} = O(L/\sqrt{m})$ for appropriately chosen $\boldsymbol{\theta}_i$. The approximation error can be absorbed into the sub-Gaussian noise term in Assumption A3 with adjusted variance $\sigma^2 + \epsilon_{\text{approx}}^2$, preserving the regret bound structure with slightly larger constants. \hfill $\square$
+where $\epsilon_{\text{approx}} = O(L/\sqrt{m})$ for appropriately chosen $\boldsymbol{\theta}_i$. The approximation error can be absorbed into the sub-Gaussian noise term in Assumption A3 with adjusted variance $\sigma_{\text{noise}}^2 + \epsilon_{\text{approx}}^2$, preserving the regret bound structure with slightly larger constants. \hfill $\square$
 
 \textbf{Empirical Verification.} We fit linear models $\hat{r}_{i,t} = \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_i$ to observed rewards across all experiments. The average $R^2$ coefficient across detectors is 0.73, indicating that linear models explain substantial reward variance. Residual analysis shows approximately symmetric, zero-mean errors consistent with the sub-Gaussian assumption.
 
@@ -263,7 +263,7 @@ This section presents additional experimental analysis using Hoeffding Adaptive 
 \caption{Runtime vs. memory trade-off}
 \label{fig:time_memory_hat}
 \end{subfigure}
-\caption{Statistical significance analysis and computational efficiency with HAT base classifier. (a) Critical Difference diagram with connecting bars indicating statistically equivalent methods ($\alpha=0.05$). (b) Runtime vs. memory trade-off showing AutoDD achieves the best accuracy while maintaining reasonable computational overhead.}
+\caption{Statistical significance analysis and computational efficiency with HAT base classifier. (a) Critical Difference diagram with connecting bars indicating statistically equivalent methods ($p=0.05$). (b) Runtime vs. memory trade-off showing AutoDD achieves the best accuracy while maintaining reasonable computational overhead.}
 \label{fig:stats_efficiency}
 \end{figure}
 
@@ -311,7 +311,7 @@ The results demonstrate rapid learning: AutoDD achieves over 80\% selection accu
 
 Beyond detection accuracy, the delay between actual drift occurrence and detection is critical for timely model adaptation. We analyze detection delay on synthetic datasets where ground-truth drift points are known.
 
-\textbf{Definition.} Detection delay $\delta_d$ is measured as the number of instances between a true drift point and the first subsequent detection. A detection within $\pm 100$ instances of a drift point is considered a true positive.
+\textbf{Definition.} Detection delay $\tau_d$ is measured as the number of instances between a true drift point and the first subsequent detection. A detection within $\pm 100$ instances of a drift point is considered a true positive.
 
 \begin{table}[!ht]
 \centering

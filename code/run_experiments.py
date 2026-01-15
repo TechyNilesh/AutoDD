@@ -90,7 +90,7 @@ def run_script(dataset_name, detector_name, run_count=None, random_seed=False,
         base_model: Base classifier to use ('gaussiannb' or 'hat')
     """
     if random_seed:
-        seed = random.randint(1, 1000)
+        seed = random.randint(1, 100)
     else:
         seed = 42
 

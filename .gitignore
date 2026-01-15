@@ -1,6 +1,12 @@
 # Simulation scripts (generated results)
 code/simulation/
 
+# Generated charts
+code/plotting/charts/
+
+# Generated benchmark results
+code/benchmark_results/
+
 # Backup folder
 code/backup/
 backup/
