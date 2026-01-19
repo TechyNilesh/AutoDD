@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - 'IJCAI-ECAI-26/**'
+      - '.github/workflows/sync-paper-branch.yml'
+  workflow_dispatch:
 
 permissions:
   contents: write

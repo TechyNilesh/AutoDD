@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - 'code/**'
+      - '.github/workflows/sync-code-branch.yml'
+  workflow_dispatch:
 
 permissions:
   contents: write
