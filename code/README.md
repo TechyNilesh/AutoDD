@@ -1,4 +1,4 @@
-# AutoDD - Automated Drift Detector Selection for Data Streams
+# AutoDD: Learning to Select Drift Detectors for Evolving Data Streams
 
 ## Overview
 
