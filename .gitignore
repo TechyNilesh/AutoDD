@@ -4,6 +4,10 @@ code/simulation/
 # Plotting folder
 code/plotting/
 
+# Reference paper markdown files
+**/paper.md
+**/*Paper.md
+
 # Generated benchmark results
 code/benchmark_results/
 
