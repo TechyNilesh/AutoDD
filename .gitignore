@@ -1,8 +1,8 @@
 # Simulation scripts (generated results)
 code/simulation/
 
-# Generated charts
-code/plotting/charts/
+# Plotting folder
+code/plotting/
 
 # Generated benchmark results
 code/benchmark_results/

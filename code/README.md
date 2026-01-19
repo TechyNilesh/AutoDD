@@ -4,28 +4,6 @@
 
 AutoDD is an adaptive framework for automated drift detector selection in data streams. It uses contextual multi-armed bandits (LinUCB) to dynamically select the most appropriate drift detector based on stream meta-features, enabling robust concept drift detection across varying data characteristics.
 
-## Features
-
-- **Adaptive Detector Selection**: Automatically selects the best drift detector using LinUCB contextual bandits
-- **Meta-Feature Extraction**: Extracts temporal, statistical, and stationarity features from data streams
-- **Multiple Base Classifiers**: Supports different base classifiers:
-  - GaussianNB (Gaussian Naive Bayes) - default
-  - HAT (Hoeffding Adaptive Tree)
-- **Multiple Drift Detectors**: Supports various drift detection algorithms:
-  - ADWIN (Adaptive Windowing)
-  - DDM (Drift Detection Method)
-  - EDDM (Early Drift Detection Method)
-  - HDDM-A (Hoeffding's bound Drift Detection Method - A-test)
-  - HDDM-W (Hoeffding's bound Drift Detection Method - W-test)
-  - Page-Hinkley Test
-  - KSWIN (Kolmogorov-Smirnov Windowing)
-  - MDDM (McDiarmid Drift Detection Method)
-  - PUDD (Prediction Uncertainty-based Drift Detector)
-  - ADDM (Autoregressive-Based Drift Detection Method)
-
-- **Comprehensive Evaluation**: Built-in benchmark framework with prequential evaluation
-- **Ablation Studies**: Tools for analyzing component contributions
-
 ## Installation
 
 ### Prerequisites
@@ -258,43 +236,6 @@ Run ablation study:
 python run_ablation_study.py
 ```
 
-## Generating Charts and Tables
-
-The `plotting/` directory contains scripts for generating all figures and tables:
-
-### Tables
-```bash
-# Generate all benchmark tables
-python plotting/table_benchmark_accuracy.py
-python plotting/table_benchmark_f1.py
-python plotting/table_benchmark_time.py
-python plotting/table_benchmark_memory.py
-python plotting/table_drift_counts.py
-python plotting/table_ablation.py
-```
-
-### Charts
-```bash
-# Prequential accuracy/F1 charts
-python plotting/chart_prequential_accuracy.py
-python plotting/chart_prequential_f1.py
-
-# Ablation box plots
-python plotting/chart_ablation.py
-
-# CD diagram
-python plotting/chart_cd_diagram.py
-
-# Time vs Memory scatter plot
-python plotting/chart_time_memory.py
-
-# Detector selection timeline
-python plotting/chart_detector_selection.py
-
-# Error rate with drift regions
-python plotting/chart_error_rate_drift.py
-```
-
 ## Project Structure
 
 ```
@@ -333,20 +274,6 @@ AutoDD/
 │   └── generate_synthetic_streams.py
 └── README.md
 ```
-
-## Performance Tips
-
-- Use `--progress_interval 500` for more frequent updates on large datasets
-- For large-scale experiments, run models in parallel using multiple terminals
-- Monitor memory usage during experiments on large datasets (airlines, poker)
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Memory Issues**: For large datasets (airlines, poker), ensure sufficient RAM (8GB+)
-2. **Missing Dependencies**: Install with `pip install river numpy pandas scikit-learn scipy matplotlib psutil tqdm`
-3. **Dataset Not Found**: Ensure datasets are in `datasets/` directory or run `generate_synthetic_streams.py`
 
 ## Citation
 
