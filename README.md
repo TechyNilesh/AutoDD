@@ -261,11 +261,6 @@ AutoDD/
 │   │   ├── mddm_run.py
 │   │   ├── pudd_run.py
 │   │   └── addm_run.py
-│   ├── plotting/                  # Visualization scripts
-│   │   ├── charts/               # Generated charts
-│   │   ├── tables/               # Generated tables
-│   │   ├── chart_*.py            # Chart generation scripts
-│   │   └── table_*.py            # Table generation scripts
 │   ├── datasets/                  # Dataset files
 │   ├── benchmark_results/         # Experiment results
 │   ├── ablation_results/          # Ablation study results
@@ -274,6 +269,7 @@ AutoDD/
 │   └── generate_synthetic_streams.py
 └── README.md
 ```
+
 
 ## Citation
 
