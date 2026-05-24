@@ -1,0 +1,69 @@
+% IJCAI-ECAI 2026 Author's response
+
+% Template file with author's response
+
+\documentclass{article}
+\pdfpagewidth=8.5in
+\pdfpageheight=11in
+\usepackage{ijcai26-authors-response}
+
+
+\usepackage{times}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\urlstyle{same}
+
+\newtheorem{example}{Example}
+\newtheorem{theorem}{Theorem}
+
+\begin{document}
+
+%\section*{Rebuttal}
+
+We thank all reviewers for recognizing the importance of automated drift-detector selection, the hierarchical LinUCB+TS design, the regret analysis, and the strong empirical results. Below we address each concern directly.
+
+\section*{Reviewer \#cbb5275}
+
+\noindent$\bullet$ \textbf{Clarity.}
+We will perform a thorough proofreading pass in revision to improve clarity throughout.
+
+\noindent$\bullet$ \textbf{Performance measurement.}
+Our evaluation follows well-accepted benchmarking practices in prior drift detection works. Prequential accuracy with test-then-train is the established end-task metric (Bifet et al., 2010; Section~4). For synthetic streams with known drift points, F1 captures the precision/recall trade-off of drift alarms (Table~4). For real-world streams without drift labels, accuracy is primary; DN is complementary evidence to reveal over or under-sensitivity (Table~5), consistent with prior drift detection studies (Barros et al., 2018; Pesaranghader \& Viktor, 2016).
+
+\section*{Reviewer \#cbb6654}
+
+\noindent$\bullet$ \textbf{Accuracy drop as proxy reward.}
+Using accuracy drop as a proxy when ground-truth labels are unavailable is standard practice in drift detection (Gama et al., 2014; Barros et al., 2018). Our reward function (Section~3.3) is a \emph{detector-utility} signal that penalizes both false alarms and missed drifts while rewarding correct detections and stable periods. Critically, AutoDD is also validated on synthetic streams with direct drift-point labels, achieving the best mean F1 (0.86/0.87, Table~4) and the lowest mean detection delay (38.4 instances, Figure~8), confirming gains are not artefacts of the proxy.
+
+\noindent$\bullet$ \textbf{Full model reset after detection.}
+This is a controlled evaluation choice to isolate detector quality (Section~4). Since \emph{all} methods use the identical reset rule, the comparison targets detector selection, not post-drift adaptation engineering. Warm-start and replay-based strategies are orthogonal extensions noted as future work.
+
+\noindent$\bullet$ \textbf{Representativeness of GaussianNB and HAT.}
+These are two qualitatively different online learners (probabilistic vs.\ adaptive tree), and the main trend is consistent across both: AutoDD obtains the best mean accuracy on synthetic streams (81.9/84.0) and real streams (79.1/83.1), as shown in Tables~4 and 5. Broader learner coverage is a natural extension.
+
+\noindent$\bullet$ \textbf{DN on real-world datasets.}
+DN is not used as a standalone metric; accuracy is primary. DN is complementary and follows standard practice in prior works (Pesaranghader \& Viktor, 2016; Barros et al., 2018) to reveal detection sensitivity. For example, on Airlines (Table~5), AutoDD detects 118 drifts versus 269 (HDDM-W) and 76 (ADWIN) while achieving the best accuracy.
+
+\noindent$\bullet$ \textbf{Bandit assumptions and linearity.}
+The regret bound (Theorems~1 and 2, Section~3.5) applies to the \emph{hierarchical selection mechanism} under a standard linear approximation, not to the full detection-adaptation-learning loop. Empirically, this approximation is well-supported: selection accuracy improves from 69.4\% in the first quarter to 82.6\% at mid-stream and 93.1\% by the end (Supplementary, Convergence Analysis), showing effective convergence.
+
+\noindent$\bullet$ \textbf{Novelty beyond engineering composition.}
+AutoDD is not merely an engineering assembly. The hierarchical formulation, contextual bandits for detector selection with Thompson Sampling for hyperparameter tuning, is a principled formalization with provable regret guarantees (Theorems~1 and 2). No prior work provides such guarantees for adaptive drift-detector selection. The framework is the first to close the automation gap left by existing streaming AutoML systems such as OAML (Celik et al., 2023) and ASML (Verma et al., 2024), which assume a fixed, manually-specified detector.
+
+\section*{Reviewer \#5075c06}
+
+\noindent$\bullet$ \textbf{Breadth of detector baselines (IBDD, WRS, IKS).}
+Our study already includes 12 baselines (Section~4, Tables~4 and 5) covering error-based, window-based, distribution-based, and meta-learning detectors, including recent strong methods (MDDM, ADDM, PUDD, Meta-ADD). To our knowledge, no prior work in this area presents a comparably comprehensive evaluation. We thank the reviewer for these suggestions. IBDD (Souza et al., 2021) operates on image-based representations for high-dimensional visual comparison, which differs from our tabular data stream setting. WRS (Barros et al., 2018) and IKS (Dos Reis et al., 2016) belong to the same statistical families already represented in our portfolio by newer detectors (KSWIN, HDDM-A/W, ADWIN). Extending the portfolio with additional detectors is straightforward within the framework and noted as future work.
+
+\noindent$\bullet$ \textbf{Analysis across drift types.}
+This analysis already exists in the Supplementary (Table~3). AutoDD achieves the best accuracy on sudden (88.2), incremental (80.4), and recurring (79.6) drift, and is competitive on gradual drift (81.7 vs.\ 82.3 for Meta-ADD). Figure~5 further illustrates how AutoDD dynamically switches detectors as stream characteristics evolve.
+
+
+
+
+
+\end{document}
