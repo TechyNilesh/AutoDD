@@ -444,12 +444,12 @@ class DetectorPortfolio:
         min_val, max_val, default, scale = param_range
 
         if scale == 'int':
-            return rng.integers(int(min_val), int(max_val) + 1)
+            return int(rng.integers(int(min_val), int(max_val) + 1))
         elif scale == 'log':
             log_min, log_max = np.log(min_val), np.log(max_val)
-            return np.exp(rng.uniform(log_min, log_max))
+            return float(np.exp(rng.uniform(log_min, log_max)))
         else:  # linear
-            return rng.uniform(min_val, max_val)
+            return float(rng.uniform(min_val, max_val))
 
     def sample_hyperparameters(self, detector_name: str,
                                 rng: Optional[np.random.Generator] = None) -> Dict[str, Any]:
@@ -476,6 +476,33 @@ class DetectorPortfolio:
 
         for param_name, param_range in ranges.items():
             params[param_name] = self.sample_param(param_range, rng)
+
+        # Several river detectors impose ordering constraints between paired
+        # parameters that independent sampling can violate. Enforce them here so
+        # randomly generated configurations are always valid.
+
+        # KSWIN: window_size >= 2 * stat_size, else "Sample larger than population".
+        if 'window_size' in params and 'stat_size' in params:
+            max_stat = params['window_size'] // 2
+            if params['stat_size'] > max_stat:
+                params['stat_size'] = int(max(1, max_stat))
+
+        # EDDM: alpha (warning) must be >= beta (drift).
+        if 'alpha' in params and 'beta' in params:
+            if params['alpha'] < params['beta']:
+                params['alpha'], params['beta'] = params['beta'], params['alpha']
+
+        # DDM: drift_threshold must be >= warning_threshold.
+        if 'drift_threshold' in params and 'warning_threshold' in params:
+            if params['drift_threshold'] < params['warning_threshold']:
+                params['drift_threshold'], params['warning_threshold'] = (
+                    params['warning_threshold'], params['drift_threshold'])
+
+        # HDDM: warning_confidence must be >= drift_confidence.
+        if 'warning_confidence' in params and 'drift_confidence' in params:
+            if params['warning_confidence'] < params['drift_confidence']:
+                params['warning_confidence'], params['drift_confidence'] = (
+                    params['drift_confidence'], params['warning_confidence'])
 
         return params
 

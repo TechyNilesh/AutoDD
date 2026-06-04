@@ -42,8 +42,10 @@
 ## Reviewer #5075c06
 
 ### R8. Missing baselines: IBDD, WRS, IKS
-- **Status:** ✅ DONE — handled without naming them
-- **What was done:** These detectors are not mentioned by name (irrelevant to bring attention to them). The standard learner justification sentence in Section IV implicitly establishes that our baseline set follows accepted practice.
+- **Status:** ✅ DONE — all three named and cited
+- **What was done:**
+  - IKS (`dosReis2016IKS`) and WRS (`Barros2018`) named and cited in Discussion and Limitations (Section VI), arguing the statistical two-sample test family is represented by the newer KSWIN, HDDM, and ADWIN; AutoDD is detector-agnostic so adding detectors is a natural extension.
+  - IBDD now named and cited in **Related Work** (distribution-based methods paragraph) as a fully unsupervised, model-independent image-based detector (`Souza2021IBDD`, KAIS 2021). New bib entry added.
 
 ### R9. Analysis across drift types (sudden, incremental, gradual, recurring)
 - **Status:** ✅ DONE
@@ -62,7 +64,7 @@
 | IEEE `[conference]` format header | ✅ DONE |
 | Footnote: "supplementary" → "Appendix A" | ✅ DONE |
 | Ethics Statement: removed IJCAI-specific reference | ✅ DONE |
-| No em dashes anywhere in paper | ✅ DONE |
+| No em dashes anywhere in paper | ✅ DONE (fixed `---` on L301; `grep -- "---"` returns none) |
 | American English consistency throughout | ✅ DONE |
 
 ---
@@ -73,15 +75,11 @@ The appendix currently contains five analyses. Below is a prioritized recommenda
 
 ### HIGH PRIORITY — Move to main paper
 
-**1. Detection Delay table (Appendix B, Table V)**
-- Currently: Appendix B table + referenced by Fig. 8 in main paper body.
-- The figure already appears in main paper (Fig. 8). The full table with per-dataset delay numbers (ADWIN=64.3, AutoDD=38.4 mean) gives concrete evidence of speed advantage.
-- **Suggestion:** Replace the figure with the table in main Results, or show both. Detection delay is a first-class metric for drift detectors and reviewers expect to see it prominently.
+**1. Detection Delay table (Table V)** — ✅ DONE
+- Moved to main Results as `tab:delay_main` (Section "Detection Delay"). Per-dataset delay numbers (ADWIN=64.3, AutoDD=38.4 mean) now in the body.
 
-**2. Convergence Analysis (Appendix B, Table IV)**
-- Currently: Appendix only, referenced by a sentence added to Section III-E.
-- Selection accuracy progression (69.4% → 82.6% → 93.1%) is direct evidence the bandit learns well. This is key novelty evidence.
-- **Suggestion:** Move Table IV to main Results as a compact single-column table. It is small and adds strong credibility to the theoretical claims.
+**2. Convergence Analysis (Table IV)** — ✅ DONE
+- Moved to main Results as `tab:conv_main` (Section "Convergence Analysis"). Selection-accuracy progression (69.4% → 82.6% → 93.1%) is now in the body and referenced from the theory section.
 
 ### MEDIUM PRIORITY — Consider moving
 
@@ -101,10 +99,10 @@ The appendix currently contains five analyses. Below is a prioritized recommenda
 - The GaussianNB versions are already in the main paper. The HAT versions are supporting evidence but do not add new insight.
 - **Keep in appendix.**
 
-**6. Full Theorem Proofs (Appendix A)**
-- Standard practice to keep proofs in appendix.
-- **Keep in appendix.**
+**6. Full Theorem Proofs**
+- Note: proofs are currently inline in the main Theoretical Analysis section (Theorem 1, Proposition 2, Corollary), not in a separate appendix. The appendix is now a single "Additional Results" section containing only the per-drift-type and detector-selection-pattern tables.
+- No action needed; inline proofs are acceptable.
 
-### Sample Complexity (Appendix A)
-- The concrete calculation ($T \approx 5 \times 10^5$ windows) gives reviewers a tangible convergence estimate.
-- **Suggestion:** Add one sentence citing this result in Section III-E after the combined regret corollary.
+### Sample Complexity — ✅ DONE
+- Added a self-contained sentence in Section III-E after the combined-regret corollary: inverting the dominant $O(\sqrt{KmT\log T})$ term for the portfolio ($K=7$, $m=15$) to reach average proxy suboptimality $\sim 10^{-2}$ gives $T \approx 5 \times 10^5$ windows, matching the order of magnitude of the convergence in Table `tab:conv_main`.
+- Note: the appendix no longer contains a separate Sample-Complexity derivation to `\cite`, so the sentence is stated self-contained rather than as a cross-reference.
