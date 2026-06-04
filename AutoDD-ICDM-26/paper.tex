@@ -46,7 +46,7 @@ Concept drift, where the statistical properties of streaming data evolve over ti
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.75\columnwidth]{images/type_of_drift_detection.png}
+    \includegraphics[width=0.75\columnwidth]{images/concept/type_of_drift_detection.png}
     \caption{Types of concept drifts.}
     \label{fig:type_of_drift}
 \end{figure}
@@ -480,28 +480,28 @@ Meta-ADD & \underline{85.4} & 22 & 74.9 & 9 & \underline{94.5} & 2 & 63.8 & 139 
 
 \begin{figure*}[!t]
     \centering
-    \includegraphics[width=0.95\textwidth]{images/prequential_legend.png}\\[4pt]
+    \includegraphics[width=0.95\textwidth]{images/prequential/prequential_legend.pdf}\\[4pt]
     \begin{subfigure}[b]{0.24\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/prequential_sea_gaussiannb.png}
+        \includegraphics[width=\textwidth]{images/prequential/prequential_sea_gaussiannb.pdf}
         \caption{SEA (GNB)}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.24\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/prequential_sea_hat.png}
+        \includegraphics[width=\textwidth]{images/prequential/prequential_sea_hat.pdf}
         \caption{SEA (HAT)}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.24\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/prequential_poker_gaussiannb.png}
+        \includegraphics[width=\textwidth]{images/prequential/prequential_poker_gaussiannb.pdf}
         \caption{Poker (GNB)}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.24\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/prequential_poker_hat.png}
+        \includegraphics[width=\textwidth]{images/prequential/prequential_poker_hat.pdf}
         \caption{Poker (HAT)}
     \end{subfigure}
     \caption{Prequential accuracy over time. SEA (synthetic) and Poker (real-world) datasets with GaussianNB and HAT base models.}
@@ -516,14 +516,14 @@ To validate the observed performance differences, we conduct statistical signifi
     \centering
     \begin{subfigure}[b]{0.48\columnwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/cd_diagram_gaussiannb.png}
+        \includegraphics[width=\textwidth]{images/cd/cd_diagram_gaussiannb.pdf}
         \caption{GaussianNB}
         \label{fig:cd_gnb}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\columnwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/cd_diagram_hat.png}
+        \includegraphics[width=\textwidth]{images/cd/cd_diagram_hat.pdf}
         \caption{HAT}
         \label{fig:cd_hat_main}
     \end{subfigure}
@@ -562,7 +562,7 @@ w/o Thompson (Level 2) & 75.3\% & 0.60 & -5.2\% \\
 
 \begin{figure}[!t]
     \centering
-    \includegraphics[width=0.95\columnwidth]{images/detector_selection_hyp.png}
+    \includegraphics[width=0.95\columnwidth]{images/selection/detector_selection_hyp.pdf}
     \caption{AutoDD detector selection on the Hyperplane stream (single run, seed~42, $w{=}100$). Colored bands show the dominant LinUCB-selected detector per 2{,}000-instance block, the black curve is the windowed prequential error rate, and dashed red lines mark drifts flagged by the active detector.}
     \label{fig:detector_selection}
 \end{figure}
@@ -574,21 +574,21 @@ We analyze AutoDD's sensitivity to key hyperparameters using GaussianNB as the b
     \centering
     \begin{subfigure}[b]{0.32\columnwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/window_sensitivity.png}
+        \includegraphics[width=\textwidth]{images/sensitivity/window_sensitivity.pdf}
         \caption{$w$}
         \label{fig:window_sensitivity}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.32\columnwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/alpha_sensitivity.png}
+        \includegraphics[width=\textwidth]{images/sensitivity/alpha_sensitivity.pdf}
         \caption{$\alpha_{\text{ucb}}$}
         \label{fig:alpha_sensitivity}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.32\columnwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/lambda_sensitivity.png}
+        \includegraphics[width=\textwidth]{images/sensitivity/lambda_sensitivity.pdf}
         \caption{$\lambda_{\text{reg}}$}
         \label{fig:lambda_sensitivity}
     \end{subfigure}
@@ -603,14 +603,14 @@ Figures~\ref{fig:tm_gnb} and~\ref{fig:tm_hat} compare runtime and memory usage a
     \centering
     \begin{subfigure}[b]{0.48\columnwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/time_memory_gaussiannb.png}
+        \includegraphics[width=\textwidth]{images/efficiency/time_memory_gaussiannb.pdf}
         \caption{GaussianNB}
         \label{fig:tm_gnb}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\columnwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/time_memory_hat.png}
+        \includegraphics[width=\textwidth]{images/efficiency/time_memory_hat.pdf}
         \caption{HAT}
         \label{fig:tm_hat}
     \end{subfigure}
