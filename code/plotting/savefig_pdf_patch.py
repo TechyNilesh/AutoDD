@@ -10,7 +10,7 @@ Reproduce the paper's vector figures:
 
     # from the code/ directory
     mkdir -p /tmp/pdfpatch && cp plotting/savefig_pdf_patch.py /tmp/pdfpatch/sitecustomize.py
-    PYTHONPATH=/tmp/pdfpatch python3 plotting/chart_prequential_accuracy.py --base_model all
+    PYTHONPATH=/tmp/pdfpatch python3 plotting/chart_prequential_accuracy.py --base_model all --no-legend
     PYTHONPATH=/tmp/pdfpatch python3 plotting/chart_cd_diagram.py          --base_model all
     PYTHONPATH=/tmp/pdfpatch python3 plotting/chart_time_memory.py         --base_model all
     PYTHONPATH=/tmp/pdfpatch python3 plotting/chart_detector_selection_combined.py
