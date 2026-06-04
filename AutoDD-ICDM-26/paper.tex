@@ -560,12 +560,13 @@ w/o Thompson (Level 2) & 75.3\% & 0.60 & -5.2\% \\
 }
 \end{table}
 
-\begin{figure}[!t]
+\begin{figure*}[!t]
     \centering
-    \includegraphics[width=0.95\columnwidth]{images/selection/detector_selection_hyp.pdf}
+    \includegraphics[width=\textwidth]{images/selection/detector_selection_legend_hyp.pdf}\\[2pt]
+    \includegraphics[width=\textwidth]{images/selection/detector_selection_hyp.pdf}
     \caption{AutoDD detector selection on the Hyperplane stream (single run, seed~42, $w{=}100$). Colored bands show the dominant LinUCB-selected detector per 2{,}000-instance block, the black curve is the windowed prequential error rate, and dashed red lines mark drifts flagged by the active detector.}
     \label{fig:detector_selection}
-\end{figure}
+\end{figure*}
 
 \subsection{Sensitivity Study}
 We analyze AutoDD's sensitivity to key hyperparameters using GaussianNB as the base model (Figure~\ref{fig:sensitivity}). Among the tested values, window size $w=100$ achieves the best selection accuracy, balancing statistical stability with drift responsiveness. Smaller windows suffer from high variance, while larger windows cause delayed drift response. For the exploration parameter, $\alpha_{\text{ucb}}=1.0$ achieves the best performance among the tested values, with lower values causing exploitation bias and higher values leading to excessive exploration. The regularization parameter $\lambda_{\text{reg}}$ shows robust performance across the range from 0.5 to 2.0, with $\lambda_{\text{reg}}=1.0$ performing best in this sweep. This stability indicates that AutoDD is not overly sensitive to hyperparameter choices around the recommended defaults.

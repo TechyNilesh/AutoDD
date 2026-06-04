@@ -67,7 +67,35 @@ def load_timeline_data(dataset):
         return json.load(f)
 
 
-def plot_combined_chart(dataset):
+def generate_legend(dataset, filename=None, ncol=None):
+    """Standalone single-row legend for the detector-selection timeline, placed
+    above the figure in LaTeX (matches the prequential/efficiency shared-legend style)."""
+    data = load_timeline_data(dataset)
+    used = set(seg['detector'] for seg in data['timeline'])
+    detectors_used = [d for d in DETECTOR_COLORS if d in used]
+    legend_elements = [
+        plt.Line2D([0], [0], color='black', linewidth=2, label='Error Rate'),
+        plt.Line2D([0], [0], color='red', linestyle='--', linewidth=2, label='Drift Point'),
+    ]
+    for det in detectors_used:
+        legend_elements.append(Patch(facecolor=DETECTOR_COLORS.get(det, 'gray'),
+                                     alpha=0.3, edgecolor='gray',
+                                     label=DETECTOR_NAMES.get(det, det)))
+    n = len(legend_elements)
+    if ncol is None:
+        ncol = n  # single row
+    if filename is None:
+        filename = f'detector_selection_legend_{dataset}.png'
+    fig = plt.figure(figsize=(2.0 * n, 0.5))
+    fig.legend(handles=legend_elements, loc='center', ncol=ncol, frameon=False,
+               fontsize=12, handlelength=1.6, handletextpad=0.5, columnspacing=1.3)
+    output_path = os.path.join(CHARTS_DIR, filename)
+    fig.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close(fig)
+    return output_path
+
+
+def plot_combined_chart(dataset, show_legend=True):
     """Plot combined detector selection + error rate chart for a dataset."""
     data = load_timeline_data(dataset)
 
@@ -122,8 +150,9 @@ def plot_combined_chart(dataset):
         name = DETECTOR_NAMES.get(det, det)
         legend_elements.append(Patch(facecolor=color, alpha=0.3, edgecolor='gray', label=name))
 
-    ax.legend(handles=legend_elements, loc='lower right', framealpha=0.95,
-              ncol=2, fontsize=9)
+    if show_legend:
+        ax.legend(handles=legend_elements, loc='lower right', framealpha=0.95,
+                  ncol=2, fontsize=9)
 
     # Bold tick labels
     ax.tick_params(axis='both', which='major', labelsize=10)
@@ -151,8 +180,10 @@ def main():
     # Generate combined charts for all synthetic datasets
     for dataset in SYNTHETIC_DATASETS:
         try:
-            path = plot_combined_chart(dataset)
+            path = plot_combined_chart(dataset, show_legend=False)
+            legend = generate_legend(dataset)
             print(f"Chart saved: {path}")
+            print(f"Legend saved: {legend}")
         except FileNotFoundError:
             print(f"Skipped {dataset}: timeline data not found")
 
