@@ -71,9 +71,7 @@ def main():
         ax.set_ylim(0, 1)
         ax.set_xticks([])
         ax.set_yticks([])
-        ax.set_ylabel('Data\nDistribution\n$P(x,y)$', fontsize=7,
-                      rotation=0, ha='right', va='center', labelpad=2)
-        ax.text(-0.30, 0.5, title, transform=ax.transAxes, fontsize=12,
+        ax.text(-0.13, 0.5, title, transform=ax.transAxes, fontsize=12,
                 ha='center', va='center', fontweight='bold')
         for sp in ['top', 'right']:
             ax.spines[sp].set_visible(False)
