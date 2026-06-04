@@ -798,7 +798,13 @@ Using the determinant--trace inequality $\det(\mathbf{A}_{i,t}) \leq \big(\tfrac
 \begin{equation}
 \|\hat{\boldsymbol{\theta}}_{i,t} - \boldsymbol{\theta}_i^*\|_{\mathbf{A}_{i,t}} \leq \alpha_{\text{ucb},t},
 \end{equation}
-where $\alpha_{\text{ucb},t} = \sigma_{\text{noise}}\sqrt{m\log(1 + tL^2/(\lambda_{\text{reg}} m)) + 2\log(K/\delta_{\text{conf}})} + \sqrt{\lambda_{\text{reg}}}\,S \leq \alpha_{\text{ucb}}$ for our choice of $\alpha_{\text{ucb}}$ (the $\det$--trace step contributes $\tfrac12\log\tfrac{\det(\mathbf{A}_{i,t})}{\det(\lambda_{\text{reg}}\mathbf{I})} \leq \tfrac{m}{2}\log(1 + tL^2/(\lambda_{\text{reg}} m))$). Call this the \emph{confidence event}; the remainder of the proof is conditioned on it.
+where, for our choice of $\alpha_{\text{ucb}}$,
+\begin{equation*}
+\resizebox{0.95\columnwidth}{!}{$
+\alpha_{\text{ucb},t} = \sigma_{\text{noise}}\sqrt{m\log\big(1 + \tfrac{tL^2}{\lambda_{\text{reg}} m}\big) + 2\log\tfrac{K}{\delta_{\text{conf}}}} + \sqrt{\lambda_{\text{reg}}}\,S \leq \alpha_{\text{ucb}},
+$}
+\end{equation*}
+with the $/m$ in the log argument following from the determinant--trace bound above. Call this the \emph{confidence event}; the remainder of the proof is conditioned on it.
 
 \emph{Step 2: Instantaneous regret bound.}
 Let $i^* = \arg\max_i \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_i^*$ be the optimal detector at time $t$, and let the UCB rule select $i_t = \arg\max_i \big( \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_{i,t} + \alpha_{\text{ucb}} \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i,t}^{-1}} \big)$. Under the confidence event,
@@ -860,7 +866,7 @@ The fractional Beta update used in implementation (Eq.~\eqref{eq:ts_update}) is 
 \emph{Step 3: Aggregation across detectors.}
 Because the detector selections partition the horizon ($\sum_{i=1}^K N_i(T) = T$) and each detector's hyperparameter problem is an independent bandit, the total Level~2 proxy regret is
 \begin{equation}
-R_2(T) = \sum_{i=1}^{K} \mathbb{E}[R_i(N_i(T))] = \sum_{i=1}^{K} O(\sqrt{C \cdot N_i(T) \log N_i(T)}).
+R_2(T) = \sum_{i=1}^{K} \mathbb{E}[R_i] = \sum_{i=1}^{K} O(\sqrt{C \cdot N_i(T) \log N_i(T)}).
 \end{equation}
 This completes the proof. \hfill $\square$
 
