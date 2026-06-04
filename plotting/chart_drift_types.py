@@ -71,7 +71,7 @@ def main():
         ax.set_ylim(0, 1)
         ax.set_xticks([])
         ax.set_yticks([])
-        ax.text(-0.11, 0.5, title, transform=ax.transAxes, fontsize=12,
+        ax.text(-0.34, 0.5, title, transform=ax.transAxes, fontsize=12,
                 ha='center', va='center', fontweight='bold')
         for sp in ['top', 'right']:
             ax.spines[sp].set_visible(False)
@@ -79,7 +79,8 @@ def main():
         ax.spines['bottom'].set_linewidth(0.8)
 
     # Fixed margins so the two axis arrows line up with the panel stack.
-    L, R, TOP, BOT = 0.30, 0.98, 0.97, 0.11
+    # Left band order: drift name -> "Data Distribution" arrow -> chart.
+    L, R, TOP, BOT = 0.35, 0.98, 0.97, 0.11
     fig.subplots_adjust(left=L, right=R, top=TOP, bottom=BOT, hspace=0.28)
 
     arrow = dict(arrowstyle='-|>', lw=1.1, color='black')
@@ -91,8 +92,9 @@ def main():
     fig.text((L + R) / 2, yb - 0.03, 'Time', ha='center', va='top',
              fontsize=11, fontweight='bold')
 
-    # y-axis: "Data Distribution" arrow (vertical, pointing up) on the far left
-    xl = 0.05
+    # y-axis: "Data Distribution" arrow (vertical, up) right next to the charts,
+    # after the drift names
+    xl = 0.325
     axes[0].annotate('', xy=(xl, TOP), xytext=(xl, BOT), xycoords='figure fraction',
                      arrowprops=arrow)
     fig.text(xl - 0.022, (TOP + BOT) / 2, 'Data Distribution', rotation=90,
