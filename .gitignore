@@ -20,7 +20,7 @@ backup/
 *.fls
 *.out
 *.synctex.gz
-**/paper.log
+*.log
 
 # Python
 __pycache__/
