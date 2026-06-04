@@ -46,7 +46,7 @@ Concept drift, where the statistical properties of streaming data evolve over ti
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.85\columnwidth]{images/concept/type_of_drift_detection.pdf}
+    \includegraphics[width=0.75\columnwidth]{images/concept/type_of_drift_detection.png}
     \caption{Types of concept drifts.}
     \label{fig:type_of_drift}
 \end{figure}
@@ -63,8 +63,7 @@ To bridge this gap, we introduce \textbf{AutoDD} (\textbf{A}utomated \textbf{D}r
 \item Extensive evaluation demonstrates AutoDD achieves higher mean accuracy than the compared state-of-the-art detectors while maintaining computational efficiency.
 \end{itemize}
 
-The rest of this paper is organized as follows. Section~\ref{sec:related} presents the related work. Section~\ref{sec:method} provides the details of our proposed AutoDD framework. Section~\ref{sec:experiments} describes the experimental setup. Section~\ref{sec:results} presents the experimental results and analysis. %Section~\ref{sec:discussion} addresses key design decisions and limitations. 
-Finally, Section~\ref{sec:conclusion} concludes the paper.
+The rest of this paper is organized as follows. Section~\ref{sec:related} presents the related work. Section~\ref{sec:method} provides the details of our proposed AutoDD framework. Section~\ref{sec:experiments} describes the experimental setup. Section~\ref{sec:results} presents the experimental results and analysis. Section~\ref{sec:discussion} discusses key design decisions and limitations. Finally, Section~\ref{sec:conclusion} concludes the paper.
 
 \section{Related Work}
 \label{sec:related}
@@ -77,7 +76,7 @@ The central difficulty of this setting is that the data-generating process is no
 
 \subsection{Drift Detection and Streaming AutoML}
 
-Drift detection methods can be broadly categorized into three paradigms. \textbf{Error rate-based methods} monitor fluctuations in classifier error rates, triggering alarms when changes are statistically significant. DDM \cite{Gama2004DDM} pioneered the warning-drift framework by monitoring prediction accuracy under binomial distribution assumptions, followed by EDDM \cite{BaenaGarcia2006EDDM} which focuses on distances between errors to detect gradual drift, HDDM \cite{FriasBlanco2015Hoeffding} which applies Hoeffding's inequality with exponentially weighted moving averages, and ADWIN \cite{Bifet2007ADWIN} which maintains adaptive sliding windows that automatically shrink when distribution changes are detected. Page-Hinkley \cite{Page1954Continuous} applies cumulative sum control charts to detect mean shifts in sequential data. Recent advances include MDDM \cite{Pesaranghader2017MDDM}, which uses McDiarmid's inequality for shorter detection delays with tighter concentration bounds, and ADDM \cite{Mayaki2022ADDM}, which models error rates as SETAR time series \cite{Tsay1989TestingAM} to achieve lower false alarm rates. \textbf{Distribution-based methods} compare data distributions across windows by quantifying dissimilarity between new and historical data distributions \cite{Kifer2004ChangeDetection}, including approaches based on information theory \cite{Dasu2006InformationTheoretic}, competence models \cite{Lu2014CompetenceModels}, and the Kolmogorov-Smirnov test (KSWIN) \cite{Raab2020KSWIN} which detects changes in univariate feature distributions. Fully unsupervised, model-independent variants such as the image-based detector IBDD \cite{Souza2021IBDD} render high-dimensional windows as grayscale images and monitor their mean squared deviation, enabling label-free detection on fast, high-dimensional streams. \textbf{Uncertainty and learning-based methods} address limitations of error-rate monitoring: PUDD \cite{Lu2025PUDD} leverages prediction confidence for earlier detection by monitoring changes in prediction uncertainty distributions, while Meta-ADD \cite{Yu2021MetaADD} employs prototypical networks to classify drift types via meta-learning on diverse drift scenarios.
+Drift detection methods can be broadly categorized into three paradigms. \textbf{Error rate-based methods} monitor fluctuations in classifier error rates, triggering alarms when changes are statistically significant. DDM \cite{Gama2004DDM} pioneered the warning-drift framework by monitoring prediction accuracy under binomial distribution assumptions, followed by EDDM \cite{BaenaGarcia2006EDDM} which focuses on distances between errors to detect gradual drift, HDDM \cite{FriasBlanco2015Hoeffding} (evaluated here in its HDDM-A and HDDM-W variants) which applies Hoeffding's inequality with exponentially weighted moving averages, and ADWIN \cite{Bifet2007ADWIN} which maintains adaptive sliding windows that automatically shrink when distribution changes are detected. Page-Hinkley \cite{Page1954Continuous} applies cumulative sum control charts to detect mean shifts in sequential data. Recent advances include MDDM \cite{Pesaranghader2017MDDM}, which uses McDiarmid's inequality for shorter detection delays with tighter concentration bounds, and ADDM \cite{Mayaki2022ADDM}, which models error rates as SETAR time series \cite{Tsay1989TestingAM} to achieve lower false alarm rates. \textbf{Distribution-based methods} compare data distributions across windows by quantifying dissimilarity between new and historical data distributions \cite{Kifer2004ChangeDetection}, including approaches based on information theory \cite{Dasu2006InformationTheoretic}, competence models \cite{Lu2014CompetenceModels}, and the Kolmogorov-Smirnov test (KSWIN) \cite{Raab2020KSWIN} which detects changes in univariate feature distributions. Fully unsupervised, model-independent variants such as the image-based detector IBDD \cite{Souza2021IBDD} render high-dimensional windows as grayscale images and monitor their mean squared deviation, enabling label-free detection on fast, high-dimensional streams. \textbf{Uncertainty and learning-based methods} address limitations of error-rate monitoring: PUDD \cite{Lu2025PUDD} leverages prediction confidence for earlier detection by monitoring changes in prediction uncertainty distributions, while Meta-ADD \cite{Yu2021MetaADD} employs prototypical networks to classify drift types via meta-learning on diverse drift scenarios.
 
 Recent developments in automated algorithm selection and hyperparameter optimization (CASH) \cite{Hutter2019AutoML} have been extended to streaming scenarios~\cite{kulbach2022evolution}. 
 However, all existing streaming AutoML systems assume a pre-selected drift detector, requiring manual specification and leaving a critical gap in the automation framework. Despite advances in both drift detection and streaming AutoML, drift detector selection remains manual. Our work fills this gap by extending AutoML to automatic drift detector selection and configuration.
@@ -341,7 +340,7 @@ Thus, under the proxy-reward and decomposition assumptions, the average proxy re
 \begin{equation}
 \lim_{T \to \infty} \frac{R(T)}{T} = 0
 \end{equation}
-Empirical support for this learning behavior is provided in Table~\ref{tab:conv_main}, where AutoDD's proxy-oracle selection accuracy improves from 69.4\% in the first quarter of the stream to 93.1\% by stream end. This trend is consistent with the linear reward approximation on the evaluated streams, but does not by itself prove the approximation. As a concrete reference point, inverting the dominant $O(\sqrt{KmT\log T})$ term for our portfolio ($K=7$, $m=15$) to reach an average proxy suboptimality on the order of $10^{-2}$ requires a horizon of roughly $T \approx 5 \times 10^{5}$ windows, which matches the order of magnitude over which the convergence in Table~\ref{tab:conv_main} is observed.
+Empirical support for this learning behavior is provided in Table~\ref{tab:conv_main}, where AutoDD's proxy-oracle selection accuracy improves from 69.4\% in the first quarter of the stream to 93.1\% by stream end. This trend is consistent with the linear reward approximation on the evaluated streams, but does not by itself prove the approximation. As a concrete reference point, inverting the dominant $O(\sqrt{KmT\log T})$ term for our portfolio ($K=7$, $m=15$) to reach an average proxy suboptimality on the order of $10^{-2}$ requires a horizon of roughly $T \approx 5 \times 10^{5}$ windows, well beyond the length of any individual stream we evaluate. The convergence in Table~\ref{tab:conv_main} therefore reflects the early, steep portion of this regret curve rather than its asymptotic tail.
 
 \section{Experiments}
 \label{sec:experiments}
@@ -350,7 +349,7 @@ We evaluate AutoDD on ten benchmark datasets comprising five synthetic and five 
 
 \begin{table}[!t]
 \centering
-\caption{Dataset characteristics (Multiple* = Sudden, Gradual, Incremental, and Normal drift types)}
+\caption{Dataset characteristics (Multiple* = Sudden, Gradual, Incremental, and Recurring drift types)}
 \label{tab:datasets}
 \resizebox{0.95\columnwidth}{!}{%
 \begin{tabular}{|l|l|r|r|l|}
@@ -434,7 +433,7 @@ Meta-ADD & \underline{88.9} & \underline{0.87} & \underline{90.8} & \textbf{0.91
 \end{table*}
 
 \subsection{Real-world Datasets}
-Table~\ref{tab:realworld} presents results on real-world benchmarks where drift patterns are unknown and potentially more complex than synthetic scenarios. AutoDD achieves the highest mean accuracy with both base models. With GaussianNB, AutoDD attains 79.1\% mean accuracy, improving to 83.1\% with HAT, exceeding the compared state-of-the-art detectors on the mean metric. ADDM emerges as the second-best performer with 75.1\% accuracy using GaussianNB and 77.8\% with HAT. AutoDD's improvements appear across all five real-world datasets, suggesting that its adaptive selection mechanism transfers across the evaluated domains. On the Electricity dataset, AutoDD achieves 89.6\% with GaussianNB and 93.8\% with HAT. On Weather, it reaches 80.0\% and 85.1\% respectively, while on Spam it attains 97.9\% and 99.0\%. AutoDD also maintains a detection count within the consensus range of the compared methods, avoiding the most extreme over- and under-detection patterns. On the Airlines dataset, AutoDD detects 118 drifts, compared to HDDM-W's 269 detections and ADWIN's 76 detections, indicating more moderate sensitivity in this benchmark.
+Table~\ref{tab:realworld} presents results on real-world benchmarks where drift patterns are unknown and potentially more complex than synthetic scenarios. AutoDD achieves the highest mean accuracy with both base models. With GaussianNB, AutoDD attains 79.1\% mean accuracy, improving to 83.1\% with HAT, exceeding the compared state-of-the-art detectors on the mean metric. ADDM emerges as the second-best performer with 75.1\% accuracy using GaussianNB and 77.8\% with HAT (tied with PUDD under HAT). AutoDD's improvements appear across all five real-world datasets, suggesting that its adaptive selection mechanism transfers across the evaluated domains. On the Electricity dataset, AutoDD achieves 89.6\% with GaussianNB and 93.8\% with HAT. On Weather, it reaches 80.0\% and 85.1\% respectively, while on Spam it attains 97.9\% and 99.0\%. AutoDD also maintains a detection count within the consensus range of the compared methods, avoiding the most extreme over- and under-detection patterns. On the Airlines dataset, AutoDD detects 118 drifts, compared to HDDM-W's 269 detections and ADWIN's 76 detections, indicating more moderate sensitivity in this benchmark.
 
 \begin{table*}[!t]
 \centering
@@ -533,11 +532,11 @@ To validate the observed performance differences, we conduct statistical signifi
 
 
 \subsection{Ablation Study}
-To understand the contribution of each component, we systematically remove AutoDD components and evaluate the impact on performance using GaussianNB as the base model. Table~\ref{tab:ablation} presents results averaged across all ten datasets. The hierarchical selection mechanism is important for AutoDD's performance. Removing Level 1 LinUCB detector selection and replacing it with random selection causes the largest performance drop, reducing accuracy from 80.5\% to 62.5\%, an 18.0\% decrease. This degradation indicates that detector-stream matching is a major contributor to effective drift detection in our evaluation. Removing Level 2 Thompson Sampling hyperparameter configuration reduces accuracy to 75.3\%, showing that adaptive tuning contributes beyond fixed default configurations. All three meta-feature categories contribute to the overall performance. Statistical features have the largest impact, with their removal reducing accuracy by 9.4\%. Stationarity features contribute 7.1\% to performance, while temporal features account for 6.4\%. Figure~\ref{fig:detector_selection} visualizes AutoDD's adaptive behavior on the Hyperplane stream (a single run, $w=100$), showing how the LinUCB layer continually re-selects detectors as the stream's meta-features evolve rather than committing to a single detector, while the windowed prequential error stays bounded and recovers after detected drifts.
+To understand the contribution of each component, we systematically remove AutoDD components and evaluate the impact on performance using GaussianNB as the base model. Table~\ref{tab:ablation} presents results averaged across all ten datasets. The hierarchical selection mechanism is important for AutoDD's performance. Removing Level 1 LinUCB detector selection and replacing it with random selection causes the largest performance drop, reducing accuracy from 80.5\% to 62.5\%, an 18.0\% decrease. This degradation indicates that detector-stream matching is a major contributor to effective drift detection in our evaluation. Removing Level 2 Thompson Sampling hyperparameter configuration reduces accuracy to 75.3\%, showing that adaptive tuning contributes beyond fixed default configurations. All three meta-feature categories contribute to the overall performance. Statistical features have the largest impact, with their removal reducing accuracy by 9.3\%. Stationarity features contribute 7.0\% to performance, while temporal features account for 6.3\%. Figure~\ref{fig:detector_selection} visualizes AutoDD's adaptive behavior on the Hyperplane stream (a single run, $w=100$), showing how the LinUCB layer continually re-selects detectors as the stream's meta-features evolve rather than committing to a single detector, while the windowed prequential error stays bounded and recovers after detected drifts.
 
 \begin{table}[!t]
 \centering
-\caption{Ablation study results across all datasets.}
+\caption{Ablation study results (accuracy averaged across all ten datasets; F1 over the five synthetic streams with known drift points).}
 \label{tab:ablation}
 \resizebox{0.95\columnwidth}{!}{%
 \begin{tabular}{|l|c|c|c|}
@@ -546,11 +545,11 @@ To understand the contribution of each component, we systematically remove AutoD
 \hline
 Full AutoDD & \textbf{80.5\%} & \textbf{0.64} & -- \\
 \hline
-w/o Temporal & 74.2\% & 0.59 & -6.4\% \\
+w/o Temporal & 74.2\% & 0.59 & -6.3\% \\
 \hline
-w/o Statistical & 71.2\% & 0.57 & -9.4\% \\
+w/o Statistical & 71.2\% & 0.57 & -9.3\% \\
 \hline
-w/o Stationarity & 73.5\% & 0.59 & -7.1\% \\
+w/o Stationarity & 73.5\% & 0.59 & -7.0\% \\
 \hline
 w/o LinUCB (Level 1) & 62.5\% & 0.50 & -18.0\% \\
 \hline
@@ -661,7 +660,7 @@ Meta-ADD & 35.2 & 48.6 & 39.8 & 55.3 & 44.7 \\
 \end{table}
 
 \subsection{Convergence Analysis}
-Table~\ref{tab:conv_main} shows how quickly AutoDD learns effective detector selections as the stream progresses, measured as the percentage of windows where the selected detector matches an offline proxy oracle under the same reward used for bandit feedback. AutoDD achieves 69.4\% proxy-oracle selection accuracy in the first quarter of the stream, improving to 82.6\% at mid-stream and 93.1\% by stream end. This trend suggests that AutoDD learns increasingly reliable selections throughout the stream, while the metric should be interpreted as proxy-oracle agreement rather than direct proof of true drift-label optimality.
+Table~\ref{tab:conv_main} shows how quickly AutoDD learns effective detector selections as the stream progresses, measured as the percentage of windows where the selected detector matches an offline proxy oracle under the same reward used for bandit feedback. AutoDD achieves 69.4\% proxy-oracle selection accuracy in the first quarter of the stream, improving to 82.6\% in the second quarter, 89.6\% at mid-stream, and 93.1\% by stream end. This trend suggests that AutoDD learns increasingly reliable selections throughout the stream, while the metric should be interpreted as proxy-oracle agreement rather than direct proof of true drift-label optimality.
 
 \begin{table}[!t]
 \centering
@@ -695,7 +694,7 @@ We highlight several boundaries of the current design. First, AutoDD automates d
 \section{Conclusion and Future Work}
 \label{sec:conclusion}
 
-We propose AutoDD, a novel framework that automatically selects and configures drift detectors for data streams. The framework extracts comprehensive meta-features and employs a two-level hierarchical selection strategy using LinUCB for detector selection and Thompson Sampling for hyperparameter configuration. Under the stated proxy-reward and linearity assumptions, the theoretical analysis gives sublinear proxy-regret bounds for the selection layer. Extensive experimental results on synthetic and real-world datasets show that AutoDD achieves considerable improvements over fixed detector baselines and the compared state-of-the-art methods while requiring no expert intervention. Beyond the limitation-driven extensions discussed in Section~\ref{sec:discussion}, a further direction is multi-objective selection that jointly balances predictive accuracy, detection latency, and computational efficiency.
+We propose AutoDD, a novel framework that automatically selects and configures drift detectors for data streams. The framework extracts comprehensive meta-features and employs a two-level hierarchical selection strategy using LinUCB for detector selection and Thompson Sampling for hyperparameter configuration. Under the stated proxy-reward and linearity assumptions, the theoretical analysis gives sublinear proxy-regret bounds for the selection layer. Extensive experimental results on synthetic and real-world datasets show that AutoDD achieves consistent mean-accuracy improvements over fixed detector baselines and the compared state-of-the-art methods while requiring no expert intervention. Beyond the limitation-driven extensions discussed in Section~\ref{sec:discussion}, a further direction is multi-objective selection that jointly balances predictive accuracy, detection latency, and computational efficiency.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
