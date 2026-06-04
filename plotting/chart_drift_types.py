@@ -71,21 +71,32 @@ def main():
         ax.set_ylim(0, 1)
         ax.set_xticks([])
         ax.set_yticks([])
-        ax.text(-0.13, 0.5, title, transform=ax.transAxes, fontsize=12,
+        ax.text(-0.11, 0.5, title, transform=ax.transAxes, fontsize=12,
                 ha='center', va='center', fontweight='bold')
         for sp in ['top', 'right']:
             ax.spines[sp].set_visible(False)
         ax.spines['left'].set_linewidth(0.8)
         ax.spines['bottom'].set_linewidth(0.8)
 
-    # "Time ->" arrow under the bottom panel
-    axes[-1].annotate('', xy=(1.0, -0.18), xytext=(0.0, -0.18),
-                      xycoords='axes fraction',
-                      arrowprops=dict(arrowstyle='->', lw=1.0, color='black'))
-    axes[-1].text(0.5, -0.34, 'Time', transform=axes[-1].transAxes,
-                  ha='center', va='top', fontsize=11, fontweight='bold')
+    # Fixed margins so the two axis arrows line up with the panel stack.
+    L, R, TOP, BOT = 0.30, 0.98, 0.97, 0.11
+    fig.subplots_adjust(left=L, right=R, top=TOP, bottom=BOT, hspace=0.28)
 
-    plt.tight_layout(h_pad=0.6)
+    arrow = dict(arrowstyle='-|>', lw=1.1, color='black')
+
+    # x-axis: "Time" arrow (horizontal, pointing right) under the panels
+    yb = 0.045
+    axes[-1].annotate('', xy=(R, yb), xytext=(L, yb), xycoords='figure fraction',
+                      arrowprops=arrow)
+    fig.text((L + R) / 2, yb - 0.03, 'Time', ha='center', va='top',
+             fontsize=11, fontweight='bold')
+
+    # y-axis: "Data Distribution" arrow (vertical, pointing up) on the far left
+    xl = 0.05
+    axes[0].annotate('', xy=(xl, TOP), xytext=(xl, BOT), xycoords='figure fraction',
+                     arrowprops=arrow)
+    fig.text(xl - 0.022, (TOP + BOT) / 2, 'Data Distribution', rotation=90,
+             ha='center', va='center', fontsize=11, fontweight='bold')
     pdf = os.path.join(CHARTS_DIR, 'type_of_drift_detection.pdf')
     plt.savefig(pdf, bbox_inches='tight')
     plt.savefig(pdf[:-4] + '.png', dpi=300, bbox_inches='tight')
