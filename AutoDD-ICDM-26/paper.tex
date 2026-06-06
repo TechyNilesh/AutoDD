@@ -313,7 +313,11 @@ R_1(T) = \sum_{t=1}^{T} \left( \max_{i} \boldsymbol{\phi}_t^\top \boldsymbol{\th
 $}
 \end{equation}
 
-\textit{Proof.} The proof follows the disjoint-arm LinUCB analysis of \cite{Abbasi2011Improved}. By the self-normalised martingale inequality (Theorem 1, \cite{Abbasi2011Improved}), the true parameter $\boldsymbol{\theta}_i^*$ lies within the confidence ellipsoid $\mathcal{C}_{i,t} = \{\boldsymbol{\theta}: \|\boldsymbol{\theta} - \hat{\boldsymbol{\theta}}_i\|_{\mathbf{A}_i} \leq \alpha_{\text{ucb}}\}$ with probability $1-\delta_{\text{conf}}$. Under this event, UCB selection ensures $\boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i_t}^* \geq \max_i \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_i^* - 2\alpha_{\text{ucb}}\|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t}^{-1}}$. Applying the elliptical potential lemma \cite{Dani2008Stochastic} separately to each detector estimator and then summing over detectors gives the additional $\sqrt{K}$ factor, yielding $R_1(T)=O(\sqrt{KmT\log T})$ under the standard convention that treats the confidence radius $\alpha_{\text{ucb}}$ as constant. The full three-step derivation, including the dimension-explicit form $\tilde{O}(m\sqrt{KT})$ obtained by retaining $\alpha_{\text{ucb}}$, is given in Appendix~\ref{appendix:proofs}. \hfill $\square$
+\textit{Proof.} We follow the disjoint-arm LinUCB analysis \cite{Abbasi2011Improved}. The self-normalised martingale inequality places each $\boldsymbol{\theta}_i^*$ in the confidence ellipsoid $\|\boldsymbol{\theta}_i^* - \hat{\boldsymbol{\theta}}_i\|_{\mathbf{A}_i} \leq \alpha_{\text{ucb}}$ with probability $1-\delta_{\text{conf}}$. On this event the UCB rule bounds the instantaneous regret as
+\begin{equation}
+\max_i \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_i^* - \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i_t}^* \;\leq\; 2\alpha_{\text{ucb}}\,\|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t}^{-1}}.
+\end{equation}
+Summing over $t$, applying the elliptical potential lemma \cite{Dani2008Stochastic} to each of the $K$ per-detector estimators, and combining the potentials by Cauchy--Schwarz contributes the $\sqrt{K}$ factor and gives $R_1(T)=O(\sqrt{KmT\log T})$, treating the confidence radius $\alpha_{\text{ucb}}=\tilde{O}(\sqrt{m})$ as constant; retaining it gives the dimension-explicit $\tilde{O}(m\sqrt{KT})$. \hfill $\square$
 
 Thompson Sampling subsequently balances exploration and exploitation for hyperparameter configuration.
 
@@ -322,7 +326,7 @@ Thompson Sampling subsequently balances exploration and exploitation for hyperpa
 R_2(T) = \sum_{i=1}^{K} O(\sqrt{C \cdot N_i(T) \log N_i(T)})
 \end{equation}
 
-\textit{Proof.} For each detector $i \in [K]$, conditioned on detector $i$ being selected, hyperparameter selection reduces to a $C$-armed bandit with bounded rewards. We normalise $r_t \in [-1,1]$ to $\tilde{r}_t = (r_t+1)/2 \in [0,1]$. The standard reduction draws a Bernoulli outcome with mean $\tilde{r}_t$ and updates the Beta posterior with that sampled outcome; by Theorem 1 of \cite{Agrawal2013Further}, Thompson Sampling achieves expected regret $O(\sqrt{CN_i(T)\log N_i(T)})$ over $N_i(T)$ rounds. Since $\sum_i N_i(T) = T$, summing across all detectors yields the stated bound. The fractional update in Eq.~\eqref{eq:ts_update} is the conditional expectation of this reduction and is used as a stable implementation heuristic rather than a separate regret theorem. The full reduction-and-aggregation argument is given in Appendix~\ref{appendix:proofs}. \hfill $\square$
+\textit{Proof.} Conditioned on detector $i$ being played, hyperparameter selection is a $C$-armed bandit with rewards normalised to $\tilde{r}_t = (r_t+1)/2 \in [0,1]$. Under the Bernoulli-sampling reduction with Beta posteriors, Thompson Sampling attains expected regret $O(\sqrt{C N_i(T)\log N_i(T)})$ over the $N_i(T)$ rounds detector $i$ is played \cite{Agrawal2013Further}; summing over the $K$ detectors with $\sum_i N_i(T)=T$ gives the bound. The fractional Beta update (Eq.~\eqref{eq:ts_update}) is the conditional expectation of this reduction, used as a stable implementation heuristic. \hfill $\square$
 
 Under the same proxy-reward abstraction, the combined regret remains sublinear, implying that average per-round proxy suboptimality vanishes over time.
 
@@ -331,7 +335,11 @@ Under the same proxy-reward abstraction, the combined regret remains sublinear, 
 R(T) = O(\sqrt{KmT \log T} + \sqrt{CKT \log T})
 \end{equation}
 
-\textit{Proof.} Under the decomposition assumption, the per-round gap can be telescoped through an intermediate term: writing $c^*_{i_t}$ for the best configuration of the \emph{selected} detector $i_t$, the gap between the proxy-oracle pair $(i^*_t,c^*_t)$ and the played pair $(i_t,c_t)$ splits into detector-selection suboptimality and configuration-selection suboptimality. The first term is bounded by Theorem~1 and the second by Proposition~2. Summing over $t$ and applying the Cauchy-Schwarz inequality, $\sum_i \sqrt{N_i(T)} \leq \sqrt{K \sum_i N_i(T)} = \sqrt{KT}$, gives $R_2(T) = O(\sqrt{CKT\log T})$, which combined with $R_1(T)$ yields the result. The detailed combination is given in Appendix~\ref{appendix:proofs}. \hfill $\square$
+\textit{Proof.} Telescoping the per-round gap through the best configuration of the \emph{selected} detector splits it into detector- and configuration-selection terms, bounded by Theorem~1 and Proposition~2 respectively. For the latter, Cauchy--Schwarz gives
+\begin{equation}
+\sum_{i=1}^{K} \sqrt{N_i(T)} \;\leq\; \sqrt{K\textstyle\sum_{i=1}^{K} N_i(T)} \;=\; \sqrt{KT},
+\end{equation}
+so $R_2(T)=O(\sqrt{CKT\log T})$; adding $R_1(T)$ yields the result. \hfill $\square$
 
 Thus, under the proxy-reward and decomposition assumptions, the average proxy regret vanishes:
 \begin{equation}
@@ -769,119 +777,5 @@ KSWIN & 7.6 & 27.8 & 25.5 \\
 \end{tabular}%
 }
 \end{table}
-
-\section{Theoretical Proofs}\label{appendix:proofs}
-
-This appendix gives the full proofs of the regret results stated in the Theory section. The condensed arguments in the main text (Theorem~1, Proposition~2, and the Corollary) are sketches of the derivations below.
-
-\textbf{Preliminaries and notation.} Let $\mathcal{S} = \{(\mathbf{x}_t, y_t)\}_{t=1}^{\infty}$ denote the data stream, $\mathcal{D} = \{D_1, \ldots, D_K\}$ with $K=7$ the detector portfolio, and $\boldsymbol{\phi}_t \in \mathbb{R}^m$ the meta-feature vector at time $t$ with $m=15$. For LinUCB we maintain, for each detector $i$, the regularised design matrix $\mathbf{A}_{i,t} = \lambda_{\text{reg}}\mathbf{I} + \sum_{s \leq t:\, i_s=i} \boldsymbol{\phi}_s \boldsymbol{\phi}_s^\top$ and the response vector $\mathbf{b}_{i,t} = \sum_{s \leq t:\, i_s=i} r_s \boldsymbol{\phi}_s$, with ridge estimate $\hat{\boldsymbol{\theta}}_{i,t} = \mathbf{A}_{i,t}^{-1} \mathbf{b}_{i,t}$. We write $N_i(T) = |\{t \leq T : i_t = i\}|$ for the number of rounds detector $i$ is selected, so that $\sum_{i=1}^K N_i(T) = T$. Throughout, A1--A3 are the assumptions of the Theory section: $\|\boldsymbol{\phi}_t\|_2 \leq L$ with $L=\sqrt{m}$, linear reward $\mathbb{E}[r_{i,t}\mid\boldsymbol{\phi}_t] = \boldsymbol{\phi}_t^\top\boldsymbol{\theta}_i^*$ with $\|\boldsymbol{\theta}_i^*\|_2 \leq S$, and $\sigma_{\text{noise}}$-sub-Gaussian noise. All bounds are stated with respect to the proxy reward of Eq.~\eqref{eq:reward}, as discussed under assumption A4.
-
-\subsection{Proof of Theorem 1 (Level 1 Proxy Regret)}
-
-\textbf{Theorem 1.} \textit{Under assumptions A1--A3, with exploration parameter $\alpha_{\text{ucb}} = \sigma_{\text{noise}}\sqrt{m \log(KT/\delta_{\text{conf}})} + S$, LinUCB detector selection achieves with probability at least $1 - \delta_{\text{conf}}$:}
-\begin{equation}
-R_1(T) = \sum_{t=1}^{T} \left( \max_{i} \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_i^* - \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i_t}^* \right) = O(\sqrt{KmT \log T}).
-\end{equation}
-
-\textit{Proof.} The proof proceeds in three steps.
-
-\emph{Step 1: Confidence ellipsoid construction.}
-By the self-normalised martingale inequality \cite{Abbasi2011Improved}, for any $\delta_{\text{conf}} > 0$ and any fixed detector $i$, with probability at least $1 - \delta_{\text{conf}}/K$, for all $t \geq 1$,
-\begin{equation}
-\resizebox{0.95\columnwidth}{!}{$
-\|\hat{\boldsymbol{\theta}}_{i,t} - \boldsymbol{\theta}_i^*\|_{\mathbf{A}_{i,t}} \leq \sigma_{\text{noise}}\sqrt{2\log\!\left(\frac{\det(\mathbf{A}_{i,t})^{1/2} \det(\lambda_{\text{reg}}\mathbf{I})^{-1/2}}{\delta_{\text{conf}}/K}\right)} + \sqrt{\lambda_{\text{reg}}}\,S.
-$}
-\end{equation}
-Using the determinant--trace inequality $\det(\mathbf{A}_{i,t}) \leq \big(\tfrac{\operatorname{tr}(\mathbf{A}_{i,t})}{m}\big)^m \leq \big(\lambda_{\text{reg}} + \tfrac{tL^2}{m}\big)^m$ and a union bound over all $K$ detectors, with probability at least $1 - \delta_{\text{conf}}$, for all $i \in [K]$ and $t \geq 1$,
-\begin{equation}
-\|\hat{\boldsymbol{\theta}}_{i,t} - \boldsymbol{\theta}_i^*\|_{\mathbf{A}_{i,t}} \leq \alpha_{\text{ucb},t},
-\end{equation}
-where, for our choice of $\alpha_{\text{ucb}}$,
-\begin{equation*}
-\resizebox{0.95\columnwidth}{!}{$
-\alpha_{\text{ucb},t} = \sigma_{\text{noise}}\sqrt{m\log\big(1 + \tfrac{tL^2}{\lambda_{\text{reg}} m}\big) + 2\log\tfrac{K}{\delta_{\text{conf}}}} + \sqrt{\lambda_{\text{reg}}}\,S \leq \alpha_{\text{ucb}},
-$}
-\end{equation*}
-with the $/m$ in the log argument following from the determinant--trace bound above. Call this the \emph{confidence event}; the remainder of the proof is conditioned on it.
-
-\emph{Step 2: Instantaneous regret bound.}
-Let $i^* = \arg\max_i \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_i^*$ be the optimal detector at time $t$, and let the UCB rule select $i_t = \arg\max_i \big( \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_{i,t} + \alpha_{\text{ucb}} \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i,t}^{-1}} \big)$. Under the confidence event,
-\begin{align}
-\boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i^*}^* &\leq \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_{i^*,t} + \alpha_{\text{ucb}} \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i^*,t}^{-1}} \\
-&\leq \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_{i_t,t} + \alpha_{\text{ucb}} \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t,t}^{-1}} \\
-&\leq \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i_t}^* + 2\alpha_{\text{ucb}} \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t,t}^{-1}},
-\end{align}
-where the first and third inequalities use the confidence bound and the second uses the UCB selection rule. Hence the instantaneous regret obeys
-\begin{equation}
-r_t^{(1)} = \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i^*}^* - \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i_t}^* \leq 2\alpha_{\text{ucb}} \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t,t}^{-1}}.
-\end{equation}
-
-\emph{Step 3: Cumulative regret via the elliptical potential lemma and the $\sqrt{K}$ factor.}
-Because the portfolio uses disjoint per-detector estimators, we split the cumulative regret by the played detector and bound each subsequence separately. Fix a detector $i$ and consider the rounds $\{t : i_t = i\}$ on which it is played. By the elliptical potential lemma \cite{Dani2008Stochastic} applied to this subsequence (in its $\min(1,\cdot)$ form, so the bound holds without requiring $\lambda_{\text{reg}} \geq L^2$) and Cauchy--Schwarz,
-\begin{align}
-\sum_{t:\, i_t=i} \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i,t}^{-1}}
-&\leq \sqrt{N_i(T) \sum_{t:\, i_t=i} \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i,t}^{-1}}^2} \\
-&\leq \sqrt{N_i(T)\, 2m\log\!\Big(1 + \tfrac{N_i(T) L^2}{\lambda_{\text{reg}} m}\Big)}.
-\end{align}
-Summing the instantaneous bound over all detectors and applying Cauchy--Schwarz across detectors, $\sum_{i=1}^K \sqrt{N_i(T)} \leq \sqrt{K \sum_{i=1}^K N_i(T)} = \sqrt{KT}$, gives
-\begin{align}
-R_1(T) &= \sum_{i=1}^K \sum_{t:\, i_t=i} r_t^{(1)} \;\leq\; 2\alpha_{\text{ucb}} \sum_{i=1}^K \sum_{t:\, i_t=i} \|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i,t}^{-1}} \\
-&\leq 2\alpha_{\text{ucb}} \sqrt{2m\log\!\Big(1 + \tfrac{T L^2}{\lambda_{\text{reg}} m}\Big)} \; \sum_{i=1}^K \sqrt{N_i(T)} \\
-&\leq 2\alpha_{\text{ucb}} \sqrt{2mKT\log\!\Big(1 + \tfrac{T L^2}{\lambda_{\text{reg}} m}\Big)} \\
-&= O(\sqrt{KmT \log T}),
-\end{align}
-where we used $\log(1 + N_i(T)L^2/(\lambda_{\text{reg}}m)) \leq \log(1 + TL^2/(\lambda_{\text{reg}}m))$ to pull the logarithmic factor out of the per-detector sum. The extra $\sqrt{K}$, relative to the single-estimator $O(\sqrt{mT\log T})$ bound, is exactly the price of maintaining $K$ separate detector estimators and aggregating their elliptical potentials.
-
-The last line follows the standard LinUCB convention of absorbing the slowly growing confidence radius $\alpha_{\text{ucb}} = \Theta(\sqrt{m\log T})$ into the $O(\cdot)$ constant. Retaining it gives the dimension-explicit rate
-\begin{equation}
-R_1(T) = O\!\big(\alpha_{\text{ucb}}\sqrt{KmT\log T}\big) = \tilde{O}\big(m\sqrt{KT}\big),
-\end{equation}
-which is linear in $m$ and matches the canonical OFUL bound $O(d\sqrt{T}\log T)$ \cite{Abbasi2011Improved} with $d=m$; the $\sqrt{KmT\log T}$ form quoted in Theorem~1 and used for the convergence estimate in the main text is its constant-radius shorthand. This completes the proof. \hfill $\square$
-
-\subsection{Proof of Proposition 2 (Level 2 Proxy Regret)}
-
-\textbf{Proposition 2.} \textit{For Thompson Sampling on $C$ configurations per detector under the standard Bernoulli-sampling reduction for bounded rewards, with $N_i(T)$ selections of detector $i \in [K]$, the expected cumulative proxy regret satisfies}
-\begin{equation}
-R_2(T) = \sum_{i=1}^{K} O(\sqrt{C \cdot N_i(T) \log N_i(T)}).
-\end{equation}
-
-\textbf{Proof.} We analyse the hyperparameter selection problem for each detector separately.
-
-\emph{Step 1: Reduction to a multi-armed bandit.}
-Conditioned on detector $i$ being selected on the rounds $\{t : i_t = i\}$, hyperparameter selection reduces to a $C$-armed bandit over $N_i(T)$ rounds. The proxy rewards $r_t \in [-1,1]$ are normalised to $\tilde{r}_t = (r_t + 1)/2 \in [0,1]$.
-
-\emph{Step 2: Beta--Bernoulli Thompson Sampling analysis.}
-For bounded rewards in $[0,1]$, the standard reduction draws a Bernoulli outcome with mean $\tilde{r}_t$ and updates a Beta posterior with that sampled outcome. By the analysis of \cite{Agrawal2012Thompson}, Thompson Sampling with Beta$(1,1)$ priors on a $C$-armed bandit attains the gap-dependent expected regret
-\begin{equation}
-\mathbb{E}[R_i(N_i)] \leq O\!\left(\sum_{c:\, \Delta_c > 0} \frac{\log N_i}{\Delta_c}\right),
-\end{equation}
-where $\Delta_c = \mu^* - \mu_c$ is the suboptimality gap of configuration $c$. The corresponding problem-independent (gap-free) bound, Theorem~2 of \cite{Agrawal2013Further}, is
-\begin{equation}
-\mathbb{E}[R_i(N_i)] \leq O(\sqrt{C \cdot N_i(T) \log N_i(T)}).
-\end{equation}
-The fractional Beta update used in implementation (Eq.~\eqref{eq:ts_update}) is the conditional expectation of this Bernoulli reduction and serves as a stable implementation heuristic rather than a separate regret theorem.
-
-\emph{Step 3: Aggregation across detectors.}
-Because the detector selections partition the horizon ($\sum_{i=1}^K N_i(T) = T$) and each detector's hyperparameter problem is an independent bandit, the total Level~2 proxy regret is
-\begin{equation}
-R_2(T) = \sum_{i=1}^{K} \mathbb{E}[R_i] = \sum_{i=1}^{K} O(\sqrt{C \cdot N_i(T) \log N_i(T)}).
-\end{equation}
-This completes the proof. \hfill $\square$
-
-\subsection{Proof of the Corollary (Combined Proxy Regret)}
-
-\textbf{Corollary.} \textit{Under the decomposition $R(T) = R_1(T) + R_2(T)$, where $R_1$ captures detector-selection suboptimality and $R_2$ configuration-selection suboptimality, the combined proxy regret is}
-\begin{equation}
-R(T) = O(\sqrt{KmT \log T} + \sqrt{CKT \log T}).
-\end{equation}
-
-\textbf{Proof.} We combine the two bounds. From Theorem~1, $R_1(T) = O(\sqrt{KmT \log T})$. For $R_2(T)$, applying $\log N_i(T) \leq \log T$ and Cauchy--Schwarz across detectors,
-\begin{align}
-R_2(T) &= \sum_{i=1}^{K} O(\sqrt{C \cdot N_i(T) \log N_i(T)}) \\
-&\leq O\!\left(\sqrt{C \log T}\, \sum_{i=1}^{K} \sqrt{N_i(T)}\right) \\
-&\leq O\!\left(\sqrt{C \log T}\, \sqrt{K \textstyle\sum_{i=1}^{K} N_i(T)}\right) \\
-&= O(\sqrt{CKT \log T}),
-\end{align}
-using $\sum_i \sqrt{N_i(T)} \leq \sqrt{K \sum_i N_i(T)}$ and $\sum_i N_i(T) = T$. Adding the two terms yields $R(T) = O(\sqrt{KmT \log T} + \sqrt{CKT \log T})$. As in Theorem~1, the $R_1$ term is quoted in its constant-radius shorthand; carrying $\alpha_{\text{ucb}}$ replaces $\sqrt{KmT\log T}$ by $\tilde{O}(m\sqrt{KT})$, whereas the $R_2$ term needs no such convention since the Thompson-sampling constant is universal. Since both terms are sublinear in $T$, the average proxy regret satisfies $\lim_{T\to\infty} R(T)/T = 0$. This completes the proof. \hfill $\square$
 
 \end{document}
