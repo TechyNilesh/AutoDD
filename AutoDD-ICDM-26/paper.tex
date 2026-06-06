@@ -306,14 +306,22 @@ These assumptions characterise the \emph{selection layer} under the standard lin
 
 The following result gives the detector-selection proxy regret for LinUCB under the stationary linear abstraction.
 
-\textbf{Theorem 1 (Level 1 Regret).} Under assumptions A1--A3, with exploration parameter $\alpha_{\text{ucb}} = \sigma_{\text{noise}}\sqrt{m \log(KT/\delta_{\text{conf}})} + S$ where $T$ is the time horizon and $\delta_{\text{conf}} \in (0,1)$ is the confidence parameter, LinUCB detector selection achieves with probability at least $1 - \delta_{\text{conf}}$:
+\textbf{Theorem 1 (Level 1 Regret).} Under assumptions A1--A3, with time horizon $T$, confidence parameter $\delta_{\text{conf}} \in (0,1)$, and exploration parameter
+\begin{equation}
+\alpha_{\text{ucb}} = \sigma_{\text{noise}}\sqrt{m \log(KT/\delta_{\text{conf}})} + S,
+\end{equation}
+LinUCB detector selection achieves, with probability at least $1 - \delta_{\text{conf}}$,
 \begin{equation}
 \resizebox{0.95\columnwidth}{!}{$
 R_1(T) = \sum_{t=1}^{T} \left( \max_{i} \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_i^* - \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i_t}^* \right) = O(\sqrt{KmT \log T})
 $}
 \end{equation}
 
-\textit{Proof.} We follow the disjoint-arm LinUCB analysis \cite{Abbasi2011Improved}. The self-normalised martingale inequality places each $\boldsymbol{\theta}_i^*$ in the confidence ellipsoid $\|\boldsymbol{\theta}_i^* - \hat{\boldsymbol{\theta}}_i\|_{\mathbf{A}_i} \leq \alpha_{\text{ucb}}$ with probability $1-\delta_{\text{conf}}$. On this event the UCB rule bounds the instantaneous regret as
+\textit{Proof Sketch.} We analyse the disjoint-arm LinUCB algorithm \cite{Li2010LinUCB} using self-normalised confidence bounds \cite{Abbasi2011Improved}. The self-normalised martingale inequality places each $\boldsymbol{\theta}_i^*$, with probability $1-\delta_{\text{conf}}$, in the confidence ellipsoid
+\begin{equation}
+\|\boldsymbol{\theta}_i^* - \hat{\boldsymbol{\theta}}_i\|_{\mathbf{A}_i} \leq \alpha_{\text{ucb}}.
+\end{equation}
+On this event the UCB rule bounds the instantaneous regret as
 \begin{equation}
 \max_i \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_i^* - \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i_t}^* \;\leq\; 2\alpha_{\text{ucb}}\,\|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t}^{-1}}.
 \end{equation}
@@ -326,7 +334,7 @@ Thompson Sampling subsequently balances exploration and exploitation for hyperpa
 R_2(T) = \sum_{i=1}^{K} O(\sqrt{C \cdot N_i(T) \log N_i(T)})
 \end{equation}
 
-\textit{Proof.} Conditioned on detector $i$ being played, hyperparameter selection is a $C$-armed bandit with rewards normalised to $\tilde{r}_t = (r_t+1)/2 \in [0,1]$. Under the Bernoulli-sampling reduction with Beta posteriors, Thompson Sampling attains expected regret $O(\sqrt{C N_i(T)\log N_i(T)})$ over the $N_i(T)$ rounds detector $i$ is played \cite{Agrawal2013Further}; summing over the $K$ detectors with $\sum_i N_i(T)=T$ gives the bound. The fractional Beta update (Eq.~\eqref{eq:ts_update}) is the conditional expectation of this reduction, used as a stable implementation heuristic. \hfill $\square$
+\textit{Proof Sketch.} Conditioned on detector $i$ being played, hyperparameter selection is a $C$-armed bandit with rewards normalised to $\tilde{r}_t = (r_t+1)/2 \in [0,1]$. Under the Bernoulli-sampling reduction with Beta posteriors, Thompson Sampling attains expected regret $O(\sqrt{C N_i(T)\log N_i(T)})$ over the $N_i(T)$ rounds detector $i$ is played \cite{Agrawal2013Further}; summing over the $K$ detectors with $\sum_i N_i(T)=T$ gives the bound. The fractional Beta update (Eq.~\eqref{eq:ts_update}) is the conditional expectation of this reduction, used as a stable implementation heuristic. \hfill $\square$
 
 Under the same proxy-reward abstraction, the combined regret remains sublinear, implying that average per-round proxy suboptimality vanishes over time.
 
@@ -335,7 +343,7 @@ Under the same proxy-reward abstraction, the combined regret remains sublinear, 
 R(T) = O(\sqrt{KmT \log T} + \sqrt{CKT \log T})
 \end{equation}
 
-\textit{Proof.} Telescoping the per-round gap through the best configuration of the \emph{selected} detector splits it into detector- and configuration-selection terms, bounded by Theorem~1 and Proposition~2 respectively. For the latter, Cauchy--Schwarz gives
+\textit{Proof Sketch.} Telescoping the per-round gap through the best configuration of the \emph{selected} detector splits it into detector- and configuration-selection terms, bounded by Theorem~1 and Proposition~2 respectively. For the latter, Cauchy--Schwarz gives
 \begin{equation}
 \sum_{i=1}^{K} \sqrt{N_i(T)} \;\leq\; \sqrt{K\textstyle\sum_{i=1}^{K} N_i(T)} \;=\; \sqrt{KT},
 \end{equation}
