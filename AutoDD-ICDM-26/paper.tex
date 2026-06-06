@@ -274,7 +274,7 @@ Initialise model $\mathcal{M}_0$, sliding window $W \gets \emptyset$\;
 \subsection{Computational Complexity}
 AutoDD has per-window complexity of $O(wd + Km^2)$ for the incrementally maintained meta-features used in our implementation, where $w$ is the AutoDD window size, $d$ is the input feature dimensionality, $K$ is the number of detectors, and $m=15$ is the meta-feature count. The main costs are meta-feature extraction ($O(wd)$) and LinUCB matrix operations ($O(Km^2)$). Space complexity is $O(Km^2 + wd)$ for storing $K$ covariance matrices of size $m \times m$ and the sliding window buffer.
 
-\subsection{Theoretical Analysis}
+\subsection{Theory}
 
 We formalize the optimisation objective as a streaming detector selection problem and provide proxy-regret bounds for the hierarchical learning approach. Our analysis focuses on the selection mechanism, showing that the average proxy suboptimality vanishes under the stated contextual-bandit assumptions.
 
