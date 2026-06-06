@@ -718,7 +718,8 @@ We propose AutoDD, a novel framework that automatically selects and configures d
 
 \section{Additional Results}\label{appendix:additional_results}
 
-\textbf{Per-Drift-Type Performance:} Table~\ref{tab:drift_type} shows AutoDD's performance per drift type. AutoDD excels on sudden (88.2\%), incremental (80.4\%), and recurring (79.6\%) drift. Meta-ADD slightly outperforms on gradual drift (82.3\% vs.\ 81.7\%) due to its learned drift-type representations.
+\subsection{Per-Drift-Type Performance}
+Table~\ref{tab:drift_type} shows AutoDD's performance per drift type. AutoDD excels on sudden (88.2\%), incremental (80.4\%), and recurring (79.6\%) drift. Meta-ADD slightly outperforms on gradual drift (82.3\% vs.\ 81.7\%) due to its learned drift-type representations.
 
 \begin{table}[!t]
 \centering
@@ -757,7 +758,8 @@ Meta-ADD & 84.6 & \textbf{82.3} & 78.9 & 77.8 \\
 }
 \end{table}
 
-\textbf{Detector Selection Patterns:} Table~\ref{tab:selection_pattern} shows that AutoDD's learned selection policy aligns with domain knowledge: ADWIN and DDM are preferred for high-velocity streams, while KSWIN dominates for high-noise and high-dimensional streams.
+\subsection{Detector Selection Patterns}
+Table~\ref{tab:selection_pattern} shows that AutoDD's learned selection policy aligns with domain knowledge: ADWIN and DDM are preferred for high-velocity streams, while KSWIN dominates for high-noise and high-dimensional streams.
 
 \begin{table}[!t]
 \centering
