@@ -40,7 +40,6 @@
 
 Concept drift, the change in the distribution of streaming data over time, significantly impacts the performance of machine learning models. While numerous drift detection methods have been proposed, selecting and configuring the most suitable detector for a specific data stream remains a challenging task. Existing AutoML frameworks for streaming data that automate model selection rely on fixed drift detection strategies, leaving a critical gap in automation. This paper introduces \textit{AutoDD} (\underline{A}utomated \underline{D}rift \underline{D}etector), a novel framework that jointly automates detector selection and hyperparameter configuration using a hierarchical learning approach. AutoDD extracts comprehensive online meta-features and employs a two-level hierarchical selection algorithm to adaptively choose both the detector and its configuration. Theoretical analysis provides sublinear regret bounds ensuring convergence to optimal performance. Comprehensive experiments on synthetic and real-world datasets demonstrate that AutoDD consistently outperforms state-of-the-art detectors while maintaining computational efficiency.
 
-
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -84,7 +83,6 @@ Recent developments in automated algorithm selection and hyperparameter optimisa
 
 AutoDD employs an adaptive, closed-loop architecture to dynamically select and configure drift detectors. As shown in Figure~\ref{fig:framework}, this architecture operates through several key steps. First, the system initialises the detector portfolio with standard hyperparameters and sets up the learning parameters. During online operation, meta-features characterising stream velocity, stationarity, and temporal patterns are continuously extracted from the incoming data stream. These meta-features serve as context for the LinUCB agent, which selects a detector from the portfolio. Thompson Sampling then chooses a hyperparameter configuration for the selected detector. The configured detector monitors the stream and triggers model adaptation upon detecting drift. Finally, performance feedback is computed based on detection outcomes, which updates both the LinUCB and Thompson Sampling components to refine future selections. This adaptive learning cycle enables AutoDD to improve its detector selections over time.
 
-
 \begin{figure*}[!t]
     \centering
     \includegraphics[width=\textwidth]{images/framework/framework_tikz.pdf}
@@ -96,50 +94,7 @@ AutoDD employs an adaptive, closed-loop architecture to dynamically select and c
 
 AutoDD operates over sliding windows of size $w$. When each window fills with incoming instances, the framework executes a complete selection cycle, beginning with meta-feature extraction.
 
-\textbf{Meta-Feature Extraction:} The meta-feature set comprises 15 features organized into three categories: Statistical, Stationarity, and Temporal. Table~\ref{tab:metafeatures} summarises each meta-feature with its mathematical formulation. All features are computed over a sliding window of size $w$ using online statistics and normalised to $[0, 1]$ via running min-max normalisation to ensure scale consistency. The resulting context vector $\boldsymbol{\phi}_t \in \mathbb{R}^{m}$ with $m=15$ is computed incrementally, supporting efficient per-instance updates.
-
-\begin{table}[!t]
-\centering
-\caption{Meta-feature portfolio with mathematical formulations.}
-\label{tab:metafeatures}
-\resizebox{0.95\columnwidth}{!}{%
-\begin{tabular}{|l|l|l|}
-\hline
-\textbf{Category} & \textbf{Feature} & \textbf{Formula/Description} \\
-\hline
-\multirow{5}{*}{Statistical} & Velocity & $v_t = n_t/\Delta t$ \\
-\cline{2-3}
-& Dimensionality & $d$ \\
-\cline{2-3}
-& Sparsity & $\frac{1}{wd}\sum_{i=1}^{w}\sum_{j=1}^{d}\mathbb{I}[\mathbf{x}_{i,j}=0]$ \\
-\cline{2-3}
-& Noise level & $H(\mathbf{X}) \approx -\frac{1}{w}\sum_{i=1}^{w}\log \hat{p}_k(\mathbf{x}_i)$ (k-NN, $k=5$) \\
-\cline{2-3}
-& Class imbalance & $\max_c |C_c| / \min_c |C_c|$ \\
-\hline
-\multirow{5}{*}{Stationarity} & Error volatility & $\sigma_{\text{err}}(t) = \sqrt{\frac{1}{w}\sum_{i=t-w}^{t}(e_i - \bar{e})^2}$ \\
-\cline{2-3}
-& KL divergence & $D_{\text{KL}}(P_t \| P_{t-1})$ (histogram, $\sqrt{w}$ bins) \\
-\cline{2-3}
-& Autocorrelation & $\rho_t = \frac{\text{Cov}(e_t, e_{t-1})}{\sigma_{e_t}\sigma_{e_{t-1}}}$ \\
-\cline{2-3}
-& Mean shift & $\Delta\mu_t = \frac{1}{d}\sum_{j=1}^{d}|\mu_{t,j} - \mu_{t-1,j}|$ \\
-\cline{2-3}
-& Variance shift & $\Delta\sigma^2_t = \frac{1}{d}\sum_{j=1}^{d}|\sigma^2_{t,j} - \sigma^2_{t-1,j}|$ \\
-\hline
-\multirow{5}{*}{Temporal} & Trend & $\beta_{\text{trend}} = \frac{\text{Cov}(t, e_t)}{\text{Var}(t)}$ \\
-\cline{2-3}
-& Periodicity & $f_{\text{dom}} = \arg\max_f |\mathcal{F}\{e_t\}(f)|$ \\
-\cline{2-3}
-& Change frequency & $\frac{1}{\Delta t}\sum_{i=1}^{w}\mathbb{I}[|\Delta e_i| > \tau_{\Delta e}]$ \\
-\cline{2-3}
-& Change magnitude & $\frac{1}{|\mathcal{C}_t|}\sum_{i \in \mathcal{C}_t}|\Delta e_i|$ \\
-\cline{2-3}
-& Recurrence score & $\frac{1}{w^2}\sum_{i,j}\mathbb{I}[\|\mathbf{x}_i - \mathbf{x}_j\| < \epsilon]$ \\
-\hline
-\end{tabular}%
-}
-\end{table}
+\textbf{Meta-Feature Extraction:} The meta-feature set comprises 15 features in three categories. \emph{Statistical} features capture velocity, dimensionality, sparsity, noise level, and class imbalance; \emph{stationarity} features capture error volatility, KL divergence, autocorrelation, mean shift, and variance shift; and \emph{temporal} features capture trend, periodicity, change frequency, change magnitude, and recurrence score. All features are computed over a sliding window of size $w$ using online statistics and normalised to $[0, 1]$ via running min-max normalisation to ensure scale consistency. The resulting context vector $\boldsymbol{\phi}_t \in \mathbb{R}^{m}$ with $m=15$ is computed incrementally, supporting efficient per-instance updates.
 
 \textbf{Detector Portfolio:} AutoDD maintains a diverse portfolio of $K=7$ drift detectors spanning window-based, error-based, and distribution-based paradigms. Table~\ref{tab:portfolio} summarises each detector with its hyperparameters, valid ranges, sampling scales, and default values from the literature. For each detector $i$, we maintain $C$ hyperparameter configurations denoted $\boldsymbol{\eta}_{i,c}$ for $c \in [C]$, the first is always the literature default, while the remaining $C-1$ are sampled from the specified ranges using the appropriate logarithmic, linear, or integer scale.
 
@@ -520,7 +475,6 @@ Meta-ADD & \underline{85.4} & 22 & 74.9 & 9 & \underline{94.5} & 2 & 63.8 & 139 
     \label{fig:prequential}
 \end{figure*}
 
-
 \subsection{Statistical Significance}
 To validate the observed performance differences, we conduct statistical significance analysis using the Friedman test with Nemenyi post-hoc analysis at $\alpha=0.05$. Figures~\ref{fig:cd_gnb} and~\ref{fig:cd_hat_main} present the Critical Difference diagrams for GaussianNB and HAT, respectively. AutoDD achieves the best average rank under both base models, with Meta-ADD, ADDM, PUDD, and MDDM following in subsequent ranks. The No Detector baseline performs worst, supporting the value of drift detection in these streaming benchmarks.
 
@@ -542,7 +496,6 @@ To validate the observed performance differences, we conduct statistical signifi
     \caption{Critical Difference diagrams (Friedman-Nemenyi, $\alpha=0.05$). AutoDD achieves the best average rank under both base models.}
     \label{fig:cd_diagram}
 \end{figure}
-
 
 \subsection{Ablation Study}
 To understand the contribution of each component, we systematically remove AutoDD components and evaluate the impact on performance using GaussianNB as the base model. Table~\ref{tab:ablation} presents results averaged across all ten datasets. The hierarchical selection mechanism is important for AutoDD's performance. Removing Level 1 LinUCB detector selection and replacing it with random selection causes the largest performance drop, reducing accuracy from 80.5\% to 62.5\%, an 18.0\% decrease. This degradation indicates that detector-stream matching is a major contributor to effective drift detection in our evaluation. Removing Level 2 Thompson Sampling hyperparameter configuration reduces accuracy to 75.3\%, showing that adaptive tuning contributes beyond fixed default configurations. All three meta-feature categories contribute to the overall performance. Statistical features have the largest impact, with their removal reducing accuracy by 9.3\%. Stationarity features contribute 7.0\% to performance, while temporal features account for 6.3\%. Figure~\ref{fig:detector_selection} visualizes AutoDD's adaptive behaviour on the Hyperplane stream (a single run, $w=100$), showing how the LinUCB layer continually re-selects detectors as the stream's meta-features evolve rather than committing to a single detector, while the windowed prequential error stays bounded and recovers after detected drifts.
@@ -783,6 +736,51 @@ HDDM-W & 12.6 & 14.2 & 13.1 \\
 Page-Hinkley & 5.8 & 8.1 & 7.2 \\
 \hline
 KSWIN & 7.6 & 27.8 & 25.5 \\
+\hline
+\end{tabular}%
+}
+\end{table}
+
+\section{Meta-Feature Formulations}\label{appendix:metafeatures}
+
+\begin{table}[!t]
+\centering
+\caption{Meta-feature portfolio with mathematical formulations.}
+\label{tab:metafeatures}
+\resizebox{0.95\columnwidth}{!}{%
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Category} & \textbf{Feature} & \textbf{Formula/Description} \\
+\hline
+\multirow{5}{*}{Statistical} & Velocity & $v_t = n_t/\Delta t$ \\
+\cline{2-3}
+& Dimensionality & $d$ \\
+\cline{2-3}
+& Sparsity & $\frac{1}{wd}\sum_{i=1}^{w}\sum_{j=1}^{d}\mathbb{I}[\mathbf{x}_{i,j}=0]$ \\
+\cline{2-3}
+& Noise level & $H(\mathbf{X}) \approx -\frac{1}{w}\sum_{i=1}^{w}\log \hat{p}_k(\mathbf{x}_i)$ (k-NN, $k=5$) \\
+\cline{2-3}
+& Class imbalance & $\max_c |C_c| / \min_c |C_c|$ \\
+\hline
+\multirow{5}{*}{Stationarity} & Error volatility & $\sigma_{\text{err}}(t) = \sqrt{\frac{1}{w}\sum_{i=t-w}^{t}(e_i - \bar{e})^2}$ \\
+\cline{2-3}
+& KL divergence & $D_{\text{KL}}(P_t \| P_{t-1})$ (histogram, $\sqrt{w}$ bins) \\
+\cline{2-3}
+& Autocorrelation & $\rho_t = \frac{\text{Cov}(e_t, e_{t-1})}{\sigma_{e_t}\sigma_{e_{t-1}}}$ \\
+\cline{2-3}
+& Mean shift & $\Delta\mu_t = \frac{1}{d}\sum_{j=1}^{d}|\mu_{t,j} - \mu_{t-1,j}|$ \\
+\cline{2-3}
+& Variance shift & $\Delta\sigma^2_t = \frac{1}{d}\sum_{j=1}^{d}|\sigma^2_{t,j} - \sigma^2_{t-1,j}|$ \\
+\hline
+\multirow{5}{*}{Temporal} & Trend & $\beta_{\text{trend}} = \frac{\text{Cov}(t, e_t)}{\text{Var}(t)}$ \\
+\cline{2-3}
+& Periodicity & $f_{\text{dom}} = \arg\max_f |\mathcal{F}\{e_t\}(f)|$ \\
+\cline{2-3}
+& Change frequency & $\frac{1}{\Delta t}\sum_{i=1}^{w}\mathbb{I}[|\Delta e_i| > \tau_{\Delta e}]$ \\
+\cline{2-3}
+& Change magnitude & $\frac{1}{|\mathcal{C}_t|}\sum_{i \in \mathcal{C}_t}|\Delta e_i|$ \\
+\cline{2-3}
+& Recurrence score & $\frac{1}{w^2}\sum_{i,j}\mathbb{I}[\|\mathbf{x}_i - \mathbf{x}_j\| < \epsilon]$ \\
 \hline
 \end{tabular}%
 }
