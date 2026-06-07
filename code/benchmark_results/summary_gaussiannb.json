@@ -34,18 +34,18 @@
     ],
     "mean_accuracy": {
         "no_detector": 0.6808,
-        "adwin": 0.726,
-        "ddm": 0.74,
-        "eddm": 0.7325,
-        "hddm_a": 0.7394,
-        "hddm_w": 0.7416,
-        "pagehinkley": 0.7289,
-        "kswin": 0.7333,
-        "mddm": 0.7478,
-        "addm": 0.7628,
-        "pudd": 0.7651,
-        "meta_add": 0.7857,
-        "autodd": 0.811
+        "adwin": 0.7289,
+        "ddm": 0.7379,
+        "eddm": 0.732,
+        "hddm_a": 0.737,
+        "hddm_w": 0.7397,
+        "pagehinkley": 0.7279,
+        "kswin": 0.7331,
+        "mddm": 0.7519,
+        "addm": 0.7639,
+        "pudd": 0.7638,
+        "meta_add": 0.7788,
+        "autodd": 0.8051
     },
     "std_accuracy": {
         "no_detector": 0,
@@ -65,16 +65,16 @@
     "rankings": [
         "autodd",
         "meta_add",
-        "pudd",
         "addm",
+        "pudd",
         "mddm",
         "hddm_w",
         "ddm",
         "hddm_a",
         "kswin",
         "eddm",
-        "pagehinkley",
         "adwin",
+        "pagehinkley",
         "no_detector"
     ]
 }
