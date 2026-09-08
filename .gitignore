@@ -9,6 +9,8 @@ code/plotting/
 code/benchmark_results/
 code/ablation_results/
 code/experiment_results/
+# All other JSON files anywhere in the repo
+*.json
 # ...except MetaADD's pre-generated training fixture, which pairs with the tracked
 # pretrained_model.pt and is an input to the Meta-ADD baseline, not a result.
 !code/MetaADD/training_data.json
@@ -26,6 +28,9 @@ backup/
 *.out
 *.synctex.gz
 *.log
+*.nav
+*.snm
+*.toc
 
 # Python
 __pycache__/
