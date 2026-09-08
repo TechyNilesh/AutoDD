@@ -208,20 +208,21 @@ Mean over the 5 synthetic and 5 real-world benchmarks, against 12 baselines.
 \textbf{Method} & Syn.\ Acc & RW Acc & Syn.\ Acc & RW Acc\\
 \midrule
 No Detector   & 69.5 & 66.6 & 72.1 & 69.4\\
-ADWIN         & 74.3 & 71.5 & 77.9 & 74.8\\
+ADWIN         & 74.3 & 71.5 & 78.0 & 74.8\\
 HDDM-W        & 76.0 & 71.9 & 79.5 & 75.5\\
-MDDM          & 76.4 & 74.0 & 78.4 & 77.0\\
-ADDM          & 77.7 & 75.1 & 79.3 & 77.8\\
-PUDD          & 78.1 & 74.6 & 79.7 & 77.8\\
-Meta-ADD      & 80.9 & 74.8 & 81.4 & 77.6\\
+MDDM          & 76.4 & 74.0 & 79.7 & 77.0\\
+ADDM          & 77.7 & 75.1 & 80.9 & 77.8\\
+PUDD          & 78.1 & 74.6 & 81.6 & 77.8\\
+Meta-ADD      & 80.9 & 74.8 & \textbf{85.1} & 77.6\\
 \midrule
 \textbf{AutoDD} & \textbf{\color{accent}81.9} & \textbf{\color{accent}79.1}
-                & \textbf{\color{accent}84.0} & \textbf{\color{accent}83.1}\\
+                & {\color{accent}84.8} & \textbf{\color{accent}83.1}\\
 \bottomrule
 \end{tabular}\par}
 \vskip12pt
-Best mean accuracy \emph{and} best macro-F1 (0.86 / 0.87) under both learners,
-with detection counts inside the consensus range of the compared methods.
+Best macro-F1 on every synthetic stream (mean 0.86 / 0.90) and best real-world accuracy
+under both learners; Meta-ADD edges the HAT synthetic mean via RBF and RTG.
+Detection counts stay inside the consensus range of the compared methods.
 \end{block}
 
 {\setbeamercolor{block body}{bg=white}

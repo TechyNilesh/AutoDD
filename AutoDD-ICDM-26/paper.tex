@@ -90,7 +90,7 @@ The remainder of this paper is organised as follows. Section~\ref{sec:related} r
 \begin{figure*}[t]
     \centering
     \includegraphics[width=0.95\textwidth]{images/framework/framework_tikz.pdf}
-    \caption{Overview of AutoDD. A window buffer forms context $\boldsymbol{\phi}_t$ from statistical, stationarity, and temporal meta-features. LinUCB selects a detector and Thompson Sampling selects its configuration. The detector emits drift signal $d_t$, which triggers model adaptation, and reward $r_t$ updates both levels.}
+    \caption{Overview of the AutoDD framework. The incoming data stream $\mathcal{S}$ is buffered into a sliding window, from which statistical, stationarity, and temporal meta-features form the context $\boldsymbol{\phi}_t$. Hierarchical selection then chooses a detector with LinUCB (Level~1) and a hyperparameter configuration with Thompson Sampling (Level~2) from the detector portfolio. The configured detector emits a drift signal $d_t$ that triggers model adaptation, and the resulting reward $r_t$ is fed back to update both selection levels.}
     \label{fig:framework}
 \end{figure*}
 
@@ -117,7 +117,7 @@ Given a detector portfolio $\mathcal{D} = \{D_1, \ldots, D_K\}$ where each $D_i$
 (D^*_t, \boldsymbol{\eta}^*_t) = \arg\max_{D_i \in \mathcal{D}, \boldsymbol{\eta} \in \mathcal{H}_i} \mathbb{E}[\mathrm{Perf}(D_i(\boldsymbol{\eta}), \mathcal{S}_t) \mid \boldsymbol{\phi}_t]
 $}
 \end{equation}
-where $\boldsymbol{\phi}_t\in\mathbb{R}^m$ is the context, $\mathcal{S}_t$ is the stream segment, and $\mathrm{Perf}(\cdot)$ is downstream model performance. Hereafter $[K]=\{1,\ldots,K\}$, and $t$ indexes window-level selection rounds rather than individual arrivals.
+where $\boldsymbol{\phi}_t$ is the stream context, $\mathcal{S}_t$ denotes the stream segment at time $t$, $\mathbb{E}[\cdot]$ is the expectation operator, and $\mathrm{Perf}(\cdot)$ denotes the downstream model performance.
 
 \section{Automated Drift Detector}
 \label{sec:method}
@@ -127,23 +127,23 @@ AutoDD employs an adaptive, closed-loop architecture to dynamically select and c
 \begin{algorithm}[t]
 \caption{AutoDD}
 \label{alg:autodd}
-\KwIn{Stream $\mathcal{S}$, portfolio $\mathcal{D}$, window size $w$; exploration $\alpha_{\text{ucb}}$, regularisation $\lambda_{\text{reg}}$, configurations $C$, prior $(a_0,b_0)$, reward constants $(\rho_{\mathrm{tp}},\kappa,\rho_{\mathrm{fp}},\rho_{\mathrm{fn}},\rho_{\mathrm{tn}},\tau_{\text{drop}})$}
-\KwOut{Window-level drift signals $\{d_t\}_{t=1}^{\infty}$}
+\KwIn{Stream $\mathcal{S}$, portfolio $\mathcal{D}$, window $w$; exploration $\alpha_{\text{ucb}}$, regularisation $\lambda_{\text{reg}}$, configs per detector $C$, prior $(a_0,b_0)$, reward constants $(\rho_{\mathrm{tp}},\kappa,\rho_{\mathrm{fp}},\rho_{\mathrm{fn}},\rho_{\mathrm{tn}},\tau_{\text{sig}})$}
+\KwOut{Drift signals $\{d_t\}_{t=1}^{\infty}$}
 Initialise $\mathbf{A}_i \gets \lambda_{\text{reg}}\mathbf{I}_m$, $\mathbf{b}_i \gets \mathbf{0}$ for all $i \in [K]$\;
 Initialise $a_{i,c} \gets a_0$, $b_{i,c} \gets b_0$ for all $i \in [K], c \in [C]$\;
-Initialise model $\mathcal{M}_0$, window buffer $W \gets \emptyset$\;
-\ForEach{instance $(\mathbf{x}_n, y_n) \in \mathcal{S}$}{
-    $W \gets \operatorname{tail}_w(W \cup \{(\mathbf{x}_n, y_n)\})$\;
-    \If{$|W| = w$ and $n \bmod w=0$}{
+Initialise model $\mathcal{M}_0$, sliding window $W \gets \emptyset$\;
+\ForEach{instance $(\mathbf{x}_t, y_t) \in \mathcal{S}$}{
+    $W \gets W \cup \{(\mathbf{x}_t, y_t)\}$\;
+    \If{$|W| = w$}{
         $\boldsymbol{\phi}_t \gets \textsc{Extract}(W)$ \tcp*{meta-features}
         \For{$i = 1$ \KwTo $K$}{
             $\text{UCB}_i \gets \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_i + \alpha_{\text{ucb}} \sqrt{\boldsymbol{\phi}_t^\top \mathbf{A}_i^{-1} \boldsymbol{\phi}_t}$ \tcp*{$\hat{\boldsymbol{\theta}}_i = \mathbf{A}_i^{-1}\mathbf{b}_i$}
         }
         $i_t \gets \arg\max_i \text{UCB}_i$ \tcp*{select detector}
         \For{$c = 1$ \KwTo $C$}{
-            Sample $\psi_{i_t,c} \sim \text{Beta}(a_{i_t,c}, b_{i_t,c})$\;
+            Sample $\psi_c \sim \text{Beta}(a_{i_t,c}, b_{i_t,c})$\;
         }
-        $c_t \gets \arg\max_c \psi_{i_t,c}$ \tcp*{select configuration}
+        $c_t \gets \arg\max_c \psi_c$ \tcp*{select configuration}
         $d_t \gets D_{i_t}(\boldsymbol{\eta}_{i_t,c_t}).\textsc{Detect}(W)$\;
         \If{$d_t = 1$}{
             $\mathcal{M}_t \gets \mathcal{M}_0$ \tcp*{reset model}
@@ -152,17 +152,18 @@ Initialise model $\mathcal{M}_0$, window buffer $W \gets \emptyset$\;
         $\mathbf{A}_{i_t} \gets \mathbf{A}_{i_t} + \boldsymbol{\phi}_t \boldsymbol{\phi}_t^\top$;\quad $\mathbf{b}_{i_t} \gets \mathbf{b}_{i_t} + r_t \boldsymbol{\phi}_t$\;
         $\tilde{r}_t \gets (r_t + 1)/2$\;
         $a_{i_t,c_t} \gets a_{i_t,c_t} + \tilde{r}_t$;\quad $b_{i_t,c_t} \gets b_{i_t,c_t} + (1-\tilde{r}_t)$\;
+        $W \gets \emptyset$\;
     }
 }
 \end{algorithm}
 
 \subsection{Algorithm Overview}
 
-AutoDD executes one selection cycle every $w$ arrivals using the current $w$-instance window, beginning with meta-feature extraction.
+AutoDD executes one selection cycle each time a sliding window of $w$ instances fills, beginning with meta-feature extraction.
 
-\textbf{Meta-Feature Extraction:} The $m=15$ features are statistical (velocity, dimensionality, sparsity, noise, and class imbalance), stationarity-based (error volatility, KL divergence, autocorrelation, mean shift, and variance shift), or temporal (trend, periodicity, change frequency, change magnitude, and recurrence). After finite-value replacement and clipping, $\ell_2$ normalisation yields $\boldsymbol{\phi}_t\in\mathbb{R}^m$ with $\|\boldsymbol{\phi}_t\|_2\leq1$; Appendix Table~\ref{tab:metafeatures} gives the estimators.
+\textbf{Meta-Feature Extraction:} The meta-feature set comprises $m$ features in three categories. \emph{Statistical} features capture velocity, dimensionality, sparsity, noise level, and class imbalance. \emph{Stationarity} features capture error volatility, KL divergence, autocorrelation, mean shift, and variance shift. \emph{Temporal} features capture trend, periodicity, change frequency, change magnitude, and recurrence score. All features are computed incrementally over the window and normalised to $[0, 1]$ by running min-max normalisation, yielding the context vector $\boldsymbol{\phi}_t \in \mathbb{R}^{m}$.
 
-\textbf{Detector Portfolio:} AutoDD maintains $K$ window-, error-, and distribution-based detectors. Table~\ref{tab:portfolio} gives their hyperparameters and ranges. For detector $i$, candidate set $\{\boldsymbol{\eta}_{i,c}\}_{c\in[C]}\subset\mathcal{H}_i$ contains the literature default and $C-1$ configurations sampled on the stated scale, where $[C]=\{1,\ldots,C\}$.
+\textbf{Detector Portfolio:} AutoDD maintains a diverse portfolio of $K$ drift detectors spanning window-based, error-based, and distribution-based paradigms. Table~\ref{tab:portfolio} summarises each detector with its hyperparameters, valid ranges, sampling scales, and default values from the literature. For each detector $i$, we maintain $C$ hyperparameter configurations denoted $\boldsymbol{\eta}_{i,c}$ for $c \in [C]$, the first is always the literature default, while the remaining $C-1$ are sampled from the specified ranges using the appropriate logarithmic, linear, or integer scale.
 
 \begin{table}[t]
 \centering
@@ -204,24 +205,24 @@ HDDM-W & Error-based & $\lambda_{\text{hddm}}$ & [0.01, 0.1] & log & 0.05 \\
 
 The two-level decomposition adapts detector choice and hyperparameter configuration jointly without treating all $K \times C$ detector-configuration pairs as a single flat action space.
 
-\textbf{Level 1 - Detector Selection via LinUCB:} Context $\boldsymbol{\phi}_t$ describes the stream, the $K$ detectors are arms, and the proxy reward measures detection performance. LinUCB \cite{Li2010LinUCB} assumes
+\textbf{Level 1 - Detector Selection via LinUCB:} We formulate detector selection as a contextual multi-armed bandit problem where context is $\boldsymbol{\phi}_t$ (meta-features), arms are $K$ detectors, and reward is detection performance. LinUCB \cite{Li2010LinUCB} assumes linear reward:
 \begin{equation}
 r_{i,t} = \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_i^* + \epsilon_t
 \end{equation}
-where $\boldsymbol{\theta}_i^*\in\mathbb{R}^m$ is detector $i$'s unknown parameter vector. The algorithm selects the highest upper confidence bound:
+where $\boldsymbol{\theta}_i^* \in \mathbb{R}^m$ is the unknown parameter vector for detector $i$. The algorithm selects the detector with the highest upper confidence bound:
 \begin{equation}
 \resizebox{0.9\columnwidth}{!}{$
-i_t = \arg\max_{i \in [K]} \left( \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_{i,t} + \alpha_{\text{ucb}} \sqrt{\boldsymbol{\phi}_t^\top \mathbf{A}_{i,t}^{-1} \boldsymbol{\phi}_t} \right)
+i_t = \arg\max_{i \in [K]} \left( \boldsymbol{\phi}_t^\top \hat{\boldsymbol{\theta}}_i + \alpha_{\text{ucb}} \sqrt{\boldsymbol{\phi}_t^\top \mathbf{A}_i^{-1} \boldsymbol{\phi}_t} \right)
 $}
 \end{equation}
-where $\hat{\boldsymbol{\theta}}_{i,t}=\mathbf{A}_{i,t}^{-1}\mathbf{b}_{i,t}$ is the pre-decision ridge estimate, with
+where $\hat{\boldsymbol{\theta}}_i = \mathbf{A}_i^{-1} \mathbf{b}_i$ is the ridge regression estimate, with
 \begin{equation}
-\mathbf{A}_{i,t}=\lambda_{\text{reg}}\mathbf{I}_m+\sum_{s<t:i_s=i}\boldsymbol{\phi}_s\boldsymbol{\phi}_s^\top,\quad
-\mathbf{b}_{i,t}=\sum_{s<t:i_s=i}r_s\boldsymbol{\phi}_s .
+\mathbf{A}_i = \lambda_{\text{reg}}\mathbf{I} + \sum_{s:i_s=i} \boldsymbol{\phi}_s \boldsymbol{\phi}_s^\top, \qquad
+\mathbf{b}_i = \sum_{s:i_s=i} r_s \boldsymbol{\phi}_s .
 \end{equation}
-Here, $\mathbf{A}_{i,t}\in\mathbb{R}^{m\times m}$ and $\mathbf{b}_{i,t}\in\mathbb{R}^m$ contain observations before round $t$; $\lambda_{\text{reg}}>0$ regularises the estimate and $\alpha_{\text{ucb}}>0$ controls exploration.
+Here, $\mathbf{A}_i \in \mathbb{R}^{m \times m}$ is the regularised design matrix with regularisation parameter $\lambda_{\text{reg}} > 0$, and $\mathbf{b}_i \in \mathbb{R}^m$ is the cumulative reward-weighted context vector for detector $i$. The parameter $\alpha_{\text{ucb}} > 0$ controls exploration-exploitation balance.
 
-\textbf{Level 2 - Hyperparameter Selection via Thompson Sampling:} Given $D_{i_t}$, Thompson Sampling \cite{Agrawal2012Thompson} selects its configuration. Each $c\in[C]$ has Beta parameters $(a_{i,c},b_{i,c})$, initialised with prior $(a_0,b_0)=(1,1)$. We sample
+\textbf{Level 2 - Hyperparameter Selection via Thompson Sampling:} Given the selected detector $D_{i_t}$, we adaptively configure its hyperparameters using Thompson Sampling \cite{Agrawal2012Thompson}. For each configuration $c \in [C] = \{1, \ldots, C\}$ of detector $i$, we maintain Beta distribution parameters $(a_{i,c}, b_{i,c})$ initialised to a uniform prior $(a_0, b_0)$. At each window, we sample:
 \begin{equation}
 \label{eq:ts_sample}
 \psi_{i_t,c} \sim \text{Beta}(a_{i_t,c}, b_{i_t,c}) \quad \forall c \in [C]
@@ -242,85 +243,92 @@ where $\tilde{r}_t = (r_t + 1)/2$ normalises the reward to $[0,1]$. %This cascad
 
 \subsection{Evaluation and Adaptation}
 
-Without ground-truth drift labels, we use the downstream model's windowed prequential accuracy $a_t\in[0,1]$ to define the proxy reward
+Evaluating detector performance without ground-truth drift labels is challenging. Following standard practice, we use model accuracy drop as a proxy metric. The reward at time $t$ is:
 \begin{equation}
 \label{eq:reward}
 r_t = \begin{cases}
-\rho_{\mathrm{tp}} + \min(\kappa\,\Delta a_t, \rho_{\mathrm{tp}}) & d_t=1, \Delta a_t > \tau_{\text{drop}} \\
--\rho_{\mathrm{fp}} & d_t=1, \Delta a_t \leq \tau_{\text{drop}} \\
--\rho_{\mathrm{fn}} - \min(\Delta a_t, \rho_{\mathrm{fn}}) & d_t=0, \Delta a_t > \tau_{\text{drop}} \\
-\rho_{\mathrm{tn}} & d_t=0, \Delta a_t \leq \tau_{\text{drop}}
+\rho_{\mathrm{tp}} + \min(\kappa\,\Delta a_t, \rho_{\mathrm{tp}}) & d_t=1, \Delta a_t > \tau_{\text{sig}} \\
+-\rho_{\mathrm{fp}} & d_t=1, \Delta a_t \leq \tau_{\text{sig}} \\
+-\rho_{\mathrm{fn}} - \min(\Delta a_t, \rho_{\mathrm{fn}}) & d_t=0, \Delta a_t > \tau_{\text{sig}} \\
+\rho_{\mathrm{tn}} & d_t=0, \Delta a_t \leq \tau_{\text{sig}}
 \end{cases}
 \end{equation}
-where $d_t\in\{0,1\}$ is the window-level alarm, $\Delta a_t=a_{t-1}-a_t$, and $\tau_{\text{drop}}$ is the accuracy-drop threshold. The $\rho$ terms name the four proxy outcomes and $\kappa$ scales the drop. With $\rho_{\mathrm{tp}},\rho_{\mathrm{fn}}\leq0.5$ and $\rho_{\mathrm{fp}},\rho_{\mathrm{tn}}\leq1$, the caps keep $r_t\in[-1,1]$. Window averaging and $\tau_{\text{drop}}$ reduce transient noise, although the reward remains coupled to the learner and labels; A4 states the fidelity needed to interpret proxy quality.
+where $d_t \in \{0,1\}$ indicates drift detection at time $t$, $\Delta a_t = a_{t-w} - a_t$ is the accuracy drop between consecutive windows, $\tau_{\text{sig}}$ is the significance threshold, $\rho_{\mathrm{tp}}, \rho_{\mathrm{fp}}, \rho_{\mathrm{fn}}, \rho_{\mathrm{tn}} > 0$ are the base rewards for the four outcomes, and $\kappa$ scales the accuracy drop. The constant $\rho_{\mathrm{tp}}$ is not tuned. It splits a correct decision's reward equally into a fixed part, crediting the decision itself, and a graded part earned in proportion to $\Delta a_t$. The paired $\min(\cdot,\rho_{\mathrm{tp}})$ caps the graded part at the same value, keeping $r_t$ within $[-1,1]$ as the bounded-reward assumption of our regret analysis requires. We note that an accuracy-based proxy couples detector quality with the downstream learner, label noise, and the evaluation window. Two design choices limit the resulting variance. The drop $\Delta a_t$ is measured over a window of $w$ instances rather than per-instance, smoothing transient noise, and the threshold $\tau_{\text{sig}}$ suppresses rewards from sub-significant fluctuations so that noise-driven dips do not reinforce spurious detections. The regret analysis below is stated for this bounded proxy reward, and interpreting proxy regret as true detector quality requires the proxy-fidelity assumption (A4) introduced there.
 
-At selection boundary $n_t=tw$, an alarm resets the model, after which incremental learning resumes:
+Upon drift detection ($d_t = 1$), the model resets to its initial state $\mathcal{M}_0$:
 \begin{equation}
-d_t=1:\ \mathcal{M}_{n_t}\gets\mathcal{M}_0,\qquad
-\mathcal{M}_{n_t+s}\gets\text{Update}(\mathcal{M}_{n_t+s-1},(\mathbf{x}_{n_t+s},y_{n_t+s})),\ s>0.
+\mathcal{M}_t \gets \mathcal{M}_0
+\end{equation} The model then resumes incremental learning from subsequent instances:
+\begin{equation}
+\mathcal{M}_{t+s} \gets \text{Update}(\mathcal{M}_{t+s-1}, (\mathbf{x}_{t+s}, y_{t+s})) \quad \forall s > 0
 \end{equation}
 
-The implementation additionally updates Level~1 at alarms; Level~2 and the theory use window-boundary updates.
+The per-window form above applies a single joint update per window. The deployed implementation additionally updates Level~1 at each detected drift while updating Level~2 only at window boundaries.
 
 \subsection{Computational Complexity}
-Using the estimators in Appendix Table~\ref{tab:metafeatures} and rank-one inverse updates, the per-window complexity excluding detector and learner costs is
+For the incrementally maintained meta-features used in our implementation, the per-window time and space complexity of AutoDD are
 \begin{equation}
-T_{\mathrm{win}}=O(wd_{\mathrm{in}}+w\log w+Km^2+C),\quad
-S_{\mathrm{win}}=O(Km^2+KC+wd_{\mathrm{in}}),
+T_{\mathrm{win}} = O(w\,d_{\mathrm{in}} + Km^2), \qquad S_{\mathrm{win}} = O(Km^2 + w\,d_{\mathrm{in}}),
 \end{equation}
-where the FFT contributes $w\log w$, LinUCB contributes $Km^2$, and Thompson Sampling contributes $C$ time and $KC$ state.
+where $w$ is the AutoDD window size, $d_{\mathrm{in}}$ is the input feature dimensionality, $K$ is the number of detectors, and $m$ is the meta-feature count. Time is dominated by meta-feature extraction and LinUCB matrix operations, and space by the $K$ covariance matrices and the window buffer.
 
 \subsection{Theory}\label{sec:theory}
 
-We analyse the two selection levels as idealised proxy-reward bandit sub-problems.
+We provide proxy-regret bounds for the two selection levels, treated as idealised contextual-bandit sub-problems, and note where this simplifies the deployed system.
 
-\textbf{Assumptions.} Let $\mathcal{G}_t$ contain the history and context available before round $t$'s reward. Following contextual-bandit analysis \cite{Abbasi2011Improved,Lattimore2020Bandit}, we assume:
+\textbf{Assumptions.} We adopt three standard assumptions from the contextual bandit literature \cite{Abbasi2011Improved,Lattimore2020Bandit}, together with a fidelity condition (A4) that links our accuracy-based proxy reward to true detection quality:
 \begin{itemize}
-\item \textbf{(A1) Bounded features:} $\|\boldsymbol{\phi}_t\|_2\leq L$; our normalisation gives $L=1$.
-\item \textbf{(A2) Linear reward:} For each detector $i$, some $\boldsymbol{\theta}_i^*\in\mathbb{R}^m$, $\|\boldsymbol{\theta}_i^*\|_2\leq S$, satisfies
+\item \textbf{(A1) Bounded features:} $\|\boldsymbol{\phi}_t\|_2 \leq L$ for all $t$, satisfied by $[0,1]$ normalisation with $L=\sqrt{m}$.
+\item \textbf{(A2) Linear reward:} For each detector $i$, there exists $\boldsymbol{\theta}_i^* \in \mathbb{R}^m$ with $\|\boldsymbol{\theta}_i^*\|_2 \leq S$ such that
 \begin{equation}
-\mathbb{E}[r_{i,t}\mid\mathcal{G}_t]=\boldsymbol{\phi}_t^\top\boldsymbol{\theta}_i^*.
+\mathbb{E}[r_{i,t} \mid \boldsymbol{\phi}_t] = \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_i^*.
 \end{equation}
-\item \textbf{(A3) Conditional noise:} $\epsilon_{i,t}=r_{i,t}-\boldsymbol{\phi}_t^\top\boldsymbol{\theta}_i^*$ is conditionally zero-mean and $\sigma_{\text{noise}}$-sub-Gaussian given $\mathcal{G}_t$; bounded rewards permit $\sigma_{\text{noise}}=1$.
-\item \textbf{(A4) Proxy fidelity:} Expected proxy-reward and true-quality orderings agree across detector--configuration pairs under Eq.~\eqref{eq:cash}.
+\item \textbf{(A3) Sub-Gaussian noise:} Reward noise is $\sigma_{\text{noise}}$-sub-Gaussian, satisfied with $\sigma_{\text{noise}} = 1$ for bounded rewards in $[-1,1]$.
+\item \textbf{(A4) Proxy fidelity:} The windowed accuracy-drop reward (Eq.~\eqref{eq:reward}) is, in expectation, monotone in true detection quality, so that a high proxy-reward detector-configuration pair is also high quality under the objective in Eq.~\eqref{eq:cash}.
 \end{itemize}
 
-\emph{Remark (stationarity under drift).} A2 requires a stationary conditional reward map, not stationary $P_t$; context represents its changes. Rising proxy-oracle agreement in Appendix Table~\ref{tab:conv_main} is consistent with this approximation.
+\emph{Remark (stationarity under drift).} Although $P_t$ is non-stationary, A2 requires only that the conditional reward map $\boldsymbol{\phi}_t \mapsto \mathbb{E}[r_{i,t}\mid\boldsymbol{\phi}_t]$ be stationary, not the marginal $P_t$. Changes in $P_t$ are represented through the context rather than through time-varying $\boldsymbol{\theta}_i^*$, and the monotonic rise of proxy-oracle selection accuracy in Appendix Table~\ref{tab:conv_main} is consistent with this approximation on the streams we study.
 
-\textbf{Theorem 1 (Level 1 Proxy Regret).} Fix each detector's configuration and let $T$ count window-level rounds. Under A1--A3, confidence $\delta_{\text{conf}}\in(0,1)$ and radius
+\textbf{Theorem 1 (Level 1 Regret).} Fix each detector's configuration, so that A1--A3 hold for the resulting stationary per-detector reward. With time horizon $T$, confidence parameter $\delta_{\text{conf}} \in (0,1)$, and the standard OFUL exploration radius
 \begin{equation}
-\resizebox{0.98\columnwidth}{!}{$
-\alpha_T=\sigma_{\text{noise}}\sqrt{2\log\frac{K}{\delta_{\text{conf}}}+m\log\!\left(1+\frac{TL^2}{m\lambda_{\text{reg}}}\right)}+\sqrt{\lambda_{\text{reg}}}S,
-$}
+\alpha_{\text{ucb}} = \sigma_{\text{noise}}\sqrt{m \log(KT/\delta_{\text{conf}})} + \sqrt{\lambda_{\text{reg}}}\,S,
 \end{equation}
-the LinUCB rule with $\alpha_{\text{ucb}}=\alpha_T$ achieves, with probability at least $1-\delta_{\text{conf}}$,
+disjoint-arm LinUCB detector selection achieves, with probability at least $1 - \delta_{\text{conf}}$,
 \begin{equation}
 \resizebox{0.95\columnwidth}{!}{$
 R_1(T) = \sum_{t=1}^{T} \left( \max_{i} \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_i^* - \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i_t}^* \right) = \tilde{O}(m\sqrt{KT}).
 $}
 \end{equation}
 
-\textit{Proof Sketch.} A union bound over arms and the self-normalised inequality \cite{Abbasi2011Improved} simultaneously give, for all arms and rounds,
+\textit{Proof Sketch.} Self-normalised confidence bounds \cite{Abbasi2011Improved} place each $\boldsymbol{\theta}_i^*$, with probability $1-\delta_{\text{conf}}$, in the confidence ellipsoid
 \begin{equation}
-\|\boldsymbol{\theta}_i^*-\hat{\boldsymbol{\theta}}_{i,t}\|_{\mathbf{A}_{i,t}}\leq\alpha_T.
+\|\boldsymbol{\theta}_i^* - \hat{\boldsymbol{\theta}}_i\|_{\mathbf{A}_i} \leq \alpha_{\text{ucb}}.
 \end{equation}
 On this event the UCB rule bounds the instantaneous regret as
 \begin{equation}
-\max_i\boldsymbol{\phi}_t^\top\boldsymbol{\theta}_i^*-\boldsymbol{\phi}_t^\top\boldsymbol{\theta}_{i_t}^*\leq2\alpha_T\|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t,t}^{-1}}.
+\max_i \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_i^* - \boldsymbol{\phi}_t^\top \boldsymbol{\theta}_{i_t}^* \;\leq\; 2\alpha_{\text{ucb}}\,\|\boldsymbol{\phi}_t\|_{\mathbf{A}_{i_t}^{-1}}.
 \end{equation}
-Applying the elliptical potential lemma \cite{Dani2008Stochastic} per detector and Cauchy--Schwarz across detectors gives
+Summing over $t$, applying the elliptical potential lemma \cite{Dani2008Stochastic} to each of the $K$ per-detector estimators, and combining the potentials by Cauchy--Schwarz contributes the $\sqrt{K}$ factor. With the radius $\alpha_{\text{ucb}}=\tilde{O}(\sqrt{m})$, this gives
 \begin{equation}
 R_1(T)=\tilde{O}(m\sqrt{KT}). \tag*{$\square$}
 \end{equation}
 
-\textbf{Proposition 2 (Level 2 Proxy Regret).} Fix detector $i$ and let its configurations yield independent stationary rewards $\tilde r\in[0,1]$ with means $\mu_{i,c}$ and $\mu_i^*=\max_c\mu_{i,c}$. Under the Bernoulli-sampling reduction, Beta Thompson Sampling over a fixed $n$ plays satisfies
+\textbf{Proposition 2 (Level 2 Proxy Regret).} Fix a detector $i$ and suppose its $C$ configurations have stationary mean rewards. For Beta--Bernoulli Thompson Sampling under the standard Bernoulli-sampling reduction for bounded rewards, with $N_i(T)$ the number of rounds detector $i$ is selected, the expected regret over those rounds satisfies:
 \begin{equation}
-\mathbb{E}[R_{2,i}(n)]=\mathbb{E}\!\left[\sum_{s=1}^{n}(\mu_i^*-\mu_{i,c_s})\right]=O(\sqrt{Cn\log n}).
+R_2(T) = \sum_{i=1}^{K} O(\sqrt{C \cdot N_i(T) \log N_i(T)})
 \end{equation}
 
-\textit{Proof Sketch.} The standard $C$-armed result gives the displayed problem-independent bound \cite{Agrawal2013Further}. Our fractional Beta update (Eq.~\eqref{eq:ts_update}) replaces the sampled Bernoulli outcome by its expectation, so this is a surrogate for the idealised problem rather than a guarantee for the implementation. \hfill $\square$
+\textit{Proof Sketch.} Conditioned on detector $i$ being played, hyperparameter selection is a $C$-armed bandit with rewards normalised to $\tilde{r}_t = (r_t+1)/2 \in [0,1]$. Thompson Sampling then attains expected regret
+\begin{equation}
+O\big(\sqrt{C\,N_i(T)\log N_i(T)}\big)
+\end{equation}
+over the $N_i(T)$ rounds detector $i$ is played \cite{Agrawal2013Further}. Summing over the $K$ detectors with $\sum_i N_i(T)=T$ gives the bound. The deployed fractional Beta update (Eq.~\eqref{eq:ts_update}) replaces each sampled Bernoulli outcome by its conditional expectation, so the bound is a surrogate for the idealised stationary-Bernoulli problem, not a guarantee for the implemented update. \hfill $\square$
 
-The two results apply only to the idealised sub-problems and do not compose into joint detector--configuration regret. A4 preserves ordering only; it does not transfer a numerical proxy-regret rate to true quality. The experimental fixed $\alpha_{\text{ucb}}$ is tuned separately from $\alpha_T$.
+These two results bound idealised sub-problems in isolation and do \emph{not} compose into a guarantee against a joint detector--configuration oracle. If the surrogate objectives are treated as separable, telescoping through the best configuration of the selected detector and bounding the configuration term by Cauchy--Schwarz gives the indicative combined rate
+\begin{equation}
+R(T) \;\lesssim\; \tilde{O}(m\sqrt{KT}) + O(\sqrt{CKT \log T}),
+\end{equation}
+which we report only as a heuristic surrogate.
 
 \section{Experiments}
 \label{sec:experiments}
@@ -407,18 +415,18 @@ Meta-ADD & \underline{88.9 (2)} & \underline{0.87 (2)} & \underline{90.8 (2)} & 
 & Acc & F1 & Acc & F1 & Acc & F1 & Acc & F1 & Acc & F1 & Acc & F1 \\
 \hline
 No Detector & 86.2 (10) & 0.42 (9) & 79.1 (13) & 0.36 (10) & \underline{81.3 (2)} & 0.43 (11) & 53.1 (12) & 0.11 (8) & 60.8 (13) & 0.12 (10) & 72.1 (13) & 0.29 (11) \\
-ADWIN & 88.1 (8) & 0.64 (7) & 85.5 (12) & 0.06 (11) & 74.6 (10) & 0.55 (8) & 73.3 (10) & 0.07 (9) & 68.3 (11) & 0.11 (11) & 77.9 (11) & 0.29 (11) \\
-DDM & 88.0 (9) & 0.10 (10) & 89.0 (7) & 0.67 (8) & 74.7 (9) & 0.52 (10) & 74.6 (5) & 0.69 (3) & 68.1 (12) & 0.13 (9) & 78.9 (6) & 0.42 (9) \\
+ADWIN & 88.1 (8) & 0.64 (7) & 85.5 (12) & 0.06 (11) & 74.6 (10) & 0.55 (8) & 73.3 (10) & 0.07 (9) & 68.3 (11) & 0.11 (11) & 78.0 (11) & 0.29 (11) \\
+DDM & 88.0 (9) & 0.10 (10) & 89.0 (7) & 0.67 (8) & 74.7 (9) & 0.52 (10) & 74.6 (5) & 0.69 (3) & 68.1 (12) & 0.13 (9) & 78.9 (7) & 0.42 (9) \\
 EDDM & 88.0 (9) & 0.46 (8) & 88.6 (8) & 0.68 (7) & 69.2 (12) & 0.29 (12) & 71.8 (11) & 0.42 (7) & 68.8 (9) & 0.47 (7) & 77.3 (12) & 0.46 (8) \\
-HDDM-A & 88.3 (6) & 0.64 (7) & 86.8 (10) & 0.06 (11) & 75.1 (7) & 0.63 (7) & 73.8 (7) & 0.07 (9) & 69.1 (7) & 0.11 (11) & 78.6 (8) & 0.30 (10) \\
-HDDM-W & 88.4 (5) & 0.65 (6) & 89.5 (6) & 0.72 (6) & 75.9 (5) & 0.67 (6) & 73.9 (6) & 0.53 (6) & 69.7 (6) & 0.58 (6) & 79.5 (4) & 0.63 (6) \\
+HDDM-A & 88.3 (6) & 0.64 (7) & 86.8 (10) & 0.06 (11) & 75.1 (7) & 0.63 (7) & 73.8 (7) & 0.07 (9) & 69.1 (7) & 0.11 (11) & 78.6 (9) & 0.30 (10) \\
+HDDM-W & 88.4 (5) & 0.65 (6) & 89.5 (6) & 0.72 (6) & 75.9 (5) & 0.67 (6) & 73.9 (6) & 0.53 (6) & 69.7 (6) & 0.58 (6) & 79.5 (6) & 0.63 (6) \\
 Page-Hinkley & 88.2 (7) & 0.65 (6) & 86.0 (11) & 0.06 (11) & 74.8 (8) & 0.52 (10) & 73.5 (9) & 0.07 (9) & 68.5 (10) & 0.11 (11) & 78.2 (10) & 0.28 (12) \\
-KSWIN & 88.0 (9) & 0.42 (9) & 88.3 (9) & 0.66 (9) & 74.5 (11) & 0.53 (9) & 73.7 (8) & 0.63 (4) & 68.9 (8) & 0.43 (8) & 78.7 (7) & 0.53 (7) \\
-MDDM & 89.1 (4) & 0.67 (5) & 90.3 (5) & 0.75 (5) & 75.5 (6) & 0.75 (4) & 73.8 (7) & 0.60 (5) & 69.8 (5) & 0.61 (5) & 78.4 (9) & 0.68 (5) \\
-ADDM & 89.8 (3) & 0.86 (3) & 91.9 (4) & 0.77 (4) & 76.6 (4) & 0.72 (5) & 75.0 (4) & 0.69 (3) & 71.3 (3) & 0.77 (3) & 79.3 (5) & 0.76 (4) \\
-PUDD & 89.8 (3) & 0.83 (4) & \underline{92.6 (2)} & 0.83 (3) & 77.1 (3) & 0.76 (3) & \underline{76.4 (2)} & \underline{0.74 (2)} & \underline{71.9 (2)} & 0.74 (4) & 79.7 (3) & 0.78 (3) \\
-Meta-ADD & \underline{90.9 (2)} & \underline{0.91 (2)} & 92.5 (3) & \underline{0.92 (2)} & 77.1 (3) & \underline{0.81 (2)} & \textbf{84.8 (1)} & \underline{0.74 (2)} & \textbf{80.4 (1)} & \underline{0.79 (2)} & \underline{81.4 (2)} & \underline{0.83 (2)} \\
-\textbf{AutoDD} & \textbf{96.7 (1)} & \textbf{0.93 (1)} & \textbf{98.4 (1)} & \textbf{0.93 (1)} & \textbf{82.4 (1)} & \textbf{0.90 (1)} & 75.8 (3) & \textbf{0.84 (1)} & 70.9 (4) & \textbf{0.88 (1)} & \textbf{84.0 (1)} & \textbf{0.87 (1)} \\
+KSWIN & 88.0 (9) & 0.42 (9) & 88.3 (9) & 0.66 (9) & 74.5 (11) & 0.53 (9) & 73.7 (8) & 0.63 (4) & 68.9 (8) & 0.43 (8) & 78.7 (8) & 0.53 (7) \\
+MDDM & 89.1 (4) & 0.67 (5) & 90.3 (5) & 0.75 (5) & 75.5 (6) & 0.75 (4) & 73.8 (7) & 0.60 (5) & 69.8 (5) & 0.61 (5) & 79.7 (5) & 0.68 (5) \\
+ADDM & 89.8 (3) & 0.86 (3) & 91.9 (4) & 0.77 (4) & 76.6 (4) & 0.72 (5) & 75.0 (4) & 0.69 (3) & 71.3 (3) & 0.77 (3) & 80.9 (4) & 0.76 (4) \\
+PUDD & 89.8 (3) & 0.83 (4) & \underline{92.6 (2)} & 0.83 (3) & 77.1 (3) & 0.76 (3) & \underline{76.4 (2)} & \underline{0.74 (2)} & \underline{71.9 (2)} & 0.74 (4) & 81.6 (3) & 0.78 (3) \\
+Meta-ADD & \underline{90.9 (2)} & \underline{0.91 (2)} & 92.5 (3) & \underline{0.92 (2)} & 77.1 (3) & \underline{0.81 (2)} & \textbf{84.8 (1)} & \underline{0.74 (2)} & \textbf{80.4 (1)} & \underline{0.79 (2)} & \textbf{85.1 (1)} & \underline{0.83 (2)} \\
+\textbf{AutoDD} & \textbf{96.7 (1)} & \textbf{0.93 (1)} & \textbf{98.4 (1)} & \textbf{0.93 (1)} & \textbf{82.4 (1)} & \textbf{0.90 (1)} & 75.8 (3) & \textbf{0.84 (1)} & 70.9 (4) & \textbf{0.88 (1)} & \underline{84.8 (2)} & \textbf{0.90 (1)} \\
 \hline
 \end{tabular}
 }
@@ -497,7 +505,7 @@ Meta-ADD & \underline{87.9 (2)} & 22 (3) & 78.2 (4) & 9 (4) & \underline{95.9 (2
 \end{figure*}
 
 \subsection{Synthetic Datasets}
-Tables~\ref{tab:synthetic_gnb} and~\ref{tab:synthetic_hat} compare all methods on the five synthetic benchmarks. AutoDD achieves the best mean accuracy and the best macro-F1 on every synthetic stream under both base models, with Meta-ADD ranking second across most datasets. The advantage is not uniform on accuracy. Under GaussianNB, Meta-ADD is more accurate on RBF and RTG, the two highest-dimensional streams, though AutoDD retains the better macro-F1 on both. Under HAT the macro-F1 lead over Meta-ADD is widest on these same two streams. The advantage is largest on datasets with abrupt drift, where adaptive detector switching is most beneficial, and narrows on gradual drift where Meta-ADD's learned representations are competitive. Fixed detectors exhibit inconsistent rankings across drift types, motivating the adaptive selection approach (Figures~\ref{fig:preq_sea_gnb}--\ref{fig:preq_sea_hat}).
+Tables~\ref{tab:synthetic_gnb} and~\ref{tab:synthetic_hat} compare all methods on the five synthetic benchmarks. AutoDD achieves the best macro-F1 on every synthetic stream under both base models and the best mean accuracy under GaussianNB, with Meta-ADD ranking second across most datasets. The advantage is not uniform on accuracy. Under both base models, Meta-ADD is more accurate on RBF and RTG, the two highest-dimensional streams, though AutoDD retains the better macro-F1 on both. Under HAT these two streams give Meta-ADD the higher mean accuracy. The advantage is largest on datasets with abrupt drift, where adaptive detector switching is most beneficial, and narrows on gradual drift where Meta-ADD's learned representations are competitive. Fixed detectors exhibit inconsistent rankings across drift types, motivating the adaptive selection approach (Figures~\ref{fig:preq_sea_gnb}--\ref{fig:preq_sea_hat}).
 
 \subsection{Real-world Datasets}
 Tables~\ref{tab:realworld_gnb} and~\ref{tab:realworld_hat} report results on real-world benchmarks where drift patterns are unknown. AutoDD ranks first on mean accuracy under both base models, with the improvement consistent across all five datasets. Detection counts remain within the consensus range of the compared methods, avoiding both extremes of over- and under-detection. On Elec, Weather, and Spam, AutoDD reports the same detection count as the strongest comparators, so its accuracy gain comes from when it adapts rather than from detecting more often. Figures~\ref{fig:preq_poker_gnb} and~\ref{fig:preq_poker_hat} confirm that AutoDD tracks or leads the baselines on the Poker stream and recovers promptly after accuracy drops.
@@ -515,23 +523,23 @@ Figures~\ref{fig:cd_gnb} and~\ref{fig:cd_hat_main} show Critical Difference diag
 \end{figure}
 
 \subsection{Ablation Study}
-Table~\ref{tab:ablation} reports performance when each component is removed in turn, using GaussianNB averaged across all datasets. Removing the Level~1 LinUCB detector selector causes the largest accuracy drop, confirming that detector-stream matching is the primary driver of adaptive performance. Removing Level~2 Thompson Sampling produces a smaller but meaningful degradation, and all three meta-feature categories provide complementary gains, with statistical features contributing most. Figure~\ref{fig:detector_selection} illustrates the resulting behaviour on the Hyperplane stream. The LinUCB layer continuously re-selects detectors as meta-features evolve, keeping the windowed error bounded and enabling rapid recovery after detected drifts.
+Table~\ref{tab:ablation} reports performance when each component is removed in turn, using GaussianNB averaged across the Elec, Weather, Airlines, and Poker streams. Removing the Level~1 LinUCB detector selector causes the largest accuracy drop, confirming that detector-stream matching is the primary driver of adaptive performance. Removing Level~2 Thompson Sampling produces a smaller but meaningful degradation, and all three meta-feature categories provide complementary gains, with statistical features contributing most. Figure~\ref{fig:detector_selection} illustrates the resulting behaviour on the Hyperplane stream. The LinUCB layer continuously re-selects detectors as meta-features evolve, keeping the windowed error bounded and enabling rapid recovery after detected drifts.
 
 \begin{table}[!ht]
 \centering
-\caption{Ablation study results (accuracy averaged across all ten datasets, macro-F1 over the five synthetic streams).}
+\caption{Ablation study results (accuracy and macro-F1 averaged across real-world datasets under GaussianNB).}
 \label{tab:ablation}
 \small
 \begin{tabular}{|l|c|c|c|}
 \hline
 \textbf{Configuration} & \textbf{Accuracy} & \textbf{Macro-F1} & \textbf{$\Delta$Acc} \\
 \hline
-Full AutoDD & \textbf{80.5\%} & \textbf{0.64} & -- \\
-w/o Temporal & 74.2\% & 0.59 & -6.3\% \\
-w/o Statistical & 71.2\% & 0.57 & -9.3\% \\
-w/o Stationarity & 73.5\% & 0.59 & -7.0\% \\
-w/o LinUCB (Level 1) & 62.5\% & 0.50 & -18.0\% \\
-w/o Thompson (Level 2) & 75.3\% & 0.60 & -5.2\% \\
+Full AutoDD & \textbf{74.5\%} & \textbf{0.60} & -- \\
+w/o Temporal & 67.9\% & 0.54 & -6.5\% \\
+w/o Statistical & 64.9\% & 0.52 & -9.6\% \\
+w/o Stationarity & 67.5\% & 0.54 & -7.0\% \\
+w/o LinUCB (Level 1) & 56.6\% & 0.45 & -17.9\% \\
+w/o Thompson (Level 2) & 69.2\% & 0.55 & -5.3\% \\
 \hline
 \end{tabular}
 \end{table}
@@ -574,14 +582,14 @@ Figures~\ref{fig:tm_gnb} and~\ref{fig:tm_hat} place all methods in the runtime-m
 
 \section{Discussion and Limitations}
 \label{sec:discussion}
-We highlight several boundaries of the current design. First, AutoDD automates detector and hyperparameter selection but not the sliding-window size, which the sensitivity analysis shows to be the most influential setting. The default value is robust across our benchmarks, yet selecting it for an unseen stream remains a manual step that an outer adaptive loop could close. Second, the reward is an accuracy-based proxy and therefore entangles detector quality with the downstream learner. We mitigate this through window-level smoothing and the significance threshold, and empirical results confirm that selection preferences are consistent across base learners, though a fully label-free reward remains an open direction. Third, to isolate detection from model selection we fix the base learner to GaussianNB and HAT, which are two standard but limited families, and adapt via full model reset, while richer learners and softer adaptation strategies (warm-starting, selective parameter resets, replay, ensemble updating) are left to future work. Fourth, the comparison is asymmetric in two respects that temper the reported margins. The four strongest comparators (MDDM, ADDM, PUDD, and Meta-ADD) are evaluated as baselines but are not members of the portfolio AutoDD selects from, so the action space is restricted to the classical detectors of Table~\ref{tab:portfolio}. In addition, all baselines run at fixed literature-recommended hyperparameters while AutoDD tunes its detector online, so part of its advantage is attributable to tuning rather than to selection. Separating these two effects requires a comparator granted an equivalent tuning budget, which we leave to future work. Finally, AutoDD targets tabular data streams, the prevalent setting in the drift-detection literature. Non-tabular modalities such as image, audio, and text are outside the scope of this work \cite{Souza2021IBDD}.
+We highlight several boundaries of the current design. AutoDD automates detector and hyperparameter selection but not the sliding-window size, which the sensitivity analysis shows to be the most influential setting. The default value is robust across our benchmarks, yet selecting it for an unseen stream remains a manual step that an outer adaptive loop could close. The reward is an accuracy-based proxy and therefore entangles detector quality with the downstream learner. We mitigate this through window-level smoothing and the significance threshold, and empirical results confirm that selection preferences are consistent across base learners, though a fully label-free reward remains an open direction. To isolate detection from model selection we fix the base learner to GaussianNB and HAT, which are two standard but limited families, and adapt via full model reset, while richer learners and softer adaptation strategies (warm-starting, selective parameter resets, replay, ensemble updating) are left to future work. The comparison is also asymmetric in two respects that temper the reported margins. The four strongest comparators (MDDM, ADDM, PUDD, and Meta-ADD) are evaluated as baselines but are not members of the portfolio AutoDD selects from, so the action space is restricted to the classical detectors of Table~\ref{tab:portfolio}. In addition, all baselines run at fixed literature-recommended hyperparameters while AutoDD tunes its detector online, so part of its advantage is attributable to tuning rather than to selection. Separating these two effects requires a comparator granted an equivalent tuning budget, which we leave to future work. AutoDD targets tabular data streams, the prevalent setting in the drift-detection literature. Non-tabular modalities such as image, audio, and text are outside the scope of this work \cite{Souza2021IBDD}.
 
 \section{Conclusion and Future Work}
 \label{sec:conclusion}
 
 This paper addressed a component that streaming AutoML has so far left to manual specification, namely the drift detector itself. We formalised the joint choice of detector and hyperparameters as a contextual selection problem and introduced AutoDD, which solves it online with a two-level hierarchical bandit. Level~1 uses LinUCB over 15 online meta-features to select a detector, and Level~2 uses Thompson Sampling to select its configuration, both driven by a bounded proxy reward because no drift labels are available at run time. Across ten benchmarks and two base learners, AutoDD attains the best mean accuracy and macro-F1 and the best average rank under the Friedman--Nemenyi test, while the ablation confirms detector selection as the main driver and its runtime and memory stay in the fast, low-memory region.
 
-Several directions follow from the limitations of Section~\ref{sec:discussion}. The most immediate is learning the window size $w$ in an outer adaptive loop, since the sensitivity analysis identifies it as the most influential setting. A second is replacing the accuracy-based proxy with a label-free reward that decouples detector credit from the downstream learner. A third is broadening the portfolio and granting baselines an equivalent tuning budget, separating the benefit of selection from that of tuning. Finally, evaluating on streams with annotated change points would allow detection delay and false alarms to be scored directly.
+Several directions follow from these limitations. The most immediate is learning the window size $w$ in an outer adaptive loop, since the sensitivity analysis identifies it as the most influential setting. A second is replacing the accuracy-based proxy with a label-free reward that decouples detector credit from the downstream learner. Finally, evaluating on streams with annotated change points would allow detection delay and false alarms to be scored directly.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
@@ -661,7 +669,7 @@ KSWIN & 7.6 & 27.8 & 25.5 \\
 ADWIN & 45.2 & 78.3 & 52.1 & 81.4 & 64.3 \\
 DDM & 38.7 & 62.5 & 48.9 & 65.2 & 53.8 \\
 EDDM & 52.3 & 71.8 & 61.4 & 74.6 & 65.0 \\
-HDDM-A & 43.8 & 75.1 & 50.3 & 78.6 & 61.9 \\
+HDDM-A & 43.8 & 75.1 & 50.3 & 78.6 & 62.0 \\
 HDDM-W & 41.5 & 58.2 & 45.7 & 62.8 & 52.1 \\
 Page-Hinkley & 46.9 & 80.5 & 53.8 & 83.2 & 66.1 \\
 KSWIN & 49.1 & 68.7 & 58.2 & 71.4 & 61.9 \\
@@ -758,7 +766,7 @@ Level 2 (Thompson) & Beta prior $(a_0, b_0)$ & $(1, 1)$ \\
 & Noise level & $H(\mathbf{X}) \approx -\frac{1}{w}\sum_{i=1}^{w}\log \hat{p}_k(\mathbf{x}_i)$ (k-NN, $k=5$) \\
 & Class imbalance & $\max_c |C_c| / \min_c |C_c|$ \\
 \hline
-\multirow{5}{*}{Stationarity} & Error volatility & $\sigma_{\text{err}}(t) = \sqrt{\frac{1}{w}\sum_{i=t-w}^{t}(e_i - \bar{e})^2}$ \\
+\multirow{5}{*}{Stationarity} & Error volatility & $\sigma_{\text{err}}(t) = \sqrt{\frac{1}{w}\sum_{i=t-w+1}^{t}(e_i - \bar{e})^2}$ \\
 & KL divergence & $D_{\text{KL}}(P_t \| P_{t-1})$ (histogram, $\sqrt{w}$ bins) \\
 & Autocorrelation & $\rho_t = \frac{\text{Cov}(e_t, e_{t-1})}{\sigma_{e_t}\sigma_{e_{t-1}}}$ \\
 & Mean shift & $\Delta\mu_t = \frac{1}{d}\sum_{j=1}^{d}|\mu_{t,j} - \mu_{t-1,j}|$ \\
@@ -775,3 +783,4 @@ Level 2 (Thompson) & Beta prior $(a_0, b_0)$ & $(1, 1)$ \\
 \end{table}
 
 \end{document}
+
