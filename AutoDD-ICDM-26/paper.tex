@@ -244,7 +244,7 @@ where $\tilde{r}_t = (r_t + 1)/2$ normalises the reward to $[0,1]$. %This cascad
 
 \subsection{Evaluation and Adaptation}
 
-Evaluating detector performance without ground-truth drift labels is challenging. Following standard practice, we use model accuracy drop as a proxy metric. The reward at time $t$ is:
+Without ground-truth drift labels, we use the downstream model's accuracy drop as a proxy reward:
 \begin{equation}
 \label{eq:reward}
 r_t = \begin{cases}
@@ -254,17 +254,7 @@ r_t = \begin{cases}
 \rho_{\mathrm{tn}} & d_t=0, \Delta a_t \leq \tau_{\text{sig}}
 \end{cases}
 \end{equation}
-where $d_t \in \{0,1\}$ indicates drift detection at time $t$, $\Delta a_t = a_{t-w} - a_t$ is the accuracy drop between consecutive windows, $\tau_{\text{sig}}$ is the significance threshold, $\rho_{\mathrm{tp}}, \rho_{\mathrm{fp}}, \rho_{\mathrm{fn}}, \rho_{\mathrm{tn}} > 0$ are the base rewards for the four outcomes, and $\kappa$ scales the accuracy drop. The constant $\rho_{\mathrm{tp}}$ is not tuned. It splits a correct decision's reward equally into a fixed part, crediting the decision itself, and a graded part earned in proportion to $\Delta a_t$. The paired $\min(\cdot,\rho_{\mathrm{tp}})$ caps the graded part at the same value, keeping $r_t$ within $[-1,1]$ as the bounded-reward assumption of our regret analysis requires. We note that an accuracy-based proxy couples detector quality with the downstream learner, label noise, and the evaluation window. Two design choices limit the resulting variance. The drop $\Delta a_t$ is measured over a window of $w$ instances rather than per-instance, smoothing transient noise, and the threshold $\tau_{\text{sig}}$ suppresses rewards from sub-significant fluctuations so that noise-driven dips do not reinforce spurious detections. The regret analysis below is stated for this bounded proxy reward, and interpreting proxy regret as true detector quality requires the proxy-fidelity assumption (A4) introduced there.
-
-Upon drift detection ($d_t = 1$), the model resets to its initial state $\mathcal{M}_0$:
-\begin{equation}
-\mathcal{M}_t \gets \mathcal{M}_0
-\end{equation} The model then resumes incremental learning from subsequent instances:
-\begin{equation}
-\mathcal{M}_{t+s} \gets \text{Update}(\mathcal{M}_{t+s-1}, (\mathbf{x}_{t+s}, y_{t+s})) \quad \forall s > 0
-\end{equation}
-
-The per-window form above applies a single joint update per window. The deployed implementation additionally updates Level~1 at each detected drift while updating Level~2 only at window boundaries.
+where $d_t \in \{0,1\}$ is the window-level alarm, $\Delta a_t = a_{t-w} - a_t$ is the accuracy drop between consecutive windows, $\tau_{\text{sig}}$ is the significance threshold, $\rho_{\mathrm{tp}}, \rho_{\mathrm{fp}}, \rho_{\mathrm{fn}}, \rho_{\mathrm{tn}} > 0$ are the base rewards for the four outcomes, and $\kappa$ scales the drop. The capped $\min(\cdot)$ terms keep $r_t \in [-1,1]$, as the regret analysis requires. On an alarm the model resets to $\mathcal{M}_0$ and resumes incremental learning. The deployed implementation additionally updates Level~1 at each detected drift while updating Level~2 only at window boundaries.
 
 \subsection{Computational Complexity}
 All meta-features in Table~\ref{tab:metafeatures} are linear-time window statistics except the FFT-based periodicity, so the per-window time and space complexity of AutoDD are
