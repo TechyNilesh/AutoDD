@@ -257,7 +257,7 @@ r_t = \begin{cases}
 where $d_t \in \{0,1\}$ is the window-level alarm, $\Delta a_t = a_{t-w} - a_t$ is the accuracy drop between consecutive windows, $\tau_{\text{sig}}$ is the significance threshold, $\rho_{\mathrm{tp}}, \rho_{\mathrm{fp}}, \rho_{\mathrm{fn}}, \rho_{\mathrm{tn}} > 0$ are the base rewards for the four outcomes, and $\kappa$ scales the drop. The capped $\min(\cdot)$ terms keep $r_t \in [-1,1]$, as the regret analysis requires. On an alarm the model resets to $\mathcal{M}_0$ and resumes incremental learning. The deployed implementation additionally updates Level~1 at each detected drift while updating Level~2 only at window boundaries.
 
 \subsection{Computational Complexity}
-All meta-features in Table~\ref{tab:metafeatures} are linear-time window statistics except the FFT-based periodicity, so the per-window time and space complexity of AutoDD are
+All meta-features are linear-time window statistics except the FFT-based periodicity, so the per-window time and space complexity of AutoDD are
 \begin{equation}
 T_{\mathrm{win}}=O(wd_{\mathrm{in}}+w\log w+Km^2),\; S_{\mathrm{win}}=O(Km^2+wd_{\mathrm{in}}),
 \end{equation}
