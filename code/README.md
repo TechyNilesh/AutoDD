@@ -145,7 +145,7 @@ AutoDD-specific parameters:
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `--window_size` | `100` | Sliding window size `w` for meta-feature extraction |
+| `--window_size` | `100` | Tumbling window size `w` for meta-feature extraction |
 | `--alpha` | `1.0` | LinUCB exploration parameter `α_ucb` |
 | `--lambda_reg` | `1.0` | LinUCB regularisation parameter `λ_reg` |
 | `--n_hp_configs` | `5` | Hyperparameter configurations per detector `C` |

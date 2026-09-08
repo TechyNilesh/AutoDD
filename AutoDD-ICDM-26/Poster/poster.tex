@@ -98,7 +98,7 @@
 {\centering
 \includegraphics[width=0.92\textwidth]{framework/framework_tikz.pdf}\par}
 \vskip10pt
-Overview of AutoDD. Meta-features extracted from a sliding window form the
+Overview of AutoDD. Meta-features extracted from a tumbling window form the
 context $\boldsymbol{\phi}_t$. LinUCB selects a detector, Thompson Sampling
 selects its configuration, and the resulting drift signal triggers adaptation.
 The reward $r_t$ is then used to update both selection levels.
@@ -158,7 +158,7 @@ downstream model performance.
 
 
 \begin{block}{AutoDD Method}
-\textbf{Context.} 15 online meta-features are computed over a sliding window and
+\textbf{Context.} 15 online meta-features are computed over a tumbling window and
 normalised to $[0,1]$. They cover \emph{statistical} properties (velocity,
 dimensionality, sparsity, noise, imbalance), \emph{stationarity} (error
 volatility, KL divergence, autocorrelation, mean and variance shift), and
