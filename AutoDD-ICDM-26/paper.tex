@@ -125,9 +125,10 @@ where $\boldsymbol{\phi}_t$ is the stream context, $\mathcal{S}_t$ denotes the s
 AutoDD employs an adaptive, closed-loop architecture to dynamically select and configure drift detectors. This architecture operates through several key steps. First, the system initialises the detector portfolio with standard hyperparameters and sets up the learning parameters. During online operation, meta-features characterising stream velocity, stationarity, and temporal patterns are continuously extracted from the incoming data stream. These meta-features serve as context for the LinUCB agent, which selects a detector from the portfolio. Thompson Sampling then chooses a hyperparameter configuration for the selected detector. The configured detector monitors the stream and triggers model adaptation upon detecting drift. Finally, performance feedback is computed based on detection outcomes, which updates both the LinUCB and Thompson Sampling components to refine future selections. Algorithm~\ref{alg:autodd} formalises this adaptive learning cycle, which enables AutoDD to improve its detector selections over time.
 
 \begin{algorithm}[t]
+\DontPrintSemicolon
 \caption{AutoDD}
 \label{alg:autodd}
-\KwIn{Stream $\mathcal{S}$, portfolio $\mathcal{D}$, window $w$; exploration $\alpha_{\text{ucb}}$, regularisation $\lambda_{\text{reg}}$, configs per detector $C$, prior $(a_0,b_0)$, reward constants $(\rho_{\mathrm{tp}},\kappa,\rho_{\mathrm{fp}},\rho_{\mathrm{fn}},\rho_{\mathrm{tn}},\tau_{\text{sig}})$}
+\KwIn{Stream $\mathcal{S}$, portfolio $\mathcal{D}$, window $w$, exploration $\alpha_{\text{ucb}}$, regularisation $\lambda_{\text{reg}}$, configs per detector $C$, prior $(a_0,b_0)$, reward constants $(\rho_{\mathrm{tp}},\kappa,\rho_{\mathrm{fp}},\rho_{\mathrm{fn}},\rho_{\mathrm{tn}},\tau_{\text{sig}})$}
 \KwOut{Drift signals $\{d_t\}_{t=1}^{\infty}$}
 Initialise $\mathbf{A}_i \gets \lambda_{\text{reg}}\mathbf{I}_m$, $\mathbf{b}_i \gets \mathbf{0}$ for all $i \in [K]$\;
 Initialise $a_{i,c} \gets a_0$, $b_{i,c} \gets b_0$ for all $i \in [K], c \in [C]$\;
@@ -149,9 +150,9 @@ Initialise model $\mathcal{M}_0$, tumbling window $W \gets \emptyset$\;
             $\mathcal{M}_t \gets \mathcal{M}_0$ \tcp*{reset model}
         }
         Compute reward $r_t$ using Eq.~\eqref{eq:reward}\;
-        $\mathbf{A}_{i_t} \gets \mathbf{A}_{i_t} + \boldsymbol{\phi}_t \boldsymbol{\phi}_t^\top$;\quad $\mathbf{b}_{i_t} \gets \mathbf{b}_{i_t} + r_t \boldsymbol{\phi}_t$\;
+        $\mathbf{A}_{i_t} \gets \mathbf{A}_{i_t} + \boldsymbol{\phi}_t \boldsymbol{\phi}_t^\top$,\quad $\mathbf{b}_{i_t} \gets \mathbf{b}_{i_t} + r_t \boldsymbol{\phi}_t$\;
         $\tilde{r}_t \gets (r_t + 1)/2$\;
-        $a_{i_t,c_t} \gets a_{i_t,c_t} + \tilde{r}_t$;\quad $b_{i_t,c_t} \gets b_{i_t,c_t} + (1-\tilde{r}_t)$\;
+        $a_{i_t,c_t} \gets a_{i_t,c_t} + \tilde{r}_t$,\quad $b_{i_t,c_t} \gets b_{i_t,c_t} + (1-\tilde{r}_t)$\;
         $W \gets \emptyset$\;
     }
 }
@@ -159,7 +160,7 @@ Initialise model $\mathcal{M}_0$, tumbling window $W \gets \emptyset$\;
 
 \subsection{Algorithm Overview}
 
-AutoDD executes one selection cycle each time a tumbling window of $w$ instances fills; window-level quantities ($\boldsymbol{\phi}_t, i_t, c_t, d_t, r_t$) are indexed by the window's closing instance $t$.
+AutoDD executes one selection cycle each time a tumbling window of $w$ instances fills. Window-level quantities ($\boldsymbol{\phi}_t, i_t, c_t, d_t, r_t$) are indexed by the window's closing instance $t$.
 
 \textbf{Meta-Feature Extraction:} The meta-feature set comprises $m$ features in three categories. \emph{Statistical} features capture velocity, dimensionality, sparsity, noise level, and class imbalance. \emph{Stationarity} features capture error volatility, KL divergence, autocorrelation, mean shift, and variance shift. \emph{Temporal} features capture trend, periodicity, change frequency, change magnitude, and recurrence score. All features are computed incrementally over the window and normalised to $[0, 1]$ by running min-max normalisation, yielding the context vector $\boldsymbol{\phi}_t \in \mathbb{R}^{m}$.
 
